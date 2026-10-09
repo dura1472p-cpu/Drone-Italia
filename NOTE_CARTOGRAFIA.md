@@ -1,0 +1,1 @@
+Revisione demo: Leaflet via cdnjs, tessere tile.openstreetmap.org. Nessuna libreria cartografica offline. Il 403 non e risolto senza diagnosi rete e fornitore tile autorizzato. WebView registra errori HTTP nel Logcat con tag DroneItaliaMap. Non compilato/testato su dispositivo. Zone inventate; nessuna autorizzazione al volo.
