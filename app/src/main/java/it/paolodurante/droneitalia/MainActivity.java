@@ -35,12 +35,48 @@ public class MainActivity extends Activity {
  setContentView(box);web.loadUrl("https://app.local/index.html");
  }
  private void locate(){
- if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},10);return;}
+ boolean fine=checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED;
+ boolean coarse=checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED;
+ if(!fine&&!coarse){requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},10);return;}
+ stopLocation();
  manager=(LocationManager)getSystemService(LOCATION_SERVICE);
- String provider=manager.isProviderEnabled(LocationManager.GPS_PROVIDER)?LocationManager.GPS_PROVIDER:LocationManager.NETWORK_PROVIDER;
- if(!manager.isProviderEnabled(provider)){Toast.makeText(this,"Attiva la posizione nelle impostazioni",Toast.LENGTH_LONG).show();return;}
- listener=new LocationListener(){public void onLocationChanged(Location l){web.evaluateJavascript("showPosition("+l.getLatitude()+","+l.getLongitude()+","+l.getAccuracy()+")",null);stopLocation();} public void onProviderDisabled(String p){} public void onProviderEnabled(String p){} public void onStatusChanged(String p,int s,Bundle b){}};
- try{manager.requestLocationUpdates(provider,1000,0,listener);Toast.makeText(this,"Ricerca posizione in corso",Toast.LENGTH_SHORT).show();web.postDelayed(()->{if(listener!=null){stopLocation();Toast.makeText(this,"Posizione non disponibile. Riprova all'aperto.",Toast.LENGTH_LONG).show();}},20000);}catch(SecurityException e){Toast.makeText(this,"Permesso posizione non disponibile",Toast.LENGTH_LONG).show();}
+ boolean gps=fine&&manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+ boolean network=manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+ if(!gps&&!network){Toast.makeText(this,"Attiva la posizione nelle impostazioni",Toast.LENGTH_LONG).show();return;}
+ final Location[] best={null};
+ listener=new LocationListener(){
+ public void onLocationChanged(Location l){
+ if(l==null)return;
+ if(best[0]==null||l.getAccuracy()<best[0].getAccuracy())best[0]=l;
+ if(l.hasAccuracy()&&l.getAccuracy()<=100){showLocation(l);stopLocation();}
+ }
+ public void onProviderDisabled(String p){}
+ public void onProviderEnabled(String p){}
+ public void onStatusChanged(String p,int s,Bundle b){}
+ };
+ try{
+ if(network)manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000,0,listener);
+ if(gps)manager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0,listener);
+ Toast.makeText(this,"Ricerca posizione in corso",Toast.LENGTH_SHORT).show();
+ final LocationListener active=listener;
+ web.postDelayed(()->{
+ if(listener!=active)return;
+ Location chosen=best[0];
+ if(chosen==null){
+ Location recent=null;
+ if(network)recent=manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+ if(gps){Location g=manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);if(g!=null&&(recent==null||g.getTime()>recent.getTime()))recent=g;}
+ if(recent!=null&&System.currentTimeMillis()-recent.getTime()<120000)chosen=recent;
+ }
+ stopLocation();
+ if(chosen!=null)showLocation(chosen);
+ else Toast.makeText(this,"Posizione non disponibile. Attiva la posizione precisa e riprova all'aperto.",Toast.LENGTH_LONG).show();
+ },25000);
+ }catch(SecurityException e){stopLocation();Toast.makeText(this,"Permesso posizione non disponibile",Toast.LENGTH_LONG).show();}
+ }
+ private void showLocation(Location l){
+ final double lat=l.getLatitude(),lng=l.getLongitude(),acc=l.hasAccuracy()?l.getAccuracy():1000;
+ web.evaluateJavascript("showPosition("+lat+","+lng+","+acc+")",null);
  }
  private void stopLocation(){if(manager!=null&&listener!=null){manager.removeUpdates(listener);listener=null;}}
  @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==10){if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED)locate();else Toast.makeText(this,"Puoi usare la mappa senza GPS",Toast.LENGTH_LONG).show();}}
