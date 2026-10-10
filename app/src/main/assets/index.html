@@ -8,7 +8,9 @@
 <h2>📂 Importa zone da file GeoJSON</h2>
 <p style="font-size:14px">Carica un file GeoJSON locale (FeatureCollection con poligoni). Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
 <input id="di-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Scegli file GeoJSON">
-<button type="button" id="di-geojson-clear">Rimuovi tutte le zone importate</button><div id="di-geojson-list" aria-label="Mappe salvate"></div>
+<button type="button" id="di-geojson-clear">Rimuovi tutte le zone importate</button><button type="button" id="di-maps-export">Esporta backup mappe JSON</button>
+<label style="display:block;margin-top:8px">Ripristina backup mappe <input type="file" id="di-maps-restore" accept=".json,application/json"></label>
+<div id="di-geojson-list" aria-label="Mappe salvate"></div>
 <p id="di-geojson-status" role="status" aria-live="polite">Nessun file caricato. Supporto GeoJSON standard; il formato ED-269 non è ancora supportato.</p>
 </section>
 <form id="search"><input id="coords" aria-label="Coordinate" placeholder="Latitudine, longitudine (es. 41.90, 12.50)"><button>Cerca</button></form>
@@ -208,6 +210,33 @@ items=next;addToMap(item,true);render();
 out.textContent='Importata e salvata '+item.filename+'. Mappe totali: '+items.length+'. Dati non verificati.';
 }catch(e){out.textContent='Importazione non riuscita: '+String(e.message||e).slice(0,180)}
 input.value='';
+});
+document.getElementById('di-maps-export').addEventListener('click',()=>{
+if(!items.length){out.textContent='Nessuna mappa da esportare.';return}
+if(!window.DroneItaliaNative||!window.DroneItaliaNative.saveMaps){out.textContent='Esportazione disponibile solo nella versione APK aggiornata.';return}
+try{
+const json=JSON.stringify({format:'drone-italia-maps',version:1,maps:items});
+const bytes=new TextEncoder().encode(json);
+if(bytes.length>5000000)throw Error('Archivio troppo grande per esportazione (massimo 5 MB).');
+let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+window.DroneItaliaNative.saveMaps(btoa(binary));
+out.textContent='Scegli dove salvare il backup delle mappe nella finestra Android.';
+}catch(e){out.textContent='Esportazione non riuscita: '+String(e.message||e).slice(0,140)}
+});
+document.getElementById('di-maps-restore').addEventListener('change',async e=>{
+const file=e.target.files&&e.target.files[0];if(!file)return;
+try{
+if(file.size>5000000)throw Error('Backup troppo grande (massimo 5 MB).');
+const data=JSON.parse(await file.text());
+if(!data||data.format!=='drone-italia-maps'||data.version!==1||!Array.isArray(data.maps)||data.maps.length>20)throw Error('Backup mappe non valido.');
+const restored=data.maps.map(x=>({id:newId(),filename:String(x.filename||'Mappa ripristinata').slice(0,120),geojson:sanitize(x.geojson)}));
+if(items.length+restored.length>20)throw Error('Limite di 20 mappe. Elimina alcune mappe prima del ripristino.');
+if(!restored.length)throw Error('Il backup non contiene mappe.');
+const next=items.concat(restored);persist(next);
+items=next;restored.forEach(x=>addToMap(x,false));render();
+out.textContent='Ripristinate '+restored.length+' mappe. Totale: '+items.length+'. Le mappe non sono dati aeronautici verificati.';
+}catch(err){out.textContent='Ripristino non riuscito: '+String(err.message||err).slice(0,160)}
+e.target.value='';
 });
 document.getElementById('di-geojson-clear').addEventListener('click',()=>{
 if(!items.length)return;
