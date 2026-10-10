@@ -53,7 +53,8 @@ jobs:
             echo "DRONE_SIGNING_STORE_FILE=$RUNNER_TEMP/drone-italia.jks" >> "$GITHUB_ENV"
             echo "Firma permanente configurata."
           else
-            echo "::warning::Firma permanente non configurata: APK debug potrebbe richiedere disinstallazione."
+            echo "::error::Chiave di firma permanente mancante: compilazione interrotta per evitare APK incompatibili."
+            exit 1
           fi
 
       - name: Compila APK
