@@ -50,6 +50,7 @@ jobs:
             : "${DRONE_SIGNING_KEY_ALIAS:?Alias chiave mancante}"
             : "${DRONE_SIGNING_KEY_PASSWORD:?Password chiave mancante}"
             printf '%s' "$DRONE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/drone-italia.jks"
+            keytool -list -keystore "$RUNNER_TEMP/drone-italia.jks" -storepass "$DRONE_SIGNING_STORE_PASSWORD" -alias "$DRONE_SIGNING_KEY_ALIAS" > /dev/null
             echo "DRONE_SIGNING_STORE_FILE=$RUNNER_TEMP/drone-italia.jks" >> "$GITHUB_ENV"
             echo "Firma permanente configurata."
           else
