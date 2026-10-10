@@ -29,7 +29,7 @@ jobs:
           from pathlib import Path
           import re
           html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
-          scripts = re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>', html, re.I)
+          scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, re.I | re.S)
           scripts = [script for script in scripts if script.strip()]
           assert scripts, 'Nessuno script incorporato trovato'
           for i, script in enumerate(scripts):
