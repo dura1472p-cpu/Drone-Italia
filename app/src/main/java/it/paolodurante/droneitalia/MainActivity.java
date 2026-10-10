@@ -9,14 +9,40 @@ import android.location.*;
 import android.webkit.*;
 import android.widget.*;
 import android.view.View;
+import android.print.PrintManager;
+import android.print.PrintAttributes;
+import android.content.Context;
+import android.app.DownloadManager;
+import android.os.Environment;
 public class MainActivity extends Activity {
  private WebView web; private LocationManager manager; private LocationListener listener;
+ private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301;
  @Override public void onCreate(Bundle state) {
  super.onCreate(state);
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
  box.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
  web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(false);
+ web.setWebChromeClient(new WebChromeClient(){
+ @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
+ if(fileCallback!=null)fileCallback.onReceiveValue(null);
+ fileCallback=callback;
+ try{Intent intent=params.createIntent();startActivityForResult(intent,FILE_PICK);return true;}
+ catch(Exception e){fileCallback=null;callback.onReceiveValue(null);Toast.makeText(MainActivity.this,"Selezione foto non disponibile",Toast.LENGTH_LONG).show();return false;}
+ }
+ });
+ web.setDownloadListener((url,userAgent,contentDisposition,mimeType,contentLength)->{
+ if(url.startsWith("blob:")){Toast.makeText(this,"Per il backup usa il pulsante Condividi backup",Toast.LENGTH_LONG).show();return;}
+ if(!url.startsWith("https://"))return;
+ try{DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);request.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"drone-italia-download");((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(request);}catch(Exception e){Toast.makeText(this,"Download non disponibile",Toast.LENGTH_LONG).show();}
+ });
+ web.addJavascriptInterface(new Object(){
+ @JavascriptInterface public void printReport(String html){runOnUiThread(()->{
+ WebView printView=new WebView(MainActivity.this);printView.getSettings().setJavaScriptEnabled(false);
+ printView.setWebViewClient(new WebViewClient(){@Override public void onPageFinished(WebView v,String url){PrintManager pm=(PrintManager)getSystemService(Context.PRINT_SERVICE);pm.print("Rapporto Drone Italia",v.createPrintDocumentAdapter("Rapporto Drone Italia"),new PrintAttributes.Builder().build());}});
+ printView.loadDataWithBaseURL("https://app.local/",html,"text/html","UTF-8",null);
+ });}
+ }, "DroneItaliaNative");
  web.setWebViewClient(new WebViewClient(){
  @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
  if(req.getUrl().toString().equals("https://app.local/index.html")) {try{return new WebResourceResponse("text/html","UTF-8",getAssets().open("index.html"));}catch(Exception e){return null;}} return null;
@@ -34,6 +60,7 @@ public class MainActivity extends Activity {
  Button gps=new Button(this);gps.setText("Mostra la mia posizione");gps.setOnClickListener(v->locate());box.addView(gps);
  setContentView(box);web.loadUrl("https://app.local/index.html");
  }
+ @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}}
  private void locate(){
  boolean fine=checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED;
  boolean coarse=checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED;
