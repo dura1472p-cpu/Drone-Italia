@@ -138,6 +138,12 @@ applyDark();refresh();
 const input=document.getElementById('di-geojson-file'),out=document.getElementById('di-geojson-status'),list=document.getElementById('di-geojson-list');
 const key='drone-italia-imported-geojson-v2',oldKey='drone-italia-imported-geojson-v1';
 const layers=new Map();
+const visibilityKey='drone-italia-map-visibility-v1';
+let hiddenIds=[];
+try{const stored=JSON.parse(localStorage.getItem(visibilityKey)||'[]');if(Array.isArray(stored))hiddenIds=stored.filter(x=>typeof x==='string').slice(0,20)}catch(e){}
+function isVisible(item){return !hiddenIds.includes(item.id)}
+function saveVisibility(next){localStorage.setItem(visibilityKey,JSON.stringify(next));hiddenIds=next}
+
 let items=[];
 function validGeometry(g){
 if(!g||!['Polygon','MultiPolygon'].includes(g.type))return false;
@@ -174,17 +180,26 @@ if(!items.length){const p=document.createElement('p');p.textContent='Nessuna map
 items.forEach(item=>{
 const row=document.createElement('p');row.style.cssText='padding:8px;border-bottom:1px solid #abc;font-size:14px';
 const name=document.createElement('strong');name.textContent=item.filename+' ('+item.geojson.features.length+' zone) ';
-const focus=document.createElement('button');focus.type='button';focus.textContent='Mostra';focus.onclick=()=>{const l=layers.get(item.id);if(l&&l.getBounds().isValid())map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:13})};
+const toggle=document.createElement('button');toggle.type='button';toggle.textContent=isVisible(item)?'👁 Nascondi':'👁 Mostra';
+toggle.setAttribute('aria-pressed',String(isVisible(item)));
+toggle.onclick=()=>{
+const next=isVisible(item)?hiddenIds.concat(item.id):hiddenIds.filter(id=>id!==item.id);
+try{saveVisibility(next)}catch(e){out.textContent='Impossibile salvare la visibilità: '+e.message;return}
+const layer=layers.get(item.id);
+if(layer){if(isVisible(item))layer.addTo(map);else map.removeLayer(layer)}
+render();out.textContent='Visibilità aggiornata. La mappa resta salvata sul telefono.';
+};
+const focus=document.createElement('button');focus.type='button';focus.textContent='Vai alla zona';focus.onclick=()=>{const l=layers.get(item.id);if(l&&l.getBounds().isValid()){map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:13});if(!isVisible(item))out.textContent='Zona raggiunta ma nascosta. Premi Mostra per visualizzarla.'}};
 const del=document.createElement('button');del.type='button';del.textContent='Elimina';del.style.marginLeft='6px';del.onclick=()=>{
 const next=items.filter(x=>x.id!==item.id);
 try{persist(next)}catch(e){out.textContent='Impossibile eliminare: '+e.message;return}
-const l=layers.get(item.id);if(l)map.removeLayer(l);layers.delete(item.id);items=next;render();out.textContent='Mappa eliminata dalla memoria del telefono.';
+const l=layers.get(item.id);if(l)map.removeLayer(l);layers.delete(item.id);try{saveVisibility(hiddenIds.filter(id=>id!==item.id))}catch(e){}items=next;render();out.textContent='Mappa eliminata dalla memoria del telefono.';
 };
-row.append(name,focus,del);list.append(row);
+row.append(name,toggle,' ',focus,del);list.append(row);
 });
 }
 function addToMap(item,zoom){
-const layer=makeLayer(item).addTo(map);layers.set(item.id,layer);
+const layer=makeLayer(item);if(isVisible(item))layer.addTo(map);layers.set(item.id,layer);
 if(zoom&&layer.getBounds().isValid())map.fitBounds(layer.getBounds(),{padding:[18,18],maxZoom:13});
 }
 function newId(){return String(Date.now())+'-'+Math.random().toString(36).slice(2)}
@@ -242,7 +257,7 @@ document.getElementById('di-geojson-clear').addEventListener('click',()=>{
 if(!items.length)return;
 if(!confirm('Eliminare tutte le '+items.length+' mappe importate?'))return;
 try{persist([])}catch(e){out.textContent='Impossibile cancellare le mappe.';return}
-layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];render();out.textContent='Tutte le mappe importate sono state eliminate.';
+layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];try{saveVisibility([])}catch(e){}render();out.textContent='Tutte le mappe importate sono state eliminate.';
 });
 })();
 </script>
