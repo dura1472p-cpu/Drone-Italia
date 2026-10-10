@@ -14,9 +14,12 @@ import android.print.PrintAttributes;
 import android.content.Context;
 import android.app.DownloadManager;
 import android.os.Environment;
+import android.util.Base64;
+import java.io.OutputStream;
 public class MainActivity extends Activity {
  private WebView web; private LocationManager manager; private LocationListener listener;
- private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301;
+ private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302;
+ private byte[] pendingBackup;
  @Override public void onCreate(Bundle state) {
  super.onCreate(state);
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
@@ -37,6 +40,10 @@ public class MainActivity extends Activity {
  try{DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);request.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"drone-italia-download");((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(request);}catch(Exception e){Toast.makeText(this,"Download non disponibile",Toast.LENGTH_LONG).show();}
  });
  web.addJavascriptInterface(new Object(){
+ @JavascriptInterface public void saveBackup(String encoded){
+ try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>12000000)throw new IllegalArgumentException("Backup troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.json");startActivityForResult(intent,BACKUP_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup non disponibile",Toast.LENGTH_LONG).show());}
+ }
+
  @JavascriptInterface public void printReport(String html){runOnUiThread(()->{
  WebView printView=new WebView(MainActivity.this);printView.getSettings().setJavaScriptEnabled(false);
  printView.setWebViewClient(new WebViewClient(){@Override public void onPageFinished(WebView v,String url){PrintManager pm=(PrintManager)getSystemService(Context.PRINT_SERVICE);pm.print("Rapporto Drone Italia",v.createPrintDocumentAdapter("Rapporto Drone Italia"),new PrintAttributes.Builder().build());}});
@@ -60,7 +67,8 @@ public class MainActivity extends Activity {
  Button gps=new Button(this);gps.setText("Mostra la mia posizione");gps.setOnClickListener(v->locate());box.addView(gps);
  setContentView(box);web.loadUrl("https://app.local/index.html");
  }
- @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}}
+ @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}
+ if(request==BACKUP_SAVE){if(result==RESULT_OK&&data!=null&&data.getData()!=null&&pendingBackup!=null){try(OutputStream out=getContentResolver().openOutputStream(data.getData())){if(out==null)throw new Exception("Destinazione non disponibile");out.write(pendingBackup);Toast.makeText(this,"Backup salvato",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Errore salvataggio backup",Toast.LENGTH_LONG).show();}}pendingBackup=null;}}
  private void locate(){
  boolean fine=checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED;
  boolean coarse=checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED;
