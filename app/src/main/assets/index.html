@@ -46,6 +46,21 @@ q('#ft-start').onclick=()=>{if(validMinutes()===null){q('#ft-alert').textContent
 const advice={signal:['Perdita del segnale','Controlla gli avvisi del radiocomando e il comportamento di failsafe previsto dal manuale. Non presumere che il ritorno automatico sia attivo o sicuro. Mantieni il contatto visivo se possibile e applica la procedura del produttore.'],battery:['Batteria bassa','Interrompi l’attività e valuta subito un atterraggio sicuro secondo gli avvisi e il manuale. Il ritorno al punto home potrebbe richiedere più energia di quella disponibile.'],wind:['Vento o controllo difficoltoso','Interrompi l’attività e segui le procedure del manuale per recupero e atterraggio. Non inseguire il drone entrando in aree pericolose.'],gps:['GNSS / punto home','Non fare affidamento sul ritorno automatico senza verificare punto home e stato di navigazione. Segui le istruzioni del produttore e mantieni il contatto visivo.'],incident:['Incidente','Metti al primo posto la sicurezza delle persone. Non toccare eliche in movimento o una batteria danneggiata, calda o fumante. Segui le procedure del produttore e valuta gli obblighi di segnalazione alle autorità.']};function help(){const d=advice[q('#ft-situation').value];q('#ft-advice').replaceChildren();const h=document.createElement('h3'),p=document.createElement('p');h.textContent=d[0];p.textContent=d[1];q('#ft-advice').append(h,p);}q('#ft-situation').onchange=help;help();})();
 </script>
 
+<style>
+/* Impaginazione mobile degli strumenti Android: campi leggibili e pulsanti a capo. */
+#planner{max-width:100%;overflow-wrap:anywhere;line-height:1.5}
+#planner h2{font-size:21px;margin:0 0 12px}
+#planner h3{font-size:19px;margin:24px 0 12px;padding-top:12px;border-top:1px solid #c8d7df}
+#planner label{display:block;margin:12px 0 6px;font-weight:600;line-height:1.45}
+#planner label input,#planner label select{display:block;width:100%;max-width:100%;min-width:0;margin-top:5px;padding:12px;border:1px solid #b6c8d1;border-radius:9px;background:#fff;color:#173544;font:inherit;font-weight:400}
+#planner button{max-width:100%;min-height:44px;padding:10px 13px;margin:3px 3px 3px 0;font:inherit;line-height:1.3}
+#planner #di-drones,#planner #di-favorites,#planner #di-plans{margin-top:12px}
+#planner #di-drones>*,#planner #di-favorites>*,#planner #di-plans>*{max-width:100%;overflow-wrap:anywhere}
+#planner #di-drones button,#planner #di-favorites button,#planner #di-plans button{margin:6px 5px 6px 0}
+#planner #di-measure-status,#planner #di-map-tools-status,#planner #di-plan-status{line-height:1.5}
+#planner #di-radius-m{max-width:180px}
+@media(min-width:680px){#planner{padding:24px 28px!important}#planner label input,#planner label select{max-width:520px}}
+</style>
 <section id="planner" style="padding:16px;background:#edf3f7;color:#173544;font:15px system-ui">
 <h2>Strumenti Android · beta</h2><p><strong>Solo pianificazione personale.</strong> Dati aeronautici ufficiali assenti: nessun risultato autorizza un volo.</p>
 <div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" id="di-measure">Misura distanza</button><button type="button" id="di-favorite">Salva punto</button><button type="button" id="di-clear-measure">Azzera misura</button></div>
