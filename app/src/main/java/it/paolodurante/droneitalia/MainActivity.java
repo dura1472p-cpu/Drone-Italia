@@ -25,17 +25,17 @@ public class MainActivity extends Activity {
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
  box.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
- web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(false);
+ web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(true);
  web.setWebChromeClient(new WebChromeClient(){
  @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
  if(fileCallback!=null)fileCallback.onReceiveValue(null);
  fileCallback=callback;
- try{Intent intent=params.createIntent();startActivityForResult(intent,FILE_PICK);return true;}
+ try{Intent intent=params.createIntent();intent.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(intent,FILE_PICK);return true;}
  catch(Exception e){fileCallback=null;callback.onReceiveValue(null);Toast.makeText(MainActivity.this,"Selezione foto non disponibile",Toast.LENGTH_LONG).show();return false;}
  }
  });
  web.setDownloadListener((url,userAgent,contentDisposition,mimeType,contentLength)->{
- if(url.startsWith("blob:")){Toast.makeText(this,"Per il backup usa il pulsante Condividi backup",Toast.LENGTH_LONG).show();return;}
+ if(url.startsWith("blob:")){Toast.makeText(this,"Per il backup usa Esporta backup JSON",Toast.LENGTH_LONG).show();return;}
  if(!url.startsWith("https://"))return;
  try{DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);request.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"drone-italia-download");((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(request);}catch(Exception e){Toast.makeText(this,"Download non disponibile",Toast.LENGTH_LONG).show();}
  });
