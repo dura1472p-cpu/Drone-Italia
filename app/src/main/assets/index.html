@@ -4,6 +4,13 @@
 </style></head><body><header><h1>Drone Italia</h1><p>Esplora la mappa · Versione dimostrativa</p></header>
 <div class="notice">ZONE INVENTATE DI PROVA. Non usare questa mappa per pianificare un volo.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Mappe ufficiali per droni</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
+<section aria-label="Importazione cartografia personale" style="padding:12px;background:#e8f2fa;border:1px solid #b4d1e6;border-radius:10px;margin:10px">
+<h2>📂 Importa zone da file GeoJSON</h2>
+<p style="font-size:14px">Carica un file GeoJSON locale (FeatureCollection con poligoni). Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
+<input id="di-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Scegli file GeoJSON">
+<button type="button" id="di-geojson-clear">Rimuovi zone importate</button>
+<p id="di-geojson-status" role="status" aria-live="polite">Nessun file caricato. Supporto GeoJSON standard; il formato ED-269 non è ancora supportato.</p>
+</section>
 <form id="search"><input id="coords" aria-label="Coordinate" placeholder="Latitudine, longitudine (es. 41.90, 12.50)"><button>Cerca</button></form>
 <div id="map"></div><div id="map-status" role="status" aria-live="polite" style="padding:10px 14px;background:#fff3cf;color:#654700;font-size:13px">La cartografia stradale richiede Internet. Nessun dato aeronautico ufficiale disponibile.</div><div class="legend"><span>🔴 Divieto simulato</span><span>🟠 Vincolo simulato</span><span>⚪ Altrove: dati non disponibili</span></div>
 <section id="detail"><h2>Seleziona un punto</h2><p>Tre zone dimostrative sono visibili intorno a Roma. Tocca la mappa per consultarne i dettagli.</p></section>
@@ -109,7 +116,54 @@ $('di-clear-radius').onclick=()=>{if(radiusCircle&&map){map.removeLayer(radiusCi
 $('di-satellite').onclick=()=>{if(!map){$('di-map-tools-status').textContent='Mappa non disponibile.';return}const status=$('di-map-tools-status');if(!satelliteLayer){satelliteLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri, Maxar, Earthstar Geographics'});satelliteLayer.on('tileerror',()=>{if(map.hasLayer(satelliteLayer))status.textContent='Immagini satellitari non disponibili: verifica la connessione Internet.'});satelliteLayer.on('tileload',()=>{if(map.hasLayer(satelliteLayer))status.textContent='Vista satellitare attiva. Immagini non necessariamente aggiornate.'})}if(map.hasLayer(satelliteLayer)){map.removeLayer(satelliteLayer);$('di-satellite').textContent='Vista satellitare';status.textContent='Vista stradale attiva.'}else{satelliteLayer.addTo(map);satelliteLayer.bringToFront();$('di-satellite').textContent='Vista stradale';status.textContent='Caricamento immagini satellitari…'}document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>map.invalidateSize(),350)};
 $('di-backup').onclick=()=>{const obj={version:1,created:new Date().toISOString(),favorites:load('favorites'),plans:load('plans'),logs:load('logs'),profile:localStorage.getItem('drone-profile'),drones:load('drones'),maintenance:load('maintenance'),activeDrone:localStorage.getItem(key+'active-drone'),dark:localStorage.getItem(key+'dark')};const data=JSON.stringify(obj);if(window.DroneItaliaNative&&window.DroneItaliaNative.saveBackup){const bytes=new TextEncoder().encode(data);let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));window.DroneItaliaNative.saveBackup(btoa(binary));$('di-backup-status').textContent='Scegli dove salvare il backup nella finestra Android.';}else{$('di-backup-status').textContent='Backup disponibile solo nell’APK Android aggiornato.';}};
 $('di-restore').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>12000000)throw Error('File troppo grande');const d=JSON.parse(await f.text());if(d.version!==1||!['favorites','plans','logs'].every(k=>Array.isArray(d[k])))throw Error('Formato non valido');if(!['drones','maintenance'].every(k=>d[k]===undefined||Array.isArray(d[k])))throw Error('Archivio non valido');if(d.favorites.length>5000||d.plans.length>5000||d.logs.length>2000||(d.drones||[]).length>100||(d.maintenance||[]).length>2000)throw Error('Backup troppo grande');if(!d.favorites.every(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&Math.abs(x.lat)<=90&&Math.abs(x.lng)<=180)||!d.plans.every(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&typeof x.date==='string')||!d.logs.every(x=>x&&typeof x==='object'))throw Error('Dati backup non validi');if(d.logs.some(x=>!x||typeof x!=='object'||(x.photo&&(!String(x.photo).startsWith('data:image/jpeg;base64,')||String(x.photo).length>3000000))))throw Error('Foto del backup non valida o troppo grande');if(!confirm('Sostituire tutti i dati locali con il backup? Prima esporta una copia dei dati attuali.'))return;const names=['favorites','plans','logs','drones','maintenance'];const old={};for(const k of names)old[k]=localStorage.getItem(key+k);try{for(const k of names)localStorage.setItem(key+k,JSON.stringify(Array.isArray(d[k])?d[k]:[]))}catch(writeError){for(const k of names){try{if(old[k]===null)localStorage.removeItem(key+k);else localStorage.setItem(key+k,old[k])}catch(ignored){}}throw Error('Spazio insufficiente o memoria non disponibile: dati precedenti ripristinati, verifica il diario.')}if(typeof d.activeDrone==='string')localStorage.setItem(key+'active-drone',d.activeDrone);if(d.dark==='1'||d.dark==='0')localStorage.setItem(key+'dark',d.dark);applyDark();if(typeof d.profile==='string')localStorage.setItem('drone-profile',d.profile);refresh();$('di-backup-status').textContent='Backup ripristinato. Riapri l’app per aggiornare il profilo.'}catch(err){$('di-backup-status').textContent='Ripristino non riuscito: '+err.message}};
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p>
+<script>
+(function(){
+const input=document.getElementById('di-geojson-file'),out=document.getElementById('di-geojson-status');
+let overlay=null;
+function validGeometry(g){
+if(!g||!['Polygon','MultiPolygon'].includes(g.type))return false;
+let count=0;
+function walk(a,depth){
+if(!Array.isArray(a))throw Error('Coordinate non valide');
+if(depth===0){
+if(a.length<2||!Number.isFinite(a[0])||!Number.isFinite(a[1])||Math.abs(a[0])>180||Math.abs(a[1])>90)throw Error('Coordinate fuori intervallo');
+count++;if(count>100000)throw Error('Troppi vertici');
+return;
+}
+if(a.length>10000)throw Error('Geometria troppo grande');
+a.forEach(x=>walk(x,depth-1));
+}
+walk(g.coordinates,g.type==='Polygon'?3:4);return count>2;
+}
+input.addEventListener('change',async()=>{
+const file=input.files&&input.files[0];if(!file)return;
+if(file.size>5*1024*1024){out.textContent='File troppo grande (massimo 5 MB).';input.value='';return}
+if(typeof L==='undefined'||typeof map==='undefined'||!map){out.textContent='Mappa non disponibile: controlla la connessione.';return}
+try{
+const data=JSON.parse(await file.text());
+if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length>2000)throw Error('Serve un GeoJSON FeatureCollection con massimo 2000 elementi.');
+const good=data.features.filter(f=>f&&f.type==='Feature'&&validGeometry(f.geometry));
+if(!good.length)throw Error('Nessun poligono valido trovato.');
+const layer=L.geoJSON({type:'FeatureCollection',features:good},{
+style:{color:'#7442b7',weight:2,fillOpacity:.15},
+onEachFeature:(feature,l)=>{
+const p=feature.properties||{};
+const title=String(p.name||p.nome||p.title||'Zona importata').slice(0,120);
+l.bindPopup((function(){const div=document.createElement('div');const h=document.createElement('strong');h.textContent=title;div.append(h);const note=document.createElement('p');note.textContent='File locale non verificato. Consulta D-Flight prima di volare.';div.append(note);return div})());
+}
+});
+if(overlay)map.removeLayer(overlay);
+overlay=layer.addTo(map);
+if(layer.getBounds().isValid())map.fitBounds(layer.getBounds(),{padding:[18,18],maxZoom:13});
+out.textContent=good.length+' poligoni importati da '+file.name+'. Dati locali non verificati: non usare per autorizzare un volo.';
+}catch(e){out.textContent='Importazione non riuscita: '+String(e.message||e).slice(0,160)}
+input.value='';
+});
+document.getElementById('di-geojson-clear').addEventListener('click',()=>{if(overlay&&map)map.removeLayer(overlay);overlay=null;out.textContent='Zone importate rimosse.'});
+})();
+</script>
+</body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 $('di-weather').onclick=async()=>{const out=$('di-weather-status');if(!selected){out.textContent='Seleziona prima un punto sulla mappa.';return}out.textContent='Caricamento meteo...';try{const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;try{response=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(selected.lat)+'&longitude='+encodeURIComponent(selected.lng)+'&current=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation&timezone=auto',{signal:controller.signal})}finally{clearTimeout(timeout)}if(!response.ok)throw Error('HTTP '+response.status);const d=await response.json(),w=d.current;if(!w)throw Error('Dati non disponibili');out.textContent='Fonte: Open-Meteo · '+w.time+' · Temperatura '+w.temperature_2m+' °C · Vento a 10 m '+w.wind_speed_10m+' km/h · Raffiche '+w.wind_gusts_10m+' km/h · Precipitazioni '+w.precipitation+' mm. Dati indicativi: verifica sul posto e nel manuale del drone.'}catch(e){out.textContent='Meteo non disponibile: controlla la connessione. Nessuna valutazione automatica di sicurezza.'}};
 
