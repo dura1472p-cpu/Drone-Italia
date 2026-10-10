@@ -169,9 +169,17 @@ localStorage.setItem(key,encoded);
 }
 function makeLayer(item){
 return L.geoJSON(item.geojson,{style:{color:'#7442b7',weight:2,fillOpacity:.15},onEachFeature:(feature,l)=>{
-const p=feature.properties||{},title=String(p.name||p.nome||p.title||'Zona importata').slice(0,120);
-const div=document.createElement('div'),h=document.createElement('strong'),note=document.createElement('p');
-h.textContent=title;note.textContent='File locale non verificato. Consulta D-Flight prima di volare.';div.append(h,note);l.bindPopup(div);
+const p=feature.properties&&typeof feature.properties==='object'&&!Array.isArray(feature.properties)?feature.properties:{};
+const get=(names)=>{for(const n of names){const v=p[n];if((typeof v==='string'||typeof v==='number')&&String(v).trim())return String(v).slice(0,300)}return ''};
+const title=get(['name','nome','title','Name','NAME'])||'Zona importata';
+const div=document.createElement('div'),h=document.createElement('strong');
+h.textContent=title;div.append(h);
+function field(label,value){if(!value)return;const row=document.createElement('p');row.style.margin='6px 0';const bold=document.createElement('strong');bold.textContent=label+': ';row.append(bold,document.createTextNode(value));div.append(row)}
+field('Descrizione',get(['description','descrizione','details','note','Description']));
+field('Quota minima',get(['lowerLimit','lower_limit','minAltitude','min_altitude','quota_minima','floor','lower','minHeight']));
+field('Quota massima',get(['upperLimit','upper_limit','maxAltitude','max_altitude','quota_massima','ceiling','upper','maxHeight']));
+field('Unità quota',get(['altitudeUnit','altitude_unit','unit','uom']));
+const note=document.createElement('p');note.textContent='Dati importati non verificati: quote e unità sono riportate come nel file, senza interpretazione aeronautica. Consulta D-Flight prima di volare.';div.append(note);l.bindPopup(div);
 }});
 }
 function render(){
