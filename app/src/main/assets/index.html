@@ -203,7 +203,27 @@ const next=items.filter(x=>x.id!==item.id);
 try{persist(next)}catch(e){out.textContent='Impossibile eliminare: '+e.message;return}
 const l=layers.get(item.id);if(l)map.removeLayer(l);layers.delete(item.id);try{saveVisibility(hiddenIds.filter(id=>id!==item.id))}catch(e){}items=next;render();out.textContent='Mappa eliminata dalla memoria del telefono.';
 };
-row.append(name,toggle,' ',focus,del);list.append(row);
+row.append(name,toggle,' ',focus,del);
+const details=document.createElement('details');details.style.marginTop='7px';
+const summary=document.createElement('summary');summary.textContent='Zone della mappa ('+item.geojson.features.length+')';details.append(summary);
+const zoneList=document.createElement('div');zoneList.style.cssText='max-height:250px;overflow-y:auto;padding:5px';
+item.geojson.features.forEach((feature,index)=>{
+const props=feature.properties&&typeof feature.properties==='object'?feature.properties:{};
+const raw=props.name||props.nome||props.title||props.Name||props.NAME;
+const label=typeof raw==='string'||typeof raw==='number'?String(raw).slice(0,100):'Zona '+(index+1);
+const btn=document.createElement('button');btn.type='button';btn.textContent=(index+1)+'. '+label;btn.style.cssText='display:block;margin:5px 0;text-align:left;max-width:100%;white-space:normal';
+btn.onclick=()=>{
+const group=layers.get(item.id);if(!group){out.textContent='Mappa non disponibile.';return}
+if(!isVisible(item)){try{saveVisibility(hiddenIds.filter(id=>id!==item.id))}catch(e){out.textContent='Impossibile mostrare la mappa.';return}group.addTo(map)}
+const children=group.getLayers();const layer=children[index];
+if(!layer||!layer.getBounds||!layer.getBounds().isValid()){out.textContent='Geometria della zona non disponibile.';return}
+map.fitBounds(layer.getBounds(),{padding:[18,18],maxZoom:15});
+if(layer.openPopup)layer.openPopup();
+render();out.textContent='Zona selezionata: '+label+'. Dati non verificati: consulta D-Flight.';
+};
+zoneList.append(btn);
+});
+details.append(zoneList);row.append(details);list.append(row);
 });
 }
 function addToMap(item,zoom){
