@@ -23,6 +23,21 @@ jobs:
       - name: Configura Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Verifica JavaScript incorporato
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('app/src/main/assets/index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>', html, re.I)
+          scripts = [script for script in scripts if script.strip()]
+          assert scripts, 'Nessuno script incorporato trovato'
+          for i, script in enumerate(scripts):
+              Path(f'/tmp/drone-italia-script-{i}.js').write_text(script, encoding='utf-8')
+          print(f'Script JavaScript trovati: {len(scripts)}')
+          PY
+          for file in /tmp/drone-italia-script-*.js; do node --check "$file"; done
+
       - name: Compila APK
         run: gradle assembleDebug --stacktrace
 
