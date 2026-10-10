@@ -186,7 +186,7 @@ toggle.onclick=()=>{
 const next=isVisible(item)?hiddenIds.concat(item.id):hiddenIds.filter(id=>id!==item.id);
 try{saveVisibility(next)}catch(e){out.textContent='Impossibile salvare la visibilità: '+e.message;return}
 const layer=layers.get(item.id);
-if(layer){if(isVisible(item))layer.addTo(map);else map.removeLayer(layer)}
+if(layer){if(isVisible(item)){layer.addTo(map);if(layer.getBounds().isValid())map.fitBounds(layer.getBounds(),{padding:[18,18],maxZoom:13})}else map.removeLayer(layer)}
 render();out.textContent='Visibilità aggiornata. La mappa resta salvata sul telefono.';
 };
 const focus=document.createElement('button');focus.type='button';focus.textContent='Vai alla zona';focus.onclick=()=>{const l=layers.get(item.id);if(l&&l.getBounds().isValid()){map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:13});if(!isVisible(item))out.textContent='Zona raggiunta ma nascosta. Premi Mostra per visualizzarla.'}};
