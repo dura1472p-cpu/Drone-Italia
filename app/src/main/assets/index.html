@@ -8,7 +8,7 @@
 <h2>📂 Importa zone da file GeoJSON</h2>
 <p style="font-size:14px">Carica un file GeoJSON locale (FeatureCollection con poligoni). Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
 <input id="di-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Scegli file GeoJSON">
-<button type="button" id="di-geojson-clear">Rimuovi zone importate</button>
+<button type="button" id="di-geojson-clear">Rimuovi tutte le zone importate</button><div id="di-geojson-list" aria-label="Mappe salvate"></div>
 <p id="di-geojson-status" role="status" aria-live="polite">Nessun file caricato. Supporto GeoJSON standard; il formato ED-269 non è ancora supportato.</p>
 </section>
 <form id="search"><input id="coords" aria-label="Coordinate" placeholder="Latitudine, longitudine (es. 41.90, 12.50)"><button>Cerca</button></form>
@@ -130,73 +130,91 @@ applyDark();refresh();
 })();
 </script>
 
+
 <script>
 (function(){
-const input=document.getElementById('di-geojson-file'),out=document.getElementById('di-geojson-status');
-let overlay=null;
-const storageKey='drone-italia-imported-geojson-v1';
-function showLayer(data,filename,restored){
-const layer=L.geoJSON(data,{
-style:{color:'#7442b7',weight:2,fillOpacity:.15},
-onEachFeature:(feature,l)=>{
-const p=feature.properties||{};
-const title=String(p.name||p.nome||p.title||'Zona importata').slice(0,120);
-const div=document.createElement('div'),h=document.createElement('strong'),note=document.createElement('p');
-h.textContent=title;note.textContent='File locale non verificato. Consulta D-Flight prima di volare.';
-div.append(h,note);l.bindPopup(div);
-}
-});
-if(overlay)map.removeLayer(overlay);
-overlay=layer.addTo(map);
-if(layer.getBounds().isValid())map.fitBounds(layer.getBounds(),{padding:[18,18],maxZoom:13});
-out.textContent=data.features.length+' poligoni '+(restored?'ripristinati':'importati')+' da '+filename+'. Dati non verificati: consulta sempre D-Flight.';
-}
-
+const input=document.getElementById('di-geojson-file'),out=document.getElementById('di-geojson-status'),list=document.getElementById('di-geojson-list');
+const key='drone-italia-imported-geojson-v2',oldKey='drone-italia-imported-geojson-v1';
+const layers=new Map();
+let items=[];
 function validGeometry(g){
 if(!g||!['Polygon','MultiPolygon'].includes(g.type))return false;
 let count=0;
 function walk(a,depth){
 if(!Array.isArray(a))throw Error('Coordinate non valide');
-if(depth===0){
-if(a.length<2||!Number.isFinite(a[0])||!Number.isFinite(a[1])||Math.abs(a[0])>180||Math.abs(a[1])>90)throw Error('Coordinate fuori intervallo');
-count++;if(count>100000)throw Error('Troppi vertici');
-return;
-}
+if(depth===0){if(a.length<2||!Number.isFinite(a[0])||!Number.isFinite(a[1])||Math.abs(a[0])>180||Math.abs(a[1])>90)throw Error('Coordinate fuori intervallo');if(++count>100000)throw Error('Troppi vertici');return}
 if(a.length>10000)throw Error('Geometria troppo grande');
 a.forEach(x=>walk(x,depth-1));
 }
 walk(g.coordinates,g.type==='Polygon'?2:3);return count>2;
 }
-input.addEventListener('change',async()=>{
-const file=input.files&&input.files[0];if(!file)return;
-if(file.size>5*1024*1024){out.textContent='File troppo grande (massimo 5 MB).';input.value='';return}
-if(typeof L==='undefined'||typeof map==='undefined'||!map){out.textContent='Mappa non disponibile: controlla la connessione.';return}
-try{
-const data=JSON.parse(await file.text());
+function sanitize(data){
 if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length>2000)throw Error('Serve un GeoJSON FeatureCollection con massimo 2000 elementi.');
 const good=data.features.filter(f=>f&&f.type==='Feature'&&validGeometry(f.geometry));
 if(!good.length)throw Error('Nessun poligono valido trovato.');
-const clean={type:'FeatureCollection',features:good};
-const filename=file.name.slice(0,120);
-const serialized=JSON.stringify({filename:filename,geojson:clean});
-if(serialized.length>3000000)throw Error('Mappa troppo grande per il salvataggio locale (massimo 3 MB).');
-try{localStorage.setItem(storageKey,serialized)}
-catch(storageError){out.textContent='Spazio di archiviazione insufficiente: mappa non salvata. Libera spazio e riprova.';return}
-showLayer(clean,filename,false);
-}catch(e){out.textContent='Importazione non riuscita: '+String(e.message||e).slice(0,160)}
+return {type:'FeatureCollection',features:good};
+}
+function persist(next){
+const encoded=JSON.stringify(next);
+if(encoded.length>3500000)throw Error('Archivio pieno: massimo 3,5 MB complessivi. Elimina una mappa per aggiungerne altre.');
+localStorage.setItem(key,encoded);
+}
+function makeLayer(item){
+return L.geoJSON(item.geojson,{style:{color:'#7442b7',weight:2,fillOpacity:.15},onEachFeature:(feature,l)=>{
+const p=feature.properties||{},title=String(p.name||p.nome||p.title||'Zona importata').slice(0,120);
+const div=document.createElement('div'),h=document.createElement('strong'),note=document.createElement('p');
+h.textContent=title;note.textContent='File locale non verificato. Consulta D-Flight prima di volare.';div.append(h,note);l.bindPopup(div);
+}});
+}
+function render(){
+list.replaceChildren();
+if(!items.length){const p=document.createElement('p');p.textContent='Nessuna mappa salvata.';list.append(p);return}
+items.forEach(item=>{
+const row=document.createElement('p');row.style.cssText='padding:8px;border-bottom:1px solid #abc;font-size:14px';
+const name=document.createElement('strong');name.textContent=item.filename+' ('+item.geojson.features.length+' zone) ';
+const focus=document.createElement('button');focus.type='button';focus.textContent='Mostra';focus.onclick=()=>{const l=layers.get(item.id);if(l&&l.getBounds().isValid())map.fitBounds(l.getBounds(),{padding:[18,18],maxZoom:13})};
+const del=document.createElement('button');del.type='button';del.textContent='Elimina';del.style.marginLeft='6px';del.onclick=()=>{
+const next=items.filter(x=>x.id!==item.id);
+try{persist(next)}catch(e){out.textContent='Impossibile eliminare: '+e.message;return}
+const l=layers.get(item.id);if(l)map.removeLayer(l);layers.delete(item.id);items=next;render();out.textContent='Mappa eliminata dalla memoria del telefono.';
+};
+row.append(name,focus,del);list.append(row);
+});
+}
+function addToMap(item,zoom){
+const layer=makeLayer(item).addTo(map);layers.set(item.id,layer);
+if(zoom&&layer.getBounds().isValid())map.fitBounds(layer.getBounds(),{padding:[18,18],maxZoom:13});
+}
+function newId(){return String(Date.now())+'-'+Math.random().toString(36).slice(2)}
+try{
+const saved=localStorage.getItem(key);
+if(saved){const raw=JSON.parse(saved);if(!Array.isArray(raw)||raw.length>20)throw Error('Archivio non valido');items=raw.map(x=>({id:String(x.id).slice(0,80),filename:String(x.filename).slice(0,120),geojson:sanitize(x.geojson)}));}
+else{const legacy=localStorage.getItem(oldKey);if(legacy){const x=JSON.parse(legacy);items=[{id:newId(),filename:String(x.filename||'Mappa precedente').slice(0,120),geojson:sanitize(x.geojson)}];persist(items);localStorage.removeItem(oldKey)}}
+if(typeof L!=='undefined'&&typeof map!=='undefined'&&map)items.forEach(item=>addToMap(item,false));
+out.textContent=items.length?'Ripristinate '+items.length+' mappe salvate. Dati non verificati: consulta D-Flight.':'Nessuna mappa caricata. Supporto GeoJSON standard; ED-269 non supportato.';
+}catch(e){out.textContent='Non è stato possibile ripristinare le mappe: '+String(e.message||e).slice(0,100)}
+render();
+input.addEventListener('change',async()=>{
+const file=input.files&&input.files[0];if(!file)return;
+try{
+if(file.size>5*1024*1024)throw Error('File troppo grande (massimo 5 MB).');
+if(typeof L==='undefined'||typeof map==='undefined'||!map)throw Error('Mappa non disponibile: controlla la connessione.');
+if(items.length>=20)throw Error('Massimo 20 mappe. Elimina una mappa per aggiungerne altre.');
+const geojson=sanitize(JSON.parse(await file.text()));
+const item={id:newId(),filename:file.name.slice(0,120),geojson};
+const next=items.concat(item);
+try{persist(next)}catch(e){throw Error('Impossibile salvare: '+e.message)}
+items=next;addToMap(item,true);render();
+out.textContent='Importata e salvata '+item.filename+'. Mappe totali: '+items.length+'. Dati non verificati.';
+}catch(e){out.textContent='Importazione non riuscita: '+String(e.message||e).slice(0,180)}
 input.value='';
 });
-document.getElementById('di-geojson-clear').addEventListener('click',()=>{if(overlay&&map)map.removeLayer(overlay);overlay=null;localStorage.removeItem(storageKey);out.textContent='Zone importate rimosse anche dalla memoria del telefono.'});
-try{
-const saved=localStorage.getItem(storageKey);
-if(saved&&typeof L!=='undefined'&&typeof map!=='undefined'&&map){
-const item=JSON.parse(saved);
-if(item&&item.geojson&&item.geojson.type==='FeatureCollection'&&Array.isArray(item.geojson.features)&&item.geojson.features.length<=2000){
-const good=item.geojson.features.filter(f=>f&&f.type==='Feature'&&validGeometry(f.geometry));
-if(good.length)showLayer({type:'FeatureCollection',features:good},String(item.filename||'file salvato').slice(0,120),true);
-}
-}
-}catch(e){out.textContent='Non è stato possibile ripristinare la mappa salvata.'}
+document.getElementById('di-geojson-clear').addEventListener('click',()=>{
+if(!items.length)return;
+if(!confirm('Eliminare tutte le '+items.length+' mappe importate?'))return;
+try{persist([])}catch(e){out.textContent='Impossibile cancellare le mappe.';return}
+layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];render();out.textContent='Tutte le mappe importate sono state eliminate.';
+});
 })();
 </script>
 </body></html>
