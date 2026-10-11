@@ -441,8 +441,8 @@ layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];try{saveVisibility
 const body=document.body,header=body.querySelector('header');
 const navNames={home:'Home',map:'Mappa',flights:'Voli',photos:'Foto',settings:'Altro'};
 const pages={};
-for(const name of Object.keys(navNames)){
-const page=document.createElement('main');page.id='di-page-'+name;page.className='di-page';page.setAttribute('aria-label',navNames[name]);pages[name]=page;body.insertBefore(page,header.nextSibling);
+for(const name of [...Object.keys(navNames),'zones']){
+const page=document.createElement('main');page.id='di-page-'+name;page.className='di-page';page.setAttribute('aria-label',navNames[name]||'Zone importate');pages[name]=page;body.insertBefore(page,header.nextSibling);
 }
 const move=(selector,destination)=>{const el=document.querySelector(selector);if(el)pages[destination].append(el)};
 const hero=document.createElement('div');hero.id='di-home-hero';hero.innerHTML='<h2>Drone Italia</h2><p>Organizza i tuoi voli, consulta la mappa e gestisci le tue zone personali.</p>';pages.home.append(hero);
