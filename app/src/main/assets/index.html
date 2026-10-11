@@ -62,6 +62,24 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 #di-page-zones section[aria-label="Importazione cartografia personale"]{margin-top:0}
 #di-page-settings footer{margin:15px}
 @media(max-width:360px){#di-home-grid{gap:9px}#di-home-grid button{min-height:135px;padding:12px}#di-home-grid .di-home-label{font-size:14px}}
+
+/* Home fotografica: composizione più vicina al prototipo */
+#di-home-hero{min-height:224px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:5px;padding:25px 18px;background:linear-gradient(180deg,rgba(8,53,89,.18),rgba(5,49,82,.86)),linear-gradient(145deg,#2985b8 0%,#167e9d 44%,#13446c 100%);border-radius:22px}
+#di-home-hero::before{content:"✈";display:grid;place-items:center;width:58px;height:58px;margin:0 auto 4px;color:#fff;font-size:39px;font-weight:800;transform:rotate(-30deg);text-shadow:0 2px 9px rgba(0,0,0,.2)}
+#di-home-hero h2{font-size:30px;line-height:1.2;letter-spacing:-.8px}#di-home-hero p{max-width:310px;font-size:13px;line-height:1.5}
+#di-home-grid{gap:11px}
+#di-home-grid button{min-height:166px;align-items:center;justify-content:center;text-align:center;gap:8px;padding:15px 11px;border-radius:19px!important}
+#di-home-grid .di-home-icon{width:49px;height:49px;border-radius:15px;font-size:27px;background:#e8f3ff}
+#di-home-grid .di-home-label{font-size:16px;letter-spacing:-.25px}
+#di-home-grid .di-home-desc{font-size:12px;line-height:1.4;max-width:155px}
+#di-home-grid button:nth-child(1) .di-home-icon{background:#def7f1}
+#di-home-grid button:nth-child(2) .di-home-icon{background:#e4eeff}
+#di-home-grid button:nth-child(3) .di-home-icon{background:#fff0e6}
+#di-home-grid button:nth-child(4) .di-home-icon{background:#efe9ff}
+#di-home-grid button:nth-child(5) .di-home-icon{background:#e0f8eb}
+#di-home-grid button:nth-child(6) .di-home-icon{background:#e2f2ff}
+#di-app-nav{border-radius:18px 18px 0 0}
+#di-app-nav button[aria-current="page"]{background:#126ce0;color:white;box-shadow:0 2px 9px rgba(18,108,224,.24)}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -82,7 +100,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 const zones=[{name:'Area A • esempio inventato',status:'Divieto simulato',color:'#c93145',bounds:[[41.89,12.47],[41.92,12.51]],limit:'0 m (esempio)',rule:'Accesso vietato nella simulazione.'},{name:'Area B • esempio inventato',status:'Quota limitata simulata',color:'#d68a15',bounds:[[41.94,12.52],[41.97,12.56]],limit:'30 m (esempio)',rule:'Limite di quota inventato, senza valore operativo.'},{name:'Area C • esempio inventato',status:'Autorizzazione simulata',color:'#d68a15',bounds:[[41.85,12.53],[41.88,12.57]],limit:'Non definita',rule:'Richiesta di autorizzazione solo dimostrativa.'}];
 let map,marker,accuracy;
 function inspect(lat,lng){const hits=zones.filter(z=>lat>=z.bounds[0][0]&&lat<=z.bounds[1][0]&&lng>=z.bounds[0][1]&&lng<=z.bounds[1][1]);const el=document.getElementById('detail');el.replaceChildren();const h=document.createElement('h2');h.textContent=hits.length?'Zone di prova al punto selezionato':'Dati aeronautici non disponibili';el.append(h);const p=document.createElement('p');p.textContent=lat.toFixed(5)+', '+lng.toFixed(5);el.append(p);for(const z of hits){const v=document.createElement('p');v.textContent=z.name+' — '+z.status+' · Quota: '+z.limit+'. '+z.rule+' Fonte: dati sintetici. Validità: nessuna.';el.append(v);}const note=document.createElement('p');note.textContent='L’assenza di zone non indica che il volo sia consentito. Verifica sempre le fonti ufficiali.';el.append(note);}
-function showPosition(lat,lng,meters){if(!map)return;window.droneItaliaLastGps={lat,lng,meters};if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);map.setView([lat,lng],13);inspect(lat,lng);}
+function showPosition(lat,lng,meters){if(window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');if(!map)return;window.droneItaliaLastGps={lat,lng,meters};if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);map.setView([lat,lng],13);inspect(lat,lng);}
 if(typeof L==='undefined'){document.getElementById('map').textContent='Leaflet non caricato: controlla la connessione e le richieste CDN (verifica la connessione).';document.getElementById('map-status').textContent='ERRORE: libreria Leaflet non disponibile. Nessuna valutazione di volo possibile.';}else{map=L.map('map').setView([41.91,12.52],11);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map).on('tileerror',e=>{const st=document.getElementById('map-status');st.dataset.failed='1';st.textContent='ERRORE TESSERE OSM: possibile HTTP 403 o problema di rete. Controlla Logcat (DroneItaliaMap). Nessuna valutazione di volo possibile.';console.warn('Errore tile OSM',e);}).on('tileload',()=>{const st=document.getElementById('map-status');if(!st.dataset.failed)st.textContent='Cartografia stradale caricata. Zone aeronautiche: solo esempi inventati.';});for(const z of zones){L.rectangle(z.bounds,{color:z.color,fillOpacity:.22}).addTo(map).on('click',e=>inspect(e.latlng.lat,e.latlng.lng));}L.control.scale({imperial:false}).addTo(map);map.on('click',e=>{inspect(e.latlng.lat,e.latlng.lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick(e.latlng);});}
 document.getElementById('search').addEventListener('submit',e=>{e.preventDefault();const raw=document.getElementById('coords').value.trim().split(',');const lat=Number(raw[0]),lng=Number(raw[1]);if(raw.length!==2||raw.some(s=>!s.trim())||!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>48||lng<6||lng>19){document.getElementById('detail').textContent='Inserisci coordinate valide nell’area italiana, separate da una virgola.';return;}if(map){map.setView([lat,lng],15);inspect(lat,lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick({lat,lng});}else document.getElementById('detail').textContent='Mappa non disponibile: controlla la connessione.';});
 </script><section id="flight-tools">
@@ -382,6 +400,7 @@ window.scrollTo(0,0);
 if(name==='map'&&typeof map!=='undefined'&&map)setTimeout(()=>map.invalidateSize(),80);
 if(anchor)setTimeout(()=>{const el=document.getElementById(anchor);if(el)el.scrollIntoView({block:'start',behavior:'smooth'})},100);
 }
+window.droneItaliaOpenPage=openPage;
 for(const [name,label] of Object.entries(navNames)){
 const btn=document.createElement('button');btn.type='button';btn.innerHTML='<span class="di-nav-icon" aria-hidden="true">'+icons[name]+'</span><span>'+label+'</span>';btn.onclick=()=>openPage(name);nav.append(btn);buttons[name]=btn;
 }
