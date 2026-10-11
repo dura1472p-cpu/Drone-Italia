@@ -859,7 +859,9 @@ function install(){
  map.getPane('italy-mask').style.pointerEvents='none';
  L.polygon([outside,...holes],{pane:'italy-mask',stroke:false,fill:true,fillColor:'#e9f0f5',fillOpacity:1,fillRule:'evenodd',interactive:false}).addTo(map);
  L.geoJSON({type:'Feature',geometry:geometry,properties:{}},{pane:'italy-mask',style:{color:'#4289ba',weight:1.5,opacity:.7,fill:false,interactive:false}}).addTo(map);
- map.fitBounds(bounds,{paddingTopLeft:[24,95],paddingBottomRight:[24,150]});
+ map.options.zoomSnap=0.25;
+ map.fitBounds(bounds,{padding:[0,0]});
+ map.setZoom(map.getZoom()+0.5,{animate:false});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
