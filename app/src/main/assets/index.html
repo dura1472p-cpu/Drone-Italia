@@ -318,6 +318,16 @@ html,body{min-height:100%;height:100%}
 /* Legenda grafica per zone GeoJSON, non indicativa di restrizioni ufficiali */
 #di-layers-panel .di-geo-legend{font-size:12px;line-height:1.6;margin:9px 0;color:#42576a}
 #di-layers-panel .di-geo-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+
+#di-flights-dashboard{padding:14px 14px 4px;margin:0 10px 8px;background:#f7fbff;border-radius:18px}
+.di-flights-bar{display:flex;align-items:center;justify-content:space-between}.di-flights-bar h2{margin:0;color:#173a60;font-size:20px}
+#di-flights-add{background:#0877ed!important;color:white!important;border:0;border-radius:50%;width:44px;height:44px;font-size:27px}
+.di-flights-tabs{display:flex;gap:8px;margin:15px 0 10px}.di-flights-tabs button{flex:1;border:0;border-radius:22px;padding:11px 4px;background:#e8f0f8;color:#31506d;font-size:13px}
+.di-flights-tabs button[aria-pressed=true]{background:#1179ed;color:white}
+#di-flights-count{color:#64798a;font-size:12px;margin:7px 0}
+#di-page-flights #di-logs>div.di-flight-card{position:relative;min-height:100px;background:white!important;box-shadow:0 3px 12px #23435d14;border:1px solid #e1eaf3!important;padding:15px!important;border-radius:16px!important;overflow:hidden}
+#di-page-flights .di-flight-card>p:first-of-type{padding-right:34px;color:#243f55;line-height:1.5;font-size:13px}
+#di-page-flights .di-flight-star{position:absolute;right:12px;top:10px;border:0;background:transparent;color:#e7a722;font-size:27px;min-height:32px}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -906,5 +916,39 @@ panel.querySelector('#di-layers-base').onclick=()=>{const satellite=document.get
 </script>
 <script>
 (function(){const p=document.getElementById('di-layers-panel');if(!p)return;const d=document.createElement('div');d.className='di-geo-legend';d.innerHTML='<b>Colori indicativi dei file GeoJSON:</b><br><i style="background:#dc5555"></i>Rosso · <i style="background:#e5a128"></i>Giallo · <i style="background:#2a9d70"></i>Verde · <i style="background:#7760c5"></i>Non classificato<br>Il colore dipende dalla categoria nel file, non da dati aeronautici ufficiali.';p.append(d)})();
+</script>
+<script>
+/* Diario voli: elenco moderno, filtri e preferiti senza alterare i dati salvati. */
+(function(){
+const page=document.getElementById('di-page-flights'),box=document.getElementById('di-logs');
+if(!page||!box)return;
+const panel=document.createElement('section');panel.id='di-flights-dashboard';
+panel.innerHTML='<div class="di-flights-bar"><h2>▦ I miei voli</h2><button type="button" id="di-flights-add" aria-label="Nuovo volo">＋</button></div><div class="di-flights-tabs" role="group" aria-label="Filtra voli"><button type="button" data-filter="all" aria-pressed="true">Tutti</button><button type="button" data-filter="completed" aria-pressed="false">Completati</button><button type="button" data-filter="favorites" aria-pressed="false">Preferiti</button></div><div id="di-flights-count" role="status"></div>';
+page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
+let filter='all';const favoriteKey='drone-italia-flight-favorites-v1';
+function favorites(){try{return JSON.parse(localStorage.getItem(favoriteKey)||'{}')||{}}catch(e){return {}}}
+function key(x){return [x.when||'',x.place||'',x.duration||'',x.notes||''].join('|')}
+function refresh(){
+ let logs=[];try{const raw=localStorage.getItem('di-logs');if(raw)logs=JSON.parse(raw)}catch(e){}
+ /* Il diario originale usa un prefisso: leggiamo le schede dal DOM, senza sostituire il salvataggio. */
+ const rows=Array.from(box.children).filter(el=>el.tagName==='DIV');
+ const fav=favorites();let shown=0;
+ rows.forEach((row,i)=>{
+  const label=row.querySelector('p')?.textContent||'';
+  const id='volo-'+label.slice(0,240);
+  row.classList.add('di-flight-card');
+  let star=row.querySelector('.di-flight-star');
+  if(!star){star=document.createElement('button');star.type='button';star.className='di-flight-star';star.setAttribute('aria-label','Aggiungi o rimuovi dai preferiti');row.insertBefore(star,row.firstChild);}
+  star.textContent=fav[id]?'★':'☆';star.setAttribute('aria-pressed',String(!!fav[id]));
+  star.onclick=()=>{const next=favorites();if(next[id])delete next[id];else next[id]=true;try{localStorage.setItem(favoriteKey,JSON.stringify(next))}catch(e){}refresh()};
+  const visible=filter!=='favorites'||!!fav[id];row.style.display=visible?'':'none';if(visible)shown++;
+ });
+ panel.querySelector('#di-flights-count').textContent=shown+' voli visualizzati';
+}
+panel.querySelectorAll('[data-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.filter;panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));refresh()});
+panel.querySelector('#di-flights-add').onclick=()=>{const el=document.getElementById('di-duration');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus()}};
+new MutationObserver(refresh).observe(box,{childList:true});
+refresh();
+})();
 </script>
 </body></html>
