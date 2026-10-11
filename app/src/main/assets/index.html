@@ -979,12 +979,8 @@ const panel=document.createElement('section');panel.id='di-flights-dashboard';
 panel.innerHTML='<div class="di-flights-bar"><h2>▦ I miei voli</h2><button type="button" id="di-flights-add" aria-label="Nuovo volo">＋</button></div><div class="di-flights-tabs" role="group" aria-label="Filtra voli"><button type="button" data-filter="all" aria-pressed="true">Tutti</button><button type="button" data-filter="completed" aria-pressed="false">Completati</button><button type="button" data-filter="favorites" aria-pressed="false">Preferiti</button></div><div id="di-flights-count" role="status"></div>';
 page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 /* Elenco subito sotto i filtri, prima degli strumenti e dei moduli. */
-const flightList=document.createElement('section');
-flightList.id='di-flights-list-section';
-flightList.setAttribute('aria-label','Elenco dei voli registrati');
-/* Mantieni il diario nella posizione originale, sotto gli strumenti. */
-box.before(flightList);
-flightList.append(box);
+/* Non spostare il diario: le altre funzioni lo aggiornano nella posizione originale. */
+const flightList=box;
 let filter='all';const favoriteKey='drone-italia-flight-favorites-v1';
 const flightStore='drone-italia-beta-logs';
 function getFav(){try{return JSON.parse(localStorage.getItem(favoriteKey)||'{}')||{}}catch(e){return {}}}
