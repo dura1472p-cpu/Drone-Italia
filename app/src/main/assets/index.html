@@ -356,7 +356,7 @@ html,body{min-height:100%;height:100%}
 #di-page-flights #di-logs>div.di-flight-filter-hidden{display:none!important}#di-page-flights #di-flights-empty[hidden]{display:none!important}#di-page-flights #di-flights-empty{padding:16px;text-align:center;color:#52718c;background:#edf5fc;border-radius:12px}
 
 #di-page-flights #di-flights-list-section{margin:0 10px 16px;padding:4px 8px 12px;min-height:64px;scroll-margin-top:18px}#di-page-flights #di-flights-list-section #di-logs>div.di-flight-card{margin:12px 0!important}#di-page-flights #di-flights-list-section #di-flights-empty{margin:10px 0!important}
-</style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
+#di-page-flights .di-flight-star[aria-pressed=true]{color:#e7a722!important}#di-page-flights .di-flight-star[aria-pressed=false]{color:#8293a3!important}</style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
 <section aria-label="Importazione cartografia personale" style="padding:12px;background:#e8f2fa;border:1px solid #b4d1e6;border-radius:10px;margin:10px">
@@ -376,7 +376,7 @@ html,body{min-height:100%;height:100%}
 const zones=[];
 let map,marker,accuracy;
 function inspect(lat,lng){const hits=zones.filter(z=>lat>=z.bounds[0][0]&&lat<=z.bounds[1][0]&&lng>=z.bounds[0][1]&&lng<=z.bounds[1][1]);const el=document.getElementById('detail');el.replaceChildren();const h=document.createElement('h2');h.textContent=hits.length?'Zone di prova al punto selezionato':'Dati aeronautici non disponibili';el.append(h);const p=document.createElement('p');p.textContent=lat.toFixed(5)+', '+lng.toFixed(5);el.append(p);for(const z of hits){const v=document.createElement('p');v.textContent=z.name+' — '+z.status+' · Quota: '+z.limit+'. '+z.rule+' Fonte: dati sintetici. Validità: nessuna.';el.append(v);}const note=document.createElement('p');note.textContent='L’assenza di zone non indica che il volo sia consentito. Verifica sempre le fonti ufficiali.';el.append(note);}
-function showPosition(lat,lng,meters){const flightGps=window.diFlightGpsPending===true;window.diFlightGpsPending=false;if(!flightGps&&window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');window.droneItaliaLastGps={lat,lng,meters};if(flightGps&&typeof window.diFlightGpsReceived==='function')window.diFlightGpsReceived({lat,lng,meters});if(!map)return;if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);map.setView([lat,lng],13);inspect(lat,lng);}
+function showPosition(lat,lng,meters){const flightGps=window.diFlightGpsPending===true;window.diFlightGpsPending=false;if(!flightGps&&window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');window.droneItaliaLastGps={lat,lng,meters};if(flightGps&&typeof window.diFlightGpsReceived==='function')window.diFlightGpsReceived({lat,lng,meters});if(flightGps)return;if(!map)return;if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);map.setView([lat,lng],13);inspect(lat,lng);}
 if(typeof L==='undefined'){document.getElementById('map').textContent='Leaflet non caricato: controlla la connessione e le richieste CDN (verifica la connessione).';document.getElementById('map-status').textContent='ERRORE: libreria Leaflet non disponibile. Nessuna valutazione di volo possibile.';}else{map=L.map('map').setView([42.5,12.5],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map).on('tileerror',e=>{const st=document.getElementById('map-status');st.dataset.failed='1';st.textContent='ERRORE TESSERE OSM: possibile HTTP 403 o problema di rete. Controlla Logcat (DroneItaliaMap). Nessuna valutazione di volo possibile.';console.warn('Errore tile OSM',e);}).on('tileload',()=>{const st=document.getElementById('map-status');if(!st.dataset.failed)st.textContent='Cartografia stradale caricata. Nessuna zona aeronautica ufficiale integrata.';});for(const z of zones){L.rectangle(z.bounds,{color:z.color,fillOpacity:.22}).addTo(map).on('click',e=>inspect(e.latlng.lat,e.latlng.lng));}L.control.scale({imperial:false}).addTo(map);map.on('click',e=>{inspect(e.latlng.lat,e.latlng.lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick(e.latlng);});}
 document.getElementById('search').addEventListener('submit',e=>{e.preventDefault();const raw=document.getElementById('coords').value.trim().split(',');const lat=Number(raw[0]),lng=Number(raw[1]);if(raw.length!==2||raw.some(s=>!s.trim())||!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>48||lng<6||lng>19){document.getElementById('detail').textContent='Inserisci coordinate valide nell’area italiana, separate da una virgola.';return;}if(map){map.setView([lat,lng],15);inspect(lat,lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick({lat,lng});}else document.getElementById('detail').textContent='Mappa non disponibile: controlla la connessione.';});
 </script><section id="flight-tools">
@@ -981,20 +981,30 @@ page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 /* Elenco subito sotto i filtri, prima degli strumenti e dei moduli. */
 /* Non spostare il diario: le altre funzioni lo aggiornano nella posizione originale. */
 const flightList=box;
-let filter='all';const favoriteKey='drone-italia-flight-favorites-v1';
+let filter='all';
+const favoriteKey='drone-italia-flight-favorites-v2',legacyKey='drone-italia-flight-favorites-v1';
 const flightStore='drone-italia-beta-logs';
-function getFav(){try{return JSON.parse(localStorage.getItem(favoriteKey)||'{}')||{}}catch(e){return {}}}
 function getLogs(){try{const a=JSON.parse(localStorage.getItem(flightStore)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
 function idOf(x){return JSON.stringify([x.when||'',x.place||'',x.duration||'',x.notes||''])}
+function getFav(){try{const f=JSON.parse(localStorage.getItem(favoriteKey)||'{}');return f&&typeof f==='object'?f:{}}catch(e){return {}}}
+/* Migrazione una sola volta: una stella rimossa non deve ricomparire da un vecchio archivio. */
+if(localStorage.getItem(favoriteKey)===null){
+ const migrated={};let old={};
+ try{old=JSON.parse(localStorage.getItem(legacyKey)||'{}')||{}}catch(e){}
+ getLogs().forEach(x=>{
+  const label=[x.when||'',(x.duration||'')+' min',x.place||'Luogo non indicato',x.notes||'','Batteria drone: '+(x.droneBattery===''||x.droneBattery==null?'n.d.':x.droneBattery)+'%','Radiocomando: '+(x.radioBattery===''||x.radioBattery==null?'n.d.':x.radioBattery)+'%'].join(' · ');
+  const k1='volo-'+label.slice(0,240);
+  const k2='volo-'+[x.when||'',x.duration||'',x.place||'',x.notes||''].join(' · ').slice(0,240);
+  if(old[k1]||old[k2])migrated[idOf(x)]=true;
+ });
+ try{localStorage.setItem(favoriteKey,JSON.stringify(migrated))}catch(e){}
+}
 const empty=document.createElement('p');empty.id='di-flights-empty';empty.hidden=true;empty.textContent='Nessun volo in questa categoria.';box.after(empty);
 function refresh(){
  const logs=getLogs(),fav=getFav(),rows=Array.from(box.children).filter(el=>el.tagName==='DIV');
  let count=0;
  rows.forEach((row,i)=>{
   const x=logs[i]||{},id=idOf(x),original=row.querySelector('p'),label=original?.textContent||'';
-  const oldId='volo-'+label.slice(0,240);
-  const oldNewId='volo-'+[x.when||'',x.duration||'',x.place||'',x.notes||''].join(' · ').slice(0,240);
-  if(!fav[id]&&(fav[oldId]||fav[oldNewId])){fav[id]=true;try{localStorage.setItem(favoriteKey,JSON.stringify(fav))}catch(e){}}
   row.classList.add('di-flight-card');
   if(original&&!row.querySelector('.di-flight-summary')){
    const parts=label.split(' · ');
@@ -1008,9 +1018,9 @@ function refresh(){
   }
   let star=row.querySelector('.di-flight-star');
   if(!star){star=document.createElement('button');star.type='button';star.className='di-flight-star';star.setAttribute('aria-label','Aggiungi o rimuovi dai preferiti');row.prepend(star)}
-  star.textContent=fav[id]?'★':'☆';star.setAttribute('aria-pressed',String(!!fav[id]));
+  star.textContent=fav[id]?'★':'☆';star.setAttribute('aria-pressed',String(!!fav[id]));star.setAttribute('aria-label',fav[id]?'Rimuovi questo volo dai preferiti':'Aggiungi questo volo ai preferiti');
   star.onclick=()=>{
-   const f=getFav();if(f[id]){delete f[id];delete f[oldId];delete f[oldNewId]}else f[id]=true;
+   const f=getFav();if(f[id])delete f[id];else f[id]=true;
    try{localStorage.setItem(favoriteKey,JSON.stringify(f))}catch(e){alert('Impossibile salvare i preferiti');return}
    refresh();
   };
@@ -1070,6 +1080,7 @@ const guide=document.createElement('div');guide.className='di-flight-gps-guide';
 const status=document.getElementById('di-flight-location-status');
 function update(p){if(p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))){window.diFlightChosenPoint={lat:Number(p.lat),lng:Number(p.lng)};form.dataset.flightLat=String(Number(p.lat));form.dataset.flightLng=String(Number(p.lng));status.textContent='✓ Posizione selezionata: '+Number(p.lat).toFixed(5)+', '+Number(p.lng).toFixed(5)}}
 window.diFlightGpsReceived=p=>{update(p);const b=document.getElementById('di-flight-gps');if(b)b.disabled=false};
+window.diFlightGpsError=message=>{window.diFlightGpsPending=false;const b=document.getElementById('di-flight-gps');if(b)b.disabled=false;status.textContent='⚠ '+(message||'Posizione non disponibile. Verifica i permessi GPS e riprova.');};
 document.getElementById('di-flight-gps').onclick=()=>{const b=document.getElementById('di-flight-gps');if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.locate!=='function'){status.textContent='GPS non disponibile in questa versione. Usa «Scegli sulla mappa».';return}window.diFlightGpsPending=true;status.textContent='⏳ Rilevamento GPS in corso… Consenti la posizione quando Android lo richiede. Attendi fino a 25 secondi.';b.disabled=true;window.DroneItaliaNative.locate();setTimeout(()=>{if(window.diFlightGpsPending){window.diFlightGpsPending=false;status.textContent='GPS non rilevato. Attiva Posizione sul telefono, autorizza Drone Italia nelle impostazioni Android e riprova all’aperto.'}b.disabled=false},27000)};
 document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMapPoint=null;window.diFlightPickingOnMap=true;status.textContent='Tocca un punto sulla mappa, poi premi «Torna al volo».';if(typeof window.droneItaliaOpenPage==='function')window.droneItaliaOpenPage('map');let back=document.getElementById('di-flight-map-return');if(!back){back=document.createElement('button');back.id='di-flight-map-return';back.type='button';back.textContent='↩ Torna al volo';back.style.cssText='position:fixed;bottom:92px;left:50%;transform:translateX(-50%);z-index:10000;background:#0877ed;color:white;border:0;border-radius:24px;padding:13px 22px;font-weight:bold;box-shadow:0 3px 12px #0004';document.body.append(back)}back.hidden=false;back.textContent='Tocca un punto sulla mappa';back.onclick=()=>{if(!window.diFlightPendingMapPoint){alert('Tocca prima un punto sulla mappa per scegliere le coordinate.');return}const point=window.diFlightPendingMapPoint;update(point);window.diFlightPickingOnMap=false;back.hidden=true;window.droneItaliaOpenPage('flights');form.hidden=false;form.scrollIntoView({block:'center'});window.diFlightPendingMapPoint=null}};
 })();
