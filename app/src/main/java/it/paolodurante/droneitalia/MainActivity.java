@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
  try{DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);request.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"drone-italia-download");((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(request);}catch(Exception e){Toast.makeText(this,"Download non disponibile",Toast.LENGTH_LONG).show();}
  });
  web.addJavascriptInterface(new Object(){
+ @JavascriptInterface public void locate(){runOnUiThread(()->MainActivity.this.locate());}
  @JavascriptInterface public void saveBackup(String encoded){
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>12000000)throw new IllegalArgumentException("Backup troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.json");startActivityForResult(intent,BACKUP_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup non disponibile",Toast.LENGTH_LONG).show());}
  }
@@ -55,7 +56,10 @@ public class MainActivity extends Activity {
  }, "DroneItaliaNative");
  web.setWebViewClient(new WebViewClient(){
  @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
- if(req.getUrl().toString().equals("https://app.local/index.html")) {try{return new WebResourceResponse("text/html","UTF-8",getAssets().open("index.html"));}catch(Exception e){return null;}} return null;
+ String url=req.getUrl().toString();
+ if(url.equals("https://app.local/index.html")) {try{return new WebResourceResponse("text/html","UTF-8",getAssets().open("index.html"));}catch(Exception e){return null;}}
+ if(url.equals("https://app.local/home-landscape.svg")) {try{return new WebResourceResponse("image/svg+xml","UTF-8",getAssets().open("home-landscape.svg"));}catch(Exception e){return null;}}
+ return null;
  }
  @Override public void onReceivedHttpError(WebView v,WebResourceRequest req,WebResourceResponse response){
  if(req.getUrl().getHost()!=null && (req.getUrl().getHost().contains("openstreetmap.org") || req.getUrl().getHost().contains("cloudflare.com"))) android.util.Log.w("DroneItaliaMap","HTTP "+response.getStatusCode()+" "+req.getUrl().getHost());
@@ -67,7 +71,6 @@ public class MainActivity extends Activity {
  if("https".equals(u.getScheme()))startActivity(new Intent(Intent.ACTION_VIEW,u));return true;
  }});
  box.addView(web,new LinearLayout.LayoutParams(-1,0,1));
- Button gps=new Button(this);gps.setText("Mostra la mia posizione");gps.setOnClickListener(v->locate());box.addView(gps);
  setContentView(box);web.loadUrl("https://app.local/index.html");
  }
  @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}
