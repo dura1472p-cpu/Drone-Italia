@@ -276,6 +276,13 @@ html,body{min-height:100%;height:100%}
 #di-page-map #map-status{margin:0!important;padding:7px 12px!important;font-size:11px!important}
 #di-page-map .legend,#di-page-map #detail,#di-page-map .di-tool-group{margin:12px!important}
 #di-app-nav{z-index:800!important}
+
+/* Pulsanti laterali mappa: icone SVG leggibili e didascalie */
+#di-page-map #di-map-quick{right:10px!important;top:67px!important;gap:10px!important;align-items:flex-end!important}
+#di-page-map #di-map-quick button{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;width:auto!important;min-width:114px!important;height:46px!important;padding:0 12px!important;border-radius:25px!important;background:#fff!important;color:#145b91!important;font-size:12px!important;font-weight:800!important;box-shadow:0 3px 13px #123a5a45!important;border:1px solid #d9e7f1!important}
+#di-page-map #di-map-quick button svg{width:22px;height:22px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#di-page-map #di-map-quick button:active{background:#e1f0ff!important}
+#di-page-map #di-map-quick button.di-selected{background:#147df0!important;color:#fff!important}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -770,6 +777,23 @@ function updateGPS(){const g=window.droneItaliaLastGps;if(!g)return;card.querySe
 setInterval(()=>{if(page.classList.contains('di-active'))updateGPS()},1500);
 const original=window.droneItaliaOpenPage;
 window.droneItaliaOpenPage=function(name,anchor){original(name,anchor);if(name==='map'){updateGPS();setTimeout(()=>{if(typeof map!=='undefined'&&map)map.invalidateSize()},180)}};
+})();
+</script>
+
+<script>
+(function(){
+const quick=document.getElementById('di-map-quick');if(!quick)return;
+const paths=[
+'<path d="m3 8 9-5 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>'
+];
+const labels=['Livelli','Cerca','La mia posizione'];
+Array.from(quick.querySelectorAll('button')).slice(0,3).forEach((btn,i)=>{
+btn.replaceChildren();
+const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.innerHTML=paths[i];
+const span=document.createElement('span');span.textContent=labels[i];btn.append(svg,span);btn.setAttribute('aria-label',labels[i]);btn.title=labels[i];
+});
 })();
 </script>
 </body></html>
