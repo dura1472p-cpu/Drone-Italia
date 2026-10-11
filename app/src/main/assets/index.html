@@ -752,4 +752,24 @@ icon.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" ar
 }
 })();
 </script>
+
+<script>
+(function(){
+const page=document.getElementById('di-page-map'),mapNode=document.getElementById('map'),quick=document.getElementById('di-map-quick');
+if(!page||!mapNode)return;
+const title=page.querySelector('.di-page-title');if(title)title.textContent='▱  Mappa';
+if(quick){
+quick.replaceChildren();
+const add=(symbol,label,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=symbol;b.title=label;b.setAttribute('aria-label',label);b.onclick=fn;quick.append(b)};
+add('▱','Livelli mappa',()=>{const b=document.getElementById('di-satellite');if(b)b.click()});
+add('⌕','Cerca coordinate',()=>{const form=document.getElementById('search');if(form){form.classList.toggle('di-search-visible');if(form.classList.contains('di-search-visible'))document.getElementById('coords').focus()}});
+add('◎','Mostra la mia posizione',()=>{if(window.DroneItaliaNative&&typeof window.DroneItaliaNative.locate==='function')window.DroneItaliaNative.locate();else alert('Posizione GPS disponibile nell’app Android')});
+}
+const card=document.createElement('aside');card.id='di-map-gps-card';card.setAttribute('aria-label','Posizione GPS');card.innerHTML='<span class="di-pin">●</span><span><span class="di-gps-label">La tua posizione</span><br><span class="di-gps-coords">Tocca ◎ per rilevare il GPS</span></span><span class="di-gps-alt">Precisione<br>—</span>';mapNode.after(card);
+function updateGPS(){const g=window.droneItaliaLastGps;if(!g)return;card.querySelector('.di-gps-coords').textContent=Number(g.lat).toFixed(5)+', '+Number(g.lng).toFixed(5);card.querySelector('.di-gps-alt').innerHTML='Precisione<br>'+Math.round(g.meters||0)+' m'}
+setInterval(()=>{if(page.classList.contains('di-active'))updateGPS()},1500);
+const original=window.droneItaliaOpenPage;
+window.droneItaliaOpenPage=function(name,anchor){original(name,anchor);if(name==='map'){updateGPS();setTimeout(()=>{if(typeof map!=='undefined'&&map)map.invalidateSize()},180)}};
+})();
+</script>
 </body></html>
