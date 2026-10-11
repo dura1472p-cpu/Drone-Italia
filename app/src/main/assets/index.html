@@ -849,7 +849,7 @@ const geometry={"type":"MultiPolygon","coordinates":[[[[15.520376,38.231155],[15
 function install(){
  if(typeof map==='undefined'||!map||typeof L==='undefined')return;
  const bounds=L.latLngBounds([35.4,6.3],[47.3,19.0]);
- map.setMaxBounds(L.latLngBounds([33.5,4.0],[49.5,22.0]));
+ map.setMaxBounds(null);map.options.maxBoundsViscosity=0;map.touchZoom.enable();map.doubleClickZoom.enable();
  map.options.maxBoundsViscosity=.85;
  const polygons=geometry.type==='Polygon'?[geometry.coordinates]:geometry.coordinates;
  const holes=polygons.map(poly=>poly[0].map(p=>[p[1],p[0]])).filter(r=>r.length>=4);
@@ -860,8 +860,8 @@ function install(){
  L.polygon([outside,...holes],{pane:'italy-mask',stroke:false,fill:true,fillColor:'#e9f0f5',fillOpacity:1,fillRule:'evenodd',interactive:false}).addTo(map);
  L.geoJSON({type:'Feature',geometry:geometry,properties:{}},{pane:'italy-mask',style:{color:'#4289ba',weight:1.5,opacity:.7,fill:false,interactive:false}}).addTo(map);
  map.options.zoomSnap=0.25;
- map.fitBounds(bounds,{padding:[0,0]});
- map.setZoom(map.getZoom()+0.5,{animate:false});
+ map.fitBounds(bounds,{padding:[4,4],animate:false});
+ window.droneItaliaShowItaly=()=>{map.invalidateSize({pan:false});map.fitBounds(bounds,{padding:[4,4],animate:false});};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
