@@ -507,4 +507,53 @@ const hero=document.getElementById('di-home-hero');
 if(hero){const icon=document.createElement('div');icon.className='di-hero-icon';icon.innerHTML=svg('drone');hero.insertBefore(icon,hero.firstChild)}
 })();
 </script>
+
+<script>
+(function(){
+const pages={photos:document.getElementById('di-page-photos'),zones:document.getElementById('di-page-zones')};
+const photos=document.createElement('main');photos.id='di-page-photos';photos.className='di-page';photos.setAttribute('aria-label','Le mie foto');
+document.getElementById('di-page-flights').after(photos);
+const title=document.createElement('h2');title.className='di-page-title';title.textContent='▧ Le mie foto';photos.append(title);
+const grid=document.createElement('div');grid.className='di-photo-grid';photos.append(grid);
+function renderPhotos(){
+grid.replaceChildren();
+let logs=[];
+try{logs=JSON.parse(localStorage.getItem('drone-italia-beta-logs')||'[]')}catch(e){}
+if(!Array.isArray(logs))logs=[];
+const withPhotos=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.startsWith('data:image/'));
+if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Nessuna foto salvata. Registra un volo e aggiungi una foto per vederla qui.';grid.append(p);return}
+withPhotos.forEach(x=>{const card=document.createElement('article');card.className='di-photo-card';const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo '+(x.place||'');img.loading='lazy';const label=document.createElement('p');label.textContent=(x.place||'Volo')+' · '+String(x.when||'').slice(0,16);card.append(img,label);grid.append(card)});
+}
+const oldOpen=window.droneItaliaOpenPage;
+window.droneItaliaOpenPage=function(name,anchor){
+if(name==='photos'){
+document.querySelectorAll('.di-page').forEach(p=>{p.classList.remove('di-active');p.setAttribute('aria-hidden','true')});
+photos.classList.add('di-active');photos.setAttribute('aria-hidden','false');
+document.querySelectorAll('#di-app-nav button').forEach(b=>b.removeAttribute('aria-current'));
+window.scrollTo(0,0);renderPhotos();return;
+}
+oldOpen(name,anchor);
+};
+const cards=document.querySelectorAll('#di-home-grid button');if(cards[3])cards[3].onclick=()=>window.droneItaliaOpenPage('photos');
+const navButtons=document.querySelectorAll('#di-app-nav button');
+if(navButtons.length===5){
+navButtons[2].querySelector('span:last-child').textContent='Zone';
+navButtons[3].querySelector('span:last-child').textContent='Voli';
+}
+const mapPage=document.getElementById('di-page-map');
+if(mapPage){
+const quick=document.createElement('div');quick.id='di-map-quick';
+[['◎','di-center-gps','La mia posizione'],['◉','di-satellite','Vista satellitare'],['⊕','di-radius','Cerchio sulla mappa']].forEach(([icon,id,label])=>{
+const btn=document.createElement('button');btn.type='button';btn.textContent=icon;btn.title=label;btn.setAttribute('aria-label',label);
+btn.onclick=()=>{const target=document.getElementById(id);if(target)target.click()};quick.append(btn)});
+mapPage.append(quick);
+}
+const list=document.getElementById('di-geojson-list');
+if(list){
+const search=document.createElement('input');search.type='search';search.id='di-map-filter';search.placeholder='Cerca una mappa importata…';search.setAttribute('aria-label','Cerca mappe');
+list.before(search);
+search.addEventListener('input',()=>{const query=search.value.trim().toLocaleLowerCase('it');Array.from(list.children).forEach(row=>{const name=row.querySelector('strong');row.style.display=!query||name&&name.textContent.toLocaleLowerCase('it').includes(query)?'':'none'})});
+}
+})();
+</script>
 </body></html>
