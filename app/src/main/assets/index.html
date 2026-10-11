@@ -352,6 +352,7 @@ html,body{min-height:100%;height:100%}
 #di-page-flights #di-new-flight-form .di-form-cancel{background:#eef5fb;color:#19527e;border:0;border-radius:12px;padding:11px;margin-top:8px;width:100%}
 
 #di-page-flights .di-flight-gps-guide{padding:12px 14px;background:#eff7ff;border:1px solid #cce3fa;border-radius:12px;margin:12px 0;color:#254861;font-size:13px;line-height:1.5}#di-page-flights .di-flight-gps-guide p{margin:7px 0}#di-page-flights #di-flight-location button{flex:1;min-width:140px;border-radius:11px;padding:12px 8px}#di-page-flights #di-flight-gps:disabled{opacity:.55}
+#di-page-flights #di-flights-empty[hidden]{display:none!important}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -975,18 +976,23 @@ const panel=document.createElement('section');panel.id='di-flights-dashboard';
 panel.innerHTML='<div class="di-flights-bar"><h2>▦ I miei voli</h2><button type="button" id="di-flights-add" aria-label="Nuovo volo">＋</button></div><div class="di-flights-tabs" role="group" aria-label="Filtra voli"><button type="button" data-filter="all" aria-pressed="true">Tutti</button><button type="button" data-filter="completed" aria-pressed="false">Completati</button><button type="button" data-filter="favorites" aria-pressed="false">Preferiti</button></div><div id="di-flights-count" role="status"></div>';
 page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 let filter='all';const favoriteKey='drone-italia-flight-favorites-v1';
-function favorites(){try{return JSON.parse(localStorage.getItem(favoriteKey)||'{}')||{}}catch(e){return {}}}
-function key(x){return [x.when||'',x.place||'',x.duration||'',x.notes||''].join('|')}
+const flightStore='drone-italia-beta-logs';
+function favorites(){try{const x=JSON.parse(localStorage.getItem(favoriteKey)||'{}');return x&&typeof x==='object'?x:{}}catch(e){return {}}}
+function storedLogs(){try{const x=JSON.parse(localStorage.getItem(flightStore)||'[]');return Array.isArray(x)?x:[]}catch(e){return []}}
+function flightKey(x){return 'volo-'+[x.when||'',x.duration||'',x.place||'',x.notes||''].join(' · ').slice(0,240)}
+const empty=document.createElement('p');empty.id='di-flights-empty';empty.hidden=true;empty.style.cssText='margin:18px 12px;color:#58728a;text-align:center;padding:16px;background:#eef6ff;border-radius:12px';box.after(empty);
 function refresh(){
- let logs=[];try{const raw=localStorage.getItem('di-logs');if(raw)logs=JSON.parse(raw)}catch(e){}
- /* Il diario originale usa un prefisso: leggiamo le schede dal DOM, senza sostituire il salvataggio. */
  const rows=Array.from(box.children).filter(el=>el.tagName==='DIV');
- const fav=favorites();let shown=0;
+ const logs=storedLogs(),fav=favorites();let shown=0;
  rows.forEach((row,i)=>{
-  const label=row.querySelector('p')?.textContent||'';
-  const id='volo-'+label.slice(0,240);
-  row.classList.add('di-flight-card');
+  const x=logs[i]||{};
   const original=row.querySelector('p');
+  const label=original?.textContent||'';
+  const legacyId='volo-'+label.slice(0,240);
+  const id=flightKey(x);
+  /* Compatibilità con le stelle salvate dalle versioni precedenti. */
+  if(fav[legacyId]&&!fav[id]){fav[id]=true;delete fav[legacyId];try{localStorage.setItem(favoriteKey,JSON.stringify(fav))}catch(e){}}
+  row.classList.add('di-flight-card');
   if(original&&!row.querySelector('.di-flight-summary')){
    const parts=label.split(' · ');
    const summary=document.createElement('div');summary.className='di-flight-summary';
@@ -998,15 +1004,22 @@ function refresh(){
    original.before(summary);original.classList.add('di-flight-original');
   }
   let star=row.querySelector('.di-flight-star');
-  if(!star){star=document.createElement('button');star.type='button';star.className='di-flight-star';star.setAttribute('aria-label','Aggiungi o rimuovi dai preferiti');row.insertBefore(star,row.firstChild);}
+  if(!star){star=document.createElement('button');star.type='button';star.className='di-flight-star';star.setAttribute('aria-label','Aggiungi o rimuovi dai preferiti');row.insertBefore(star,row.firstChild)}
   star.textContent=fav[id]?'★':'☆';star.setAttribute('aria-pressed',String(!!fav[id]));
-  star.onclick=()=>{const next=favorites();if(next[id])delete next[id];else next[id]=true;try{localStorage.setItem(favoriteKey,JSON.stringify(next))}catch(e){}refresh()};
-  const visible=filter!=='favorites'||!!fav[id];row.style.display=visible?'':'none';if(visible)shown++;
+  star.onclick=()=>{const next=favorites();if(next[id])delete next[id];else next[id]=true;try{localStorage.setItem(favoriteKey,JSON.stringify(next))}catch(e){alert('Impossibile salvare i preferiti');return}refresh()};
+  const visible=filter!=='favorites'||!!fav[id];
+  row.style.setProperty('display',visible?'block':'none','important');
+  if(visible)shown++;
  });
  panel.querySelector('#di-flights-count').textContent=shown+' voli visualizzati';
+ empty.hidden=shown!==0;
+ empty.textContent=filter==='favorites'?'Nessun volo preferito. Tocca ☆ su un volo nella scheda Tutti.':'Nessun volo registrato.';
 }
-panel.querySelectorAll('[data-filter]').forEach(btn=>btn.onclick=()=>{filter=btn.dataset.filter;panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));refresh()});
-panel.querySelector('#di-flights-add').onclick=()=>{const el=document.getElementById('di-duration');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus()}};
+panel.querySelectorAll('[data-filter]').forEach(btn=>btn.onclick=()=>{
+ filter=btn.dataset.filter;
+ panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+ refresh();
+});
 new MutationObserver(refresh).observe(box,{childList:true});
 refresh();
 })();
