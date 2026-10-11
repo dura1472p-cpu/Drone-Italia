@@ -640,6 +640,10 @@ if(name==='map'&&typeof map!=='undefined'&&map){
   canvas.style.setProperty('min-height','0','important');
   canvas.style.setProperty('margin','0','important');
   map.invalidateSize({pan:false});
+  if(!window.diItalyInitialCentered){
+   window.diItalyInitialCentered=true;
+   map.setView([42.5,12.5],5,{animate:false});
+  }
  };
  requestAnimationFrame(resizeMap);
  setTimeout(resizeMap,150);
