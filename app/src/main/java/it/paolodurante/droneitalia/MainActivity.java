@@ -58,6 +58,7 @@ public class MainActivity extends Activity {
  @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
  String url=req.getUrl().toString();
  if(url.equals("https://app.local/index.html")) {try{return new WebResourceResponse("text/html","UTF-8",getAssets().open("index.html"));}catch(Exception e){return null;}}
+ if(url.equals("https://app.local/drone-home-hero.jpg")) {try{return new WebResourceResponse("image/jpeg",null,getAssets().open("drone-home-hero.jpg"));}catch(Exception e){return null;}}
  if(url.equals("https://app.local/home-reference.svg")) {try{return new WebResourceResponse("image/svg+xml","UTF-8",getAssets().open("home-reference.svg"));}catch(Exception e){return null;}}
  if(url.equals("https://app.local/home-landscape.svg")) {try{return new WebResourceResponse("image/svg+xml","UTF-8",getAssets().open("home-landscape.svg"));}catch(Exception e){return null;}}
  return null;
