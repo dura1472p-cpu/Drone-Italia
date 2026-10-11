@@ -126,6 +126,26 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 #di-page-flights #di-logs>div{padding:12px;border:1px solid #dce7f2;border-radius:16px;background:#f8fbff;margin:10px 0!important}
 #di-page-flights #di-logs>div img{width:95px;max-height:95px;object-fit:cover;float:left;margin:0 12px 7px 0}
 #di-page-settings .di-tool-group{border-radius:18px}
+
+/* Home ricostruita sulle proporzioni del mockup originale */
+#di-page-home{background:#eef5fa}
+#di-home-hero{position:relative;min-height:270px;margin:0 0 10px;border-radius:0 0 18px 18px;background:linear-gradient(180deg,rgba(7,56,90,.08),rgba(2,33,52,.85)),url("home-landscape.svg") center center/cover no-repeat!important;box-shadow:none}
+#di-home-hero h2{font-size:29px;margin:0 0 3px;line-height:1.1}
+#di-home-hero p{font-size:13px;line-height:1.45;max-width:290px}
+#di-home-hero .di-hero-icon{width:56px;height:56px;margin:0 auto 7px}
+#di-home-hero .di-hero-icon svg{width:56px;height:56px;stroke-width:2.1}
+#di-home-hero .di-hero-tagline{color:white;font-weight:750;font-size:14px;margin:0 0 2px}
+#di-home-hero .di-hero-small{font-size:11px;opacity:.95}
+#di-home-grid{gap:8px;margin:0 10px}
+#di-home-grid button{min-height:143px;padding:12px 8px;border-radius:17px!important;border:1px solid #e7edf4;gap:6px}
+#di-home-grid .di-home-icon{width:40px;height:40px;border-radius:12px}
+#di-home-grid .di-home-icon svg{width:25px;height:25px}
+#di-home-grid .di-home-label{font-size:14px;font-weight:800}
+#di-home-grid .di-home-desc{font-size:11px;max-width:155px;line-height:1.35}
+#di-app-nav{border-radius:14px 14px 0 0;padding:4px 5px calc(4px + env(safe-area-inset-bottom))}
+#di-app-nav button{min-height:48px;gap:1px;font-size:10px}
+#di-app-nav button[aria-current=page]{background:#116ce5;border-radius:13px!important}
+@media(max-width:360px){#di-home-hero{min-height:232px}#di-home-grid button{min-height:130px}#di-home-grid .di-home-desc{font-size:10px}}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -554,6 +574,31 @@ const search=document.createElement('input');search.type='search';search.id='di-
 list.before(search);
 search.addEventListener('input',()=>{const query=search.value.trim().toLocaleLowerCase('it');Array.from(list.children).forEach(row=>{const name=row.querySelector('strong');row.style.display=!query||name&&name.textContent.toLocaleLowerCase('it').includes(query)?'':'none'})});
 }
+})();
+</script>
+
+<script>
+(function(){
+const hero=document.getElementById('di-home-hero');
+if(!hero)return;
+const icon=hero.querySelector('.di-hero-icon');
+if(icon)icon.innerHTML='<svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="25" y="25" width="14" height="14" rx="5" fill="white"/><path d="M25 26 15 16m24 10 10-10M25 38 15 48m24-10 10 10"/><circle cx="12" cy="13" r="7"/><circle cx="52" cy="13" r="7"/><circle cx="12" cy="51" r="7"/><circle cx="52" cy="51" r="7"/><path d="M5 13h14M45 13h14M5 51h14M45 51h14"/></svg>';
+const heading=hero.querySelector('h2');
+if(heading){
+const tagline=document.createElement('p');tagline.className='di-hero-tagline';tagline.textContent='Pianifica i tuoi voli in sicurezza';heading.after(tagline);
+}
+const p=hero.querySelector('p:not(.di-hero-tagline)');
+if(p){p.textContent='Mappe, zone, voli e foto sempre con te.';p.classList.add('di-hero-small')}
+const cards=document.querySelectorAll('#di-home-grid button');
+const labels=[
+['Visualizza la tua posizione e le zone.','Mappa'],
+['Aggiungi file GeoJSON per le tue zone.','Importa zone'],
+['Gestisci i voli registrati.','I miei voli'],
+['Foto con posizione GPS.','Le mie foto'],
+['Esporta e ripristina i tuoi dati.','Backup'],
+["Personalizza l'app.",'Impostazioni']
+];
+cards.forEach((card,i)=>{const title=card.querySelector('.di-home-label'),desc=card.querySelector('.di-home-desc');if(title)title.textContent=labels[i][1];if(desc)desc.textContent=labels[i][0]});
 })();
 </script>
 </body></html>
