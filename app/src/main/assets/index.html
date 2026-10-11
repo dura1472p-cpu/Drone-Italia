@@ -617,7 +617,27 @@ if(!pages[name])name='home';
 Object.keys(pages).forEach(k=>{pages[k].classList.toggle('di-active',k===name);pages[k].setAttribute('aria-hidden',String(k!==name))});
 Object.keys(buttons).forEach(k=>{if(k===name)buttons[k].setAttribute('aria-current','page');else buttons[k].removeAttribute('aria-current')});
 window.scrollTo(0,0);
-if(name==='map'&&typeof map!=='undefined'&&map)setTimeout(()=>map.invalidateSize(),80);
+if(name==='map'&&typeof map!=='undefined'&&map){
+ const resizeMap=()=>{
+  const panel=document.getElementById('di-page-map'),canvas=document.getElementById('map');
+  if(!panel||!canvas)return;
+  panel.style.setProperty('position','fixed','important');
+  panel.style.setProperty('inset','0','important');
+  panel.style.setProperty('width','100vw','important');
+  panel.style.setProperty('height','100dvh','important');
+  panel.style.setProperty('overflow','hidden','important');
+  canvas.style.setProperty('position','absolute','important');
+  canvas.style.setProperty('inset','0','important');
+  canvas.style.setProperty('width','100%','important');
+  canvas.style.setProperty('height','100%','important');
+  canvas.style.setProperty('min-height','0','important');
+  canvas.style.setProperty('margin','0','important');
+  map.invalidateSize({pan:false});
+ };
+ requestAnimationFrame(resizeMap);
+ setTimeout(resizeMap,150);
+ setTimeout(resizeMap,450);
+}
 if(anchor)setTimeout(()=>{const el=document.getElementById(anchor);if(el)el.scrollIntoView({block:'start',behavior:'smooth'})},100);
 }
 window.droneItaliaOpenPage=openPage;
