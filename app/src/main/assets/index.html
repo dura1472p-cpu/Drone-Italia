@@ -1,19 +1,52 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"><style>
 *{box-sizing:border-box}body{margin:0;font:16px system-ui;color:#122c39;background:#f4f7fa}header{padding:16px;background:#102f40;color:white}h1{font-size:23px;margin:0}header p{margin:5px 0 0;font-size:13px}.notice{padding:12px;background:#fff0cc;color:#654700;font-weight:600;font-size:14px}form{display:flex;gap:6px;padding:10px}input{min-width:0;flex:1;padding:10px;border:1px solid #bbc9d1;border-radius:8px}button{padding:10px;border:0;border-radius:8px;background:#126b7a;color:white}#map{height:44vh;min-height:260px}.legend{display:flex;gap:12px;padding:10px;font-size:12px;flex-wrap:wrap}#detail{padding:14px;margin:0 10px;background:white;border-radius:12px}h2{font-size:18px;margin:0 0 8px}#detail p{font-size:14px}footer{padding:14px;font-size:12px}a{color:#126b7a}.error{color:#ab2436}
-</style></head><body><header><h1>Drone Italia</h1><p>Esplora la mappa · Versione dimostrativa</p></header>
-<div class="notice">ZONE INVENTATE DI PROVA. Non usare questa mappa per pianificare un volo.</div>
-<section aria-label="Cartografia ufficiale"><h2>🗺️ Mappe ufficiali per droni</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
+
+/* Drone Italia · interfaccia mobile rinnovata */
+:root{--di-ink:#173044;--di-muted:#526778;--di-blue:#1265bc;--di-teal:#087b87;--di-border:#dce6ef;--di-surface:#fff;--di-shadow:0 5px 22px rgba(20,54,80,.07)}
+html{scroll-behavior:smooth}body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.55;color:var(--di-ink);background:#f3f7fb;-webkit-text-size-adjust:100%}
+header{padding:25px 20px 22px;background:linear-gradient(125deg,#104c87,#117c9a);border-radius:0 0 24px 24px;box-shadow:0 6px 20px rgba(15,67,113,.16)}
+header h1{font-size:clamp(25px,6vw,32px);letter-spacing:-.6px;font-weight:800}header p{font-size:14px;color:#e6f6ff;margin-top:6px}
+h2{font-size:19px;letter-spacing:-.3px;line-height:1.3;margin:0 0 12px}h3{line-height:1.35}
+p{line-height:1.58}section[aria-label="Cartografia ufficiale"],section[aria-label="Importazione cartografia personale"],#detail,#flight-tools,.notice{margin:14px 12px}
+section[aria-label="Cartografia ufficiale"],section[aria-label="Importazione cartografia personale"],#detail{padding:18px!important;border:1px solid var(--di-border)!important;border-radius:20px!important;background:var(--di-surface)!important;box-shadow:var(--di-shadow)}
+section[aria-label="Cartografia ufficiale"]{margin-top:16px}section[aria-label="Cartografia ufficiale"] p{margin:9px 0 13px;color:var(--di-muted)}
+section[aria-label="Cartografia ufficiale"] p strong{color:var(--di-ink)}
+.notice{padding:13px 16px;background:#fff5d9;color:#704b05;border:1px solid #f3d68e;border-radius:14px;font-size:13px;line-height:1.5}
+button,button[type="button"],button[type="submit"],input[type="button"],section a[style*="background"]{font-family:inherit;font-size:14px;font-weight:650;line-height:1.25;min-height:43px;padding:11px 15px;border-radius:13px!important;box-shadow:0 2px 5px rgba(17,77,115,.10);transition:filter .15s,transform .15s}
+button{background:var(--di-teal)}button:active{transform:scale(.98)}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #66aaf3;outline-offset:2px}
+input:not([type="checkbox"]):not([type="radio"]),select,textarea{font:inherit;max-width:100%;min-height:43px;border:1px solid #cbd8e4;border-radius:12px;padding:10px 12px;background:#fff;color:#173044}
+input[type="file"]{width:100%;min-height:48px;font-size:13px;padding:7px;margin:6px 0}
+input[type="file"]::file-selector-button{background:#e8f2fc;color:#164f88;border:0;border-radius:10px;padding:10px 12px;font:inherit;font-weight:700;margin-right:8px}
+#di-geojson-clear{background:#f7e8e8;color:#9a3036;box-shadow:none}#di-maps-export{background:#1767b5}
+#di-geojson-list{margin-top:15px}#di-geojson-list>p{margin:10px 0!important;padding:14px!important;border:1px solid var(--di-border)!important;border-radius:15px;background:#f8fbff;font-size:14px!important;line-height:1.8;overflow-wrap:anywhere}
+#di-geojson-list>p>strong{display:block;margin-bottom:8px;color:#163c5b;font-size:14px}
+#di-geojson-list button{margin:3px 4px 3px 0;min-height:40px;padding:9px 12px}
+#di-geojson-list details{border-top:1px solid var(--di-border);padding-top:10px}
+#di-geojson-list summary{cursor:pointer;color:#155f9e;font-weight:700;padding:5px 0}
+#di-geojson-status{background:#e9f4fa;border-radius:12px;padding:12px;font-size:13px;color:#26556d}
+#search{margin:12px;gap:8px;padding:0}#search input{min-width:0}#search button{background:var(--di-blue)}
+#map{height:48vh;min-height:300px;margin:0 12px;border-radius:18px;border:1px solid var(--di-border);overflow:hidden;box-shadow:var(--di-shadow)}
+#map-status{margin:8px 12px;border-radius:12px}.legend{margin:0 12px;gap:8px}.legend span{padding:5px 9px;border-radius:9px;background:#e9eff6}
+#detail{margin-top:10px}#flight-tools{padding:17px!important;border:1px solid var(--di-border);border-radius:20px;box-shadow:var(--di-shadow)}
+#flight-tools button{border-radius:13px!important;min-height:43px;padding:10px 13px}
+#flight-tools .box{border-radius:16px!important;padding:16px!important}
+#flight-tools .flight-tabs{gap:8px}
+footer{padding:18px;color:#526778;line-height:1.6}
+@media(max-width:390px){section[aria-label="Cartografia ufficiale"],section[aria-label="Importazione cartografia personale"],#detail{padding:14px!important}button{font-size:13px;padding:10px 12px}#map{min-height:270px}}
+</style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
+<div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
+<section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
 <section aria-label="Importazione cartografia personale" style="padding:12px;background:#e8f2fa;border:1px solid #b4d1e6;border-radius:10px;margin:10px">
-<h2>📂 Importa zone da file GeoJSON</h2>
+<h2>📂 Le tue mappe GeoJSON</h2>
 <p style="font-size:14px">Carica un file GeoJSON locale (FeatureCollection con poligoni). Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
 <input id="di-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Scegli file GeoJSON">
-<button type="button" id="di-geojson-clear">Rimuovi tutte le zone importate</button><button type="button" id="di-maps-export">Esporta backup mappe JSON</button>
-<label style="display:block;margin-top:8px">Ripristina backup mappe <input type="file" id="di-maps-restore" accept=".json,application/json"></label>
+<button type="button" id="di-geojson-clear">Elimina tutte le mappe</button><button type="button" id="di-maps-export">💾 Esporta backup mappe</button>
+<label style="display:block;margin-top:8px">📥 Ripristina backup mappe <input type="file" id="di-maps-restore" accept=".json,application/json"></label>
 <div id="di-geojson-list" aria-label="Mappe salvate"></div>
 <p id="di-geojson-status" role="status" aria-live="polite">Nessun file caricato. Supporto GeoJSON standard; il formato ED-269 non è ancora supportato.</p>
 </section>
-<form id="search"><input id="coords" aria-label="Coordinate" placeholder="Latitudine, longitudine (es. 41.90, 12.50)"><button>Cerca</button></form>
+<form id="search"><input id="coords" aria-label="Coordinate" placeholder="Cerca coordinate: 41.90, 12.50"><button>Cerca</button></form>
 <div id="map"></div><div id="map-status" role="status" aria-live="polite" style="padding:10px 14px;background:#fff3cf;color:#654700;font-size:13px">La cartografia stradale richiede Internet. Nessun dato aeronautico ufficiale disponibile.</div><div class="legend"><span>🔴 Divieto simulato</span><span>🟠 Vincolo simulato</span><span>⚪ Altrove: dati non disponibili</span></div>
 <section id="detail"><h2>Seleziona un punto</h2><p>Tre zone dimostrative sono visibili intorno a Roma. Tocca la mappa per consultarne i dettagli.</p></section>
 <footer>Cartografia © OpenStreetMap contributors. Nessun dato aeronautico ufficiale integrato.<br><a href="https://www.d-flight.it/">Consulta d-flight</a> · <a href="https://www.enac.gov.it/sicurezza-aerea/droni/">Informazioni ENAC</a><p>La posizione viene elaborata nell'app, senza salvataggio. Il servizio cartografico riceve IP e richieste delle mappe; i fornitori CDN ricevono richieste dei componenti.</p></footer>
