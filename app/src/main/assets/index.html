@@ -98,6 +98,34 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 #di-home-grid svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #di-home-hero::before{display:none}
 #di-home-hero .di-hero-icon svg{width:62px;height:62px;fill:none;stroke:white;stroke-width:1.7;stroke-linecap:round}
+
+/* Interfaccia a otto viste ispirata al progetto approvato */
+#di-page-home{background:#f3f8fc}
+#di-home-hero{margin:0 0 13px;border-radius:0 0 20px 20px;min-height:250px;box-shadow:none;background:linear-gradient(180deg,rgba(14,83,132,.05),rgba(4,48,76,.9)),linear-gradient(160deg,#2997d2 5%,#76bad9 52%,#234b6b 100%)}
+#di-home-grid{margin:0 12px;gap:9px}
+#di-home-grid button{min-height:146px;border-radius:17px!important;box-shadow:0 2px 12px rgba(21,68,106,.07)}
+#di-home-grid .di-home-icon{width:43px;height:43px}
+#di-home-grid .di-home-label{font-size:14px}
+#di-home-grid .di-home-desc{font-size:11px}
+#di-app-nav{padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(16,62,95,.09)}
+#di-app-nav button{min-height:48px;font-size:10px}
+#di-app-nav button[aria-current=page]{border-radius:15px!important}
+.di-page-title{font-size:21px;margin:11px 16px 12px}
+#di-page-map{position:relative}
+#di-page-map #map{height:63vh;min-height:370px;margin:0 8px;border-radius:14px}
+#di-map-quick{position:absolute;right:18px;top:125px;z-index:500;display:flex;flex-direction:column;gap:8px}
+#di-map-quick button{width:46px;height:46px;border-radius:50%!important;padding:7px;background:white;color:#135b94;box-shadow:0 4px 13px #163d5d38;font-size:21px}
+#di-page-zones section[aria-label="Importazione cartografia personale"]{margin:10px 12px;border-radius:20px!important}
+#di-page-zones #di-geojson-list>p{background:white;border-radius:16px!important;box-shadow:0 3px 12px #163d5d0e}
+#di-zone-filter,#di-map-filter{display:block;width:100%;margin:8px 0 12px;background:#f0f5fa!important}
+#di-page-photos .di-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px}
+#di-page-photos .di-photo-card{border-radius:13px;overflow:hidden;background:#fff;box-shadow:0 3px 13px #1640681a}
+#di-page-photos .di-photo-card img{display:block;width:100%;height:110px;object-fit:cover}
+#di-page-photos .di-photo-card p{margin:0;padding:8px;font-size:11px;overflow-wrap:anywhere}
+#di-page-photos .di-photo-empty{margin:16px;padding:18px;border-radius:16px;background:#fff;color:#4d6479}
+#di-page-flights #di-logs>div{padding:12px;border:1px solid #dce7f2;border-radius:16px;background:#f8fbff;margin:10px 0!important}
+#di-page-flights #di-logs>div img{width:95px;max-height:95px;object-fit:cover;float:left;margin:0 12px 7px 0}
+#di-page-settings .di-tool-group{border-radius:18px}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
