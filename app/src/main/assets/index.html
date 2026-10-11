@@ -621,4 +621,15 @@ const labels=[
 cards.forEach((card,i)=>{const title=card.querySelector('.di-home-label'),desc=card.querySelector('.di-home-desc');if(title)title.textContent=labels[i][1];if(desc)desc.textContent=labels[i][0]});
 })();
 </script>
+
+<script>
+(function(){
+const mapPage=document.getElementById('di-page-map');
+if(!mapPage)return;
+const quick=document.getElementById('di-map-quick');
+const gps=document.createElement('button');gps.type='button';gps.id='di-native-gps';gps.textContent='◎';gps.title='Mostra la mia posizione';gps.setAttribute('aria-label','Mostra la mia posizione');
+gps.onclick=()=>{window.droneItaliaOpenPage('map');if(window.DroneItaliaNative&&typeof DroneItaliaNative.locate==='function'){DroneItaliaNative.locate()}else{alert('Posizione disponibile nell’app Android')}};
+if(quick){const old=quick.querySelector('button');if(old)old.remove();quick.prepend(gps)}
+})();
+</script>
 </body></html>
