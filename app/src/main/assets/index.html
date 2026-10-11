@@ -146,6 +146,26 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 #di-app-nav button{min-height:48px;gap:1px;font-size:10px}
 #di-app-nav button[aria-current=page]{background:#116ce5;border-radius:13px!important}
 @media(max-width:360px){#di-home-hero{min-height:232px}#di-home-grid button{min-height:130px}#di-home-grid .di-home-desc{font-size:10px}}
+
+/* Rifinitura Home: disposizione dell'anteprima approvata */
+#di-page-home{padding:0 0 85px!important}
+#di-home-hero{min-height:265px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 14px!important}
+#di-home-hero h2{font-size:clamp(28px,8vw,38px)!important;font-weight:850;letter-spacing:-1px;color:#fff!important;text-shadow:0 2px 9px #163c5a70}
+#di-home-hero .di-hero-tagline{font-size:clamp(13px,3.9vw,17px)!important;line-height:1.35;font-weight:750;color:white!important}
+#di-home-hero .di-hero-small{color:#e9f5ff!important;font-size:12px!important}
+#di-home-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin:10px 12px!important}
+#di-home-grid button{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;min-height:144px!important;background:#fff!important;color:#102a4e!important;padding:11px 7px!important;border-radius:17px!important}
+#di-home-grid .di-home-label{color:#102a4e!important;font-weight:800!important}
+#di-home-grid .di-home-desc{color:#526b80!important}
+#di-home-grid button:nth-child(1) .di-home-icon{background:#03b9c5!important}
+#di-home-grid button:nth-child(2) .di-home-icon{background:#087cfa!important}
+#di-home-grid button:nth-child(3) .di-home-icon{background:#ff5364!important}
+#di-home-grid button:nth-child(4) .di-home-icon{background:#527afa!important}
+#di-home-grid button:nth-child(5) .di-home-icon{background:#08bd92!important}
+#di-home-grid button:nth-child(6) .di-home-icon{background:#086bd2!important}
+#di-app-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;background:#fff!important}
+#di-app-nav button{width:100%!important;min-width:0!important;padding:4px 0!important}
+#di-app-nav button[aria-current=page]{background:#087af5!important;color:#fff!important}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
