@@ -982,7 +982,8 @@ page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 const flightList=document.createElement('section');
 flightList.id='di-flights-list-section';
 flightList.setAttribute('aria-label','Elenco dei voli registrati');
-panel.after(flightList);
+/* Mantieni il diario nella posizione originale, sotto gli strumenti. */
+box.before(flightList);
 flightList.append(box);
 let filter='all';const favoriteKey='drone-italia-flight-favorites-v1';
 const flightStore='drone-italia-beta-logs';
@@ -1030,7 +1031,8 @@ panel.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click
  filter=btn.dataset.filter;
  panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
  refresh();
- flightList.scrollIntoView({behavior:'smooth',block:'start'});
+ const firstVisible=Array.from(box.children).find(row=>row.classList.contains('di-flight-card')&&!row.classList.contains('di-flight-filter-hidden'));
+ (firstVisible||flightList).scrollIntoView({behavior:'smooth',block:'start'});
 }));
 new MutationObserver(refresh).observe(box,{childList:true});
 refresh();
