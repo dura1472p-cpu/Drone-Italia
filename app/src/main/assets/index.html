@@ -439,7 +439,7 @@ layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];try{saveVisibility
 (function(){
 'use strict';
 const body=document.body,header=body.querySelector('header');
-const navNames={home:'Home',map:'Mappa',zones:'Zone',flights:'Voli',settings:'Altro'};
+const navNames={home:'Home',map:'Mappa',flights:'Voli',photos:'Foto',settings:'Altro'};
 const pages={};
 for(const name of Object.keys(navNames)){
 const page=document.createElement('main');page.id='di-page-'+name;page.className='di-page';page.setAttribute('aria-label',navNames[name]);pages[name]=page;body.insertBefore(page,header.nextSibling);
@@ -451,12 +451,12 @@ const cards=[
 ['🗺️','Mappa','Esplora la cartina e i punti salvati','map'],
 ['📂','Importa zone','Carica e gestisci le mappe GeoJSON','zones'],
 ['🛩️','I miei voli','Piani, diario e rapporti','flights'],
-['📷','Le mie foto','Foto associate ai voli','flights'],
+['📷','Le mie foto','Foto associate ai voli','photos'],
 ['💾','Backup','Esporta e ripristina i dati','settings'],
 ['⚙️','Impostazioni','Droni, manutenzione e aspetto','settings']
 ];
 const nav=document.createElement('nav');nav.id='di-app-nav';nav.setAttribute('aria-label','Navigazione principale');
-const icons={home:'⌂',map:'🗺',zones:'📂',flights:'✈',settings:'⚙'};
+const icons={home:'⌂',map:'🗺',flights:'✈',photos:'▧',settings:'•••'};
 const buttons={};
 function openPage(name,anchor){
 if(!pages[name])name='home';
@@ -477,7 +477,7 @@ const ico=document.createElement('span');ico.className='di-home-icon';ico.textCo
 const title=document.createElement('span');title.className='di-home-label';title.textContent=label;
 const sub=document.createElement('span');sub.className='di-home-desc';sub.textContent=desc;
 btn.append(ico,title,sub);
-btn.onclick=()=>openPage(target,label==='Le mie foto'?'di-log-photo':label==='Backup'?'di-backup':null);
+btn.onclick=()=>window.droneItaliaOpenPage(target,label==='Backup'?'di-backup':null);
 grid.append(btn);
 }
 const heading=(name,title)=>{const h=document.createElement('h2');h.className='di-page-title';h.textContent=title;pages[name].append(h)};
@@ -521,7 +521,7 @@ settings:'<circle cx="12" cy="12" r="3"/><path d="M10 2h4l1 3 3 1 3-1 2 4-2 2v3l
 drone:'<rect x="9" y="9" width="6" height="6" rx="2"/><path d="M9 9 5 5m10 4 4-4M9 15l-4 4m10-4 4 4"/><circle cx="4" cy="4" r="2"/><circle cx="20" cy="4" r="2"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="20" r="2"/>'
 };
 function svg(k){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[k]+'</svg>'}
-document.querySelectorAll('#di-app-nav .di-nav-icon').forEach((el,i)=>{el.innerHTML=svg(['home','map','zones','flights','settings'][i])});
+document.querySelectorAll('#di-app-nav .di-nav-icon').forEach((el,i)=>{el.innerHTML=svg(['home','map','flights','photos','settings'][i])});
 document.querySelectorAll('#di-home-grid .di-home-icon').forEach((el,i)=>{el.innerHTML=svg(['map','zones','flights','photos','backup','settings'][i])});
 const hero=document.getElementById('di-home-hero');
 if(hero){const icon=document.createElement('div');icon.className='di-hero-icon';icon.innerHTML=svg('drone');hero.insertBefore(icon,hero.firstChild)}
@@ -531,8 +531,7 @@ if(hero){const icon=document.createElement('div');icon.className='di-hero-icon';
 <script>
 (function(){
 const pages={photos:document.getElementById('di-page-photos'),zones:document.getElementById('di-page-zones')};
-const photos=document.createElement('main');photos.id='di-page-photos';photos.className='di-page';photos.setAttribute('aria-label','Le mie foto');
-document.getElementById('di-page-flights').after(photos);
+const photos=document.getElementById('di-page-photos');
 const title=document.createElement('h2');title.className='di-page-title';title.textContent='▧ Le mie foto';photos.append(title);
 const grid=document.createElement('div');grid.className='di-photo-grid';photos.append(grid);
 function renderPhotos(){
@@ -550,6 +549,7 @@ if(name==='photos'){
 document.querySelectorAll('.di-page').forEach(p=>{p.classList.remove('di-active');p.setAttribute('aria-hidden','true')});
 photos.classList.add('di-active');photos.setAttribute('aria-hidden','false');
 document.querySelectorAll('#di-app-nav button').forEach(b=>b.removeAttribute('aria-current'));
+const photoTab=document.querySelectorAll('#di-app-nav button')[3];if(photoTab)photoTab.setAttribute('aria-current','page');
 window.scrollTo(0,0);renderPhotos();return;
 }
 oldOpen(name,anchor);
@@ -557,8 +557,8 @@ oldOpen(name,anchor);
 const cards=document.querySelectorAll('#di-home-grid button');if(cards[3])cards[3].onclick=()=>window.droneItaliaOpenPage('photos');
 const navButtons=document.querySelectorAll('#di-app-nav button');
 if(navButtons.length===5){
-navButtons[2].querySelector('span:last-child').textContent='Zone';
-navButtons[3].querySelector('span:last-child').textContent='Voli';
+navButtons[2].querySelector('span:last-child').textContent='Voli';
+navButtons[3].querySelector('span:last-child').textContent='Foto';
 }
 const mapPage=document.getElementById('di-page-map');
 if(mapPage){
