@@ -803,4 +803,30 @@ const span=document.createElement('span');span.textContent=labels[i];btn.append(
 });
 })();
 </script>
+
+<script>
+/* Maschera geografica: mantiene visibile l'Italia e attenua i paesi confinanti. */
+(function(){
+const source='https://raw.githubusercontent.com/johan/world.geo.json/master/countries/ITA.geo.json';
+function install(){
+ if(typeof map==='undefined'||!map||typeof L==='undefined')return;
+ const bounds=L.latLngBounds([35.2,6.2],[47.4,19.1]);
+ map.setMaxBounds(L.latLngBounds([33.8,4.5],[49.2,21.0]));
+ map.options.maxBoundsViscosity=0.85;
+ map.fitBounds(bounds,{padding:[10,10]});
+ fetch(source).then(r=>{if(!r.ok)throw Error('Confine non disponibile');return r.json()}).then(data=>{
+ const geom=data.type==='Feature'?data.geometry:data;
+ if(!geom||!['Polygon','MultiPolygon'].includes(geom.type))return;
+ const polygons=geom.type==='Polygon'?[geom.coordinates]:geom.coordinates;
+ const holes=[];
+ for(const poly of polygons){if(poly[0]&&poly[0].length>=4)holes.push(poly[0].map(p=>[p[1],p[0]]))}
+ if(!holes.length)return;
+ const outside=[[-85,-179],[-85,179],[85,179],[85,-179]];
+ map.createPane('italy-mask');map.getPane('italy-mask').style.zIndex='390';map.getPane('italy-mask').style.pointerEvents='none';
+ L.polygon([outside,...holes],{pane:'italy-mask',stroke:false,fill:true,fillColor:'#f0f4f7',fillOpacity:.97,fillRule:'evenodd',interactive:false}).addTo(map);
+ }).catch(()=>{const st=document.getElementById('map-status');if(st)st.textContent+=' · Confini Italia non disponibili: cartografia completa visibile.'});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+})();
+</script>
 </body></html>
