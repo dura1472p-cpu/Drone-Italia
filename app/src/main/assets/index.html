@@ -738,6 +738,7 @@ function openPage(name,anchor){
  }
  if(name!=='map'&&typeof map!=='undefined'&&map){
  if(window.diFlightMapMarker){map.removeLayer(window.diFlightMapMarker);window.diFlightMapMarker=null}
+ if(typeof window.diHideFlightsOnMap==='function')window.diHideFlightsOnMap();
  if(typeof window.diClearTemporaryMapMarkers==='function')window.diClearTemporaryMapMarkers();
 }
 if(!pages[name])name='home';
@@ -1203,6 +1204,19 @@ function openFlightGroup(point,marker){
 /* Filtri della mappa: leggono lo stesso archivio del diario. */
 const mapFilters={year:'',month:'',model:'',place:''};
 let flightsMapActive=false,mapRenderTimer=null;
+const hideFlightsButton=document.createElement('button');hideFlightsButton.type='button';hideFlightsButton.textContent='✕ Nascondi voli';hideFlightsButton.hidden=true;
+function hideFlightsOnMap(){
+ flightsMapActive=false;clearTimeout(mapRenderTimer);mapRenderTimer=null;
+ const overlay=document.getElementById('di-flight-group-overlay');if(overlay)overlay.diClose();
+ if(typeof map!=='undefined'&&map){
+  if(window.diAllFlightsLayer)map.removeLayer(window.diAllFlightsLayer);
+  if(window.diAllFlightsInfo)map.removeControl(window.diAllFlightsInfo);
+ }
+ window.diAllFlightsLayer=null;window.diAllFlightsInfo=null;
+ hideFlightsButton.hidden=true;mapFilterPanel.hidden=true;
+ const toggle=document.querySelector('[aria-controls="di-flight-map-filters"]');if(toggle)toggle.setAttribute('aria-expanded','false');
+}
+window.diHideFlightsOnMap=hideFlightsOnMap;hideFlightsButton.onclick=hideFlightsOnMap;
 function gpsFlights(){return getLogs().filter(x=>x&&x.lat!==''&&x.lng!==''&&x.lat!=null&&x.lng!=null&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Math.abs(Number(x.lat))<=90&&Math.abs(Number(x.lng))<=180)}
 function matchesMapFilters(x){
  const day=flightDay(x);
@@ -1216,7 +1230,7 @@ const mapFilterPanel=document.createElement('section');mapFilterPanel.id='di-fli
 mapFilterPanel.setAttribute('aria-label','Filtri dei voli sulla mappa');
 mapFilterPanel.innerHTML='<div><strong>Filtra voli</strong> <button type="button" id="di-flight-filter-close" aria-label="Chiudi filtri">✕</button></div><label>Anno<select id="di-flight-filter-year"></select></label><label>Mese<select id="di-flight-filter-month"><option value="">Tutti i mesi</option></select></label><label>Drone<select id="di-flight-filter-model"></select></label><label>Località<input type="search" id="di-flight-filter-place" placeholder="Cerca località"></label><button type="button" id="di-flight-filter-reset">Mostra tutti i voli</button><p id="di-flight-filter-count" role="status"></p><small>Solo i voli con coordinate GPS compaiono sulla mappa.</small>';
 const filterStyle=document.createElement('style');
-filterStyle.textContent='#di-flight-map-filters{position:absolute;top:66px;left:10px;right:10px;z-index:700;max-height:calc(100% - 150px);overflow-y:auto;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:16px;box-shadow:0 6px 24px #1235;color:#173044}#di-flight-map-filters[hidden]{display:none!important}#di-flight-map-filters>div{display:flex;align-items:center;justify-content:space-between}#di-flight-map-filters label{display:block;font-size:14px;margin:8px 0}#di-flight-map-filters select,#di-flight-map-filters input{display:block;width:100%;min-height:44px;margin-top:4px;font:inherit;padding:8px;border:1px solid #bbc9d1;border-radius:8px}#di-flight-map-filters p{font-size:14px}#di-flight-map-filters small{font-size:12px}';
+filterStyle.textContent='#di-map-quick button[hidden]{display:none!important}#di-flight-map-filters{position:absolute;top:66px;left:10px;right:10px;z-index:700;max-height:calc(100% - 150px);overflow-y:auto;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:16px;box-shadow:0 6px 24px #1235;color:#173044}#di-flight-map-filters[hidden]{display:none!important}#di-flight-map-filters>div{display:flex;align-items:center;justify-content:space-between}#di-flight-map-filters label{display:block;font-size:14px;margin:8px 0}#di-flight-map-filters select,#di-flight-map-filters input{display:block;width:100%;min-height:44px;margin-top:4px;font:inherit;padding:8px;border:1px solid #bbc9d1;border-radius:8px}#di-flight-map-filters p{font-size:14px}#di-flight-map-filters small{font-size:12px}';
 document.head.append(filterStyle);
 const field=name=>mapFilterPanel.querySelector('#di-flight-filter-'+name);
 const months=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -1232,7 +1246,7 @@ function populateMapFilters(){
 }
 if(quickMap){
  const btn=document.createElement('button');btn.type='button';btn.textContent='☷ Filtra voli';btn.setAttribute('aria-controls',mapFilterPanel.id);btn.setAttribute('aria-expanded','false');
- quickMap.append(btn);quickMap.parentElement.append(mapFilterPanel);
+ quickMap.append(btn,hideFlightsButton);quickMap.parentElement.append(mapFilterPanel);
  function closeFilters(){mapFilterPanel.hidden=true;btn.setAttribute('aria-expanded','false');btn.focus()}
  btn.onclick=()=>{populateMapFilters();mapFilterPanel.hidden=!mapFilterPanel.hidden;btn.setAttribute('aria-expanded',String(!mapFilterPanel.hidden));if(!mapFilterPanel.hidden){showFlightsOnMap(false);field('year').focus()}};
  field('close').onclick=closeFilters;
@@ -1242,10 +1256,11 @@ if(quickMap){
 field('reset').onclick=()=>{Object.keys(mapFilters).forEach(name=>{mapFilters[name]='';field(name).value=''});showFlightsOnMap(false)};
 function showFlightsOnMap(openPage){
  if(typeof L==='undefined'||typeof map==='undefined'||!map){alert('La mappa non è disponibile. Controlla la connessione.');return}
- flightsMapActive=true;
+ flightsMapActive=true;hideFlightsButton.hidden=false;
  if(openPage){window.diFlightOpeningSavedLocation=true;window.droneItaliaOpenPage('map');window.diFlightOpeningSavedLocation=false}
  clearTimeout(mapRenderTimer);
  mapRenderTimer=setTimeout(()=>{
+  if(!flightsMapActive)return;
   try{
    const allEntries=gpsFlights(),entries=allEntries.filter(matchesMapFilters);
    const overlay=document.getElementById('di-flight-group-overlay');if(overlay)overlay.diClose();
