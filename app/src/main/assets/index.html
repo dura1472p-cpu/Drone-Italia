@@ -1249,7 +1249,7 @@ function matchesMapFilters(x){
 const quickMap=document.getElementById('di-map-quick');
 const mapFilterPanel=document.createElement('section');mapFilterPanel.id='di-flight-map-filters';mapFilterPanel.hidden=true;
 mapFilterPanel.setAttribute('aria-label','Filtri dei voli sulla mappa');
-mapFilterPanel.innerHTML='<div><strong>Filtra voli</strong> <button type="button" id="di-flight-filter-close" aria-label="Chiudi filtri">✕</button></div><label>Anno<select id="di-flight-filter-year"></select></label><label>Mese<select id="di-flight-filter-month"><option value="">Tutti i mesi</option></select></label><label>Drone<select id="di-flight-filter-model"></select></label><label>Località<input type="search" id="di-flight-filter-place" placeholder="Cerca località"></label><button type="button" id="di-flight-filter-reset">Mostra tutti i voli</button><p id="di-flight-filter-count" role="status"></p><small>Solo i voli con coordinate GPS compaiono sulla mappa.</small>';
+mapFilterPanel.innerHTML='<div><strong>Filtra voli</strong> <button type="button" id="di-flight-filter-close" aria-label="Chiudi filtri">✕</button></div><label>Anno<select id="di-flight-filter-year"></select></label><label>Mese<select id="di-flight-filter-month"><option value="">Tutti i mesi</option></select></label><label>Drone<select id="di-flight-filter-model"></select></label><label>Località<input type="search" id="di-flight-filter-place" placeholder="Cerca località"></label><button type="button" id="di-flight-filter-reset">Mostra tutti i voli</button> <button type="button" id="di-flight-filter-pdf" disabled>📄 PDF dei voli filtrati</button><p id="di-flight-filter-count" role="status"></p><small>Solo i voli con coordinate GPS compaiono sulla mappa.</small>';
 const filterStyle=document.createElement('style');
 filterStyle.textContent='.di-flight-map-selected{outline:3px solid #147bd2;outline-offset:3px}#di-map-quick button[hidden]{display:none!important}#di-flight-map-filters{position:absolute;top:66px;left:10px;right:10px;z-index:700;max-height:calc(100% - 150px);overflow-y:auto;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:16px;box-shadow:0 6px 24px #1235;color:#173044}#di-flight-map-filters[hidden]{display:none!important}#di-flight-map-filters>div{display:flex;align-items:center;justify-content:space-between}#di-flight-map-filters label{display:block;font-size:14px;margin:8px 0}#di-flight-map-filters select,#di-flight-map-filters input{display:block;width:100%;min-height:44px;margin-top:4px;font:inherit;padding:8px;border:1px solid #bbc9d1;border-radius:8px}#di-flight-map-filters p{font-size:14px}#di-flight-map-filters small{font-size:12px}';
 document.head.append(filterStyle);
@@ -1275,6 +1275,19 @@ if(quickMap){
 }
 ['year','month','model','place'].forEach(name=>field(name).addEventListener(name==='place'?'input':'change',()=>{mapFilters[name]=field(name).value;showFlightsOnMap(false)}));
 field('reset').onclick=()=>{Object.keys(mapFilters).forEach(name=>{mapFilters[name]='';field(name).value=''});showFlightsOnMap(false)};
+function filteredFlightsReport(entries){
+ const total=entries.reduce((sum,x)=>sum+Math.max(0,Number(x.duration)||0),0);
+ const selected=[['Anno',mapFilters.year||'Tutti'],['Mese',mapFilters.month?months[Number(mapFilters.month)-1]:'Tutti'],['Drone',mapFilters.model||'Tutti'],['Località',mapFilters.place.trim()||'Tutte']];
+ const filters=selected.map(([label,value])=>'<li><b>'+label+':</b> '+safeHtml(value)+'</li>').join('');
+ const rows=entries.map(x=>'<tr><td>'+safeHtml(x.when||'Non indicata')+'</td><td>'+safeHtml(x.place||'Non indicata')+'</td><td>'+safeHtml(x.model||'Non indicato')+'</td><td>'+safeHtml(formatFlightTime(Math.max(0,Number(x.duration)||0)))+'</td><td>'+safeHtml(Number(x.lat).toFixed(5)+', '+Number(x.lng).toFixed(5))+'</td></tr>').join('');
+ return '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Voli filtrati Drone Italia</title><style>@page{size:A4 landscape;margin:15mm}body{font:14px Arial,sans-serif;color:#20384b}h1,h2{color:#1268a8}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left;overflow-wrap:anywhere}th{background:#eaf3fa}thead{display:table-header-group}tr{break-inside:avoid}ul{padding-left:20px}p{line-height:1.5}</style></head><body><h1>Drone Italia — Voli filtrati sulla mappa</h1><p>Rapporto generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><h2>Filtri applicati</h2><ul>'+filters+'</ul><p><b>Voli:</b> '+entries.length+' · <b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'</p><table><thead><tr><th>Data</th><th>Località</th><th>Drone</th><th>Durata</th><th>Coordinate GPS</th></tr></thead><tbody>'+rows+'</tbody></table><p>Il rapporto include solo i voli con coordinate GPS corrispondenti ai filtri selezionati.</p><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
+}
+field('pdf').onclick=()=>{
+ const entries=gpsFlights().filter(matchesMapFilters);
+ if(!entries.length){alert('Nessun volo da esportare con questi filtri.');return}
+ if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.printReport!=='function'){alert('Esportazione PDF disponibile nell’app Android aggiornata.');return}
+ window.DroneItaliaNative.printReport(filteredFlightsReport(entries));
+};
 function showFlightsOnMap(openPage){
  if(typeof L==='undefined'||typeof map==='undefined'||!map){alert('La mappa non è disponibile. Controlla la connessione.');return}
  flightsMapActive=true;hideFlightsButton.hidden=false;
@@ -1284,6 +1297,7 @@ function showFlightsOnMap(openPage){
   if(!flightsMapActive)return;
   try{
    const allEntries=gpsFlights(),entries=allEntries.filter(matchesMapFilters);
+   field('pdf').disabled=entries.length===0;
    const overlay=document.getElementById('di-flight-group-overlay');if(overlay)overlay.diClose();
    if(window.diAllFlightsLayer)map.removeLayer(window.diAllFlightsLayer);
    const group=L.featureGroup();
