@@ -361,6 +361,8 @@ html,body{min-height:100%;height:100%}
 
 #di-page-photos .di-photo-actions{display:flex;align-items:center;gap:9px;margin:8px 10px 18px;flex-wrap:wrap}#di-page-photos .di-photo-actions button{background:#1179ed;color:white;border:0;border-radius:12px;padding:13px 17px;font-size:14px;font-weight:700;min-height:46px}#di-page-photos .di-photo-actions select{flex:1;min-width:155px;max-width:100%;background:white;border:1px solid #d0dfeb;border-radius:11px;padding:12px 8px;font-size:12px;color:#274c69}#di-page-photos .di-photo-actions input[hidden]{display:none!important}
 #di-page-photos #di-photo-diagnostics{font-size:12px;color:#54708a;margin:0 12px 8px}
+
+#di-page-photos .di-photo-card{display:flex!important;flex-direction:column;padding:0!important}#di-page-photos .di-photo-open{display:block;width:100%;border:0;background:transparent;padding:0;text-align:left;color:#29465d;min-width:0}#di-page-photos .di-photo-open img{width:100%;aspect-ratio:1/1;object-fit:cover}#di-page-photos .di-photo-open span{display:block;padding:7px 6px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#di-page-photos .di-photo-delete{border:0;border-top:1px solid #e6edf4;background:#fff;color:#a13d3d;font-size:11px;padding:10px 2px;min-height:36px;width:100%;font-weight:600}#di-page-photos .di-photo-delete:disabled{opacity:.45}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -846,6 +848,15 @@ async function galleryData(){
  }
  return saved;
 }
+async function deleteGalleryPhoto(id){
+ const db=await galleryDb();
+ await new Promise((resolve,reject)=>{
+  const tx=db.transaction('photos','readwrite');
+  tx.objectStore('photos').delete(id);
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('Eliminazione non riuscita'));
+  tx.onabort=()=>reject(tx.error||Error('Archivio non disponibile'));
+ });
+}
 async function saveGalleryPhoto(x){
  const db=await galleryDb();
  await new Promise((resolve,reject)=>{
@@ -899,13 +910,39 @@ const logs=flightData();
 const fromFlights=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0);
 let fromGallery=[],error='';
 try{fromGallery=await galleryData()}catch(e){error='Archivio foto non accessibile: '+(e&&e.message||'errore sconosciuto')}
-const withPhotos=fromFlights.concat(fromGallery.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0)).reverse();
+const withPhotos=logs.map((x,i)=>({photo:x&&x.photo,place:x&&x.place,when:x&&x.when,kind:'flight',index:i}))
+ .filter(x=>typeof x.photo==='string'&&x.photo.trim())
+ .concat(fromGallery.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim()).map(x=>({...x,kind:'gallery'}))).reverse();
 refreshFlightOptions();
 counter.textContent=withPhotos.length+' foto';
 const diagnostics=document.getElementById('di-photo-diagnostics');
 if(diagnostics)diagnostics.textContent=fromFlights.length+' foto nei voli · '+fromGallery.length+' foto nella galleria'+(error?' · ⚠ '+error:'');
 if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent=error?'Impossibile aprire l’archivio delle foto. Non cancellare i dati dell’app.':'Non risultano foto salvate nei voli o nella galleria. Premi «＋ Aggiungi foto» per importarne una dal telefono.';grid.append(p);return}
-withPhotos.forEach(x=>{const card=document.createElement('button');card.type='button';card.className='di-photo-card';card.setAttribute('aria-label','Apri foto del volo '+(x.place||'')+' del '+String(x.when||''));const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo '+(x.place||'');img.loading='lazy';const label=document.createElement('span');label.textContent=x.place||'Volo';card.append(img,label);card.onclick=()=>openViewer(x);grid.append(card)});
+withPhotos.forEach(x=>{
+ const card=document.createElement('article');card.className='di-photo-card';
+ const open=document.createElement('button');open.type='button';open.className='di-photo-open';open.setAttribute('aria-label','Apri foto '+(x.place||'')+' del '+String(x.when||''));
+ const img=document.createElement('img');img.src=x.photo;img.alt='Foto '+(x.place||'');img.loading='lazy';
+ const label=document.createElement('span');label.textContent=x.place||'Volo';open.append(img,label);open.onclick=()=>openViewer(x);
+ const del=document.createElement('button');del.type='button';del.className='di-photo-delete';del.textContent='🗑 Elimina';del.setAttribute('aria-label','Elimina foto '+(x.place||''));
+ del.onclick=async()=>{
+  const msg=x.kind==='flight'?'Eliminare la foto associata a questo volo? Il volo e gli altri dati rimarranno salvati.':'Eliminare definitivamente questa fotografia dalla galleria?';
+  if(!confirm(msg))return;
+  del.disabled=true;
+  try{
+   if(x.kind==='flight'){
+    const current=flightData();
+    if(!current[x.index]||current[x.index].photo!==x.photo)throw Error('Il volo è cambiato. Riapri la galleria.');
+    current[x.index].photo='';
+    localStorage.setItem('drone-italia-beta-logs',JSON.stringify(current));
+   }else{
+    if(x.id==null)throw Error('Identificativo foto non disponibile.');
+    await deleteGalleryPhoto(x.id);
+   }
+   await renderPhotos();
+  }catch(e){del.disabled=false;alert('Impossibile eliminare la foto: '+(e.message||e))}
+ };
+ card.append(open,del);grid.append(card);
+});
 }
 const oldOpen=window.droneItaliaOpenPage;
 window.droneItaliaOpenPage=function(name,anchor){
