@@ -356,7 +356,9 @@ html,body{min-height:100%;height:100%}
 #di-page-flights #di-logs>div.di-flight-filter-hidden{display:none!important}#di-page-flights #di-flights-empty[hidden]{display:none!important}#di-page-flights #di-flights-empty{padding:16px;text-align:center;color:#52718c;background:#edf5fc;border-radius:12px}
 
 #di-page-flights #di-flights-list-section{margin:0 10px 16px;padding:4px 8px 12px;min-height:64px;scroll-margin-top:18px}#di-page-flights #di-flights-list-section #di-logs>div.di-flight-card{margin:12px 0!important}#di-page-flights #di-flights-list-section #di-flights-empty{margin:10px 0!important}
-#di-page-flights .di-flight-star[aria-pressed=true]{color:#e7a722!important}#di-page-flights .di-flight-star[aria-pressed=false]{color:#8293a3!important}</style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
+#di-page-flights .di-flight-star[aria-pressed=true]{color:#e7a722!important}#di-page-flights .di-flight-star[aria-pressed=false]{color:#8293a3!important}
+#di-page-photos{padding:18px 12px 100px!important;background:#f2f6fb!important;min-height:100vh}#di-page-photos .di-photos-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 10px 0}#di-page-photos .di-photos-header h2{font-size:23px;margin:6px 0;color:#183c5a}#di-page-photos #di-photo-count{font-size:12px;color:#416480;background:#e0ecf8;padding:7px 10px;border-radius:18px;white-space:nowrap}#di-page-photos .di-photos-intro{font-size:13px;color:#5d758a;margin:8px 10px 18px}#di-page-photos .di-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px}#di-page-photos .di-photo-card{display:block;border:0!important;padding:0!important;text-align:left;min-width:0;overflow:hidden;border-radius:12px;background:white;box-shadow:0 2px 8px #24445c18}#di-page-photos .di-photo-card img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;display:block}#di-page-photos .di-photo-card span{display:block;padding:7px 6px;color:#29465d;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#di-page-photos .di-photo-card:focus-visible{outline:3px solid #1179ed}#di-page-photos #di-photo-viewer[hidden]{display:none!important}#di-page-photos #di-photo-viewer{position:fixed;inset:0;z-index:11000;background:#07131bef;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 16px 30px;box-sizing:border-box}#di-page-photos #di-photo-viewer img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:8px}#di-page-photos #di-photo-viewer p{color:#fff;text-align:center;font-size:14px}#di-page-photos #di-photo-close{position:absolute;top:22px;right:20px;border:0;background:#ffffff26;color:white;font-size:25px;border-radius:50%;width:46px;height:46px}#di-page-photos .di-photo-empty{grid-column:1/-1}
+</style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
 <section aria-label="Importazione cartografia personale" style="padding:12px;background:#e8f2fa;border:1px solid #b4d1e6;border-radius:10px;margin:10px">
@@ -799,20 +801,34 @@ if(hero){const icon=document.createElement('div');icon.className='di-hero-icon';
 (function(){
 const pages={photos:document.getElementById('di-page-photos'),zones:document.getElementById('di-page-zones')};
 const photos=document.getElementById('di-page-photos');
-const title=document.createElement('h2');title.className='di-page-title';title.textContent='▧ Le mie foto';photos.append(title);
+const header=document.createElement('div');header.className='di-photos-header';
+const title=document.createElement('h2');title.className='di-page-title';title.textContent='📷 Le mie foto';
+const counter=document.createElement('span');counter.id='di-photo-count';counter.setAttribute('aria-live','polite');
+header.append(title,counter);photos.append(header);
+const intro=document.createElement('p');intro.className='di-photos-intro';intro.textContent='Le fotografie dei tuoi voli, tutte in un unico posto. Tocca una foto per ingrandirla.';photos.append(intro);
 const grid=document.createElement('div');grid.className='di-photo-grid';photos.append(grid);
+const viewer=document.createElement('div');viewer.id='di-photo-viewer';viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Fotografia ingrandita');
+viewer.innerHTML='<button type="button" id="di-photo-close" aria-label="Chiudi fotografia">✕</button><img id="di-photo-large" alt="Fotografia del volo"><p id="di-photo-caption"></p>';
+photos.append(viewer);
+function closeViewer(){viewer.hidden=true;document.body.style.overflow=''}
+viewer.querySelector('#di-photo-close').onclick=closeViewer;
+viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.hidden)closeViewer()});
+function openViewer(x){viewer.querySelector('#di-photo-large').src=x.photo;viewer.querySelector('#di-photo-caption').textContent=(x.place||'Volo')+' · '+String(x.when||'');viewer.hidden=false;document.body.style.overflow='hidden';viewer.querySelector('#di-photo-close').focus()}
 function renderPhotos(){
 grid.replaceChildren();
 let logs=[];
 try{logs=JSON.parse(localStorage.getItem('drone-italia-beta-logs')||'[]')}catch(e){}
 if(!Array.isArray(logs))logs=[];
-const withPhotos=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.startsWith('data:image/'));
-if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Nessuna foto salvata. Registra un volo e aggiungi una foto per vederla qui.';grid.append(p);return}
-withPhotos.forEach(x=>{const card=document.createElement('article');card.className='di-photo-card';const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo '+(x.place||'');img.loading='lazy';const label=document.createElement('p');label.textContent=(x.place||'Volo')+' · '+String(x.when||'').slice(0,16);card.append(img,label);grid.append(card)});
+const withPhotos=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.startsWith('data:image/')).reverse();
+counter.textContent=withPhotos.length+' foto';
+if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Nessuna fotografia presente. Vai in Voli → + Nuovo volo e aggiungi una foto per visualizzarla qui.';grid.append(p);return}
+withPhotos.forEach(x=>{const card=document.createElement('button');card.type='button';card.className='di-photo-card';card.setAttribute('aria-label','Apri foto del volo '+(x.place||'')+' del '+String(x.when||''));const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo '+(x.place||'');img.loading='lazy';const label=document.createElement('span');label.textContent=x.place||'Volo';card.append(img,label);card.onclick=()=>openViewer(x);grid.append(card)});
 }
 const oldOpen=window.droneItaliaOpenPage;
 window.droneItaliaOpenPage=function(name,anchor){
 if(name==='photos'){
+closeViewer();
 document.querySelectorAll('.di-page').forEach(p=>{p.classList.remove('di-active');p.setAttribute('aria-hidden','true')});
 photos.classList.add('di-active');photos.setAttribute('aria-hidden','false');
 document.querySelectorAll('#di-app-nav button').forEach(b=>b.removeAttribute('aria-current'));
