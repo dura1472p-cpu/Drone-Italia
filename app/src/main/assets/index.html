@@ -1131,6 +1131,7 @@ const flightList=box;
 const statsPanel=document.createElement('section');statsPanel.id='di-flight-statistics';
 statsPanel.innerHTML='<button type="button" id="di-stats-toggle" aria-expanded="false">📊 Statistiche di volo <span>▾</span></button><div id="di-stats-content" hidden><div class="di-stats-cards"><div><strong id="di-stats-month-flights">0</strong><span>Voli questo mese</span></div><div><strong id="di-stats-month-time">0 min</strong><span>Tempo questo mese</span></div><div><strong id="di-stats-longest">—</strong><span>Volo più lungo</span></div></div><h4>Voli negli ultimi 6 mesi</h4><div id="di-stats-chart" class="di-stats-chart"></div><p id="di-stats-place"></p><p class="di-stats-note">Statistiche calcolate dai voli salvati. Le date non riconosciute non rientrano nei conteggi mensili.</p></div>';
 panel.append(statsPanel);
+const statsContent=statsPanel.querySelector('#di-stats-content');
 const extra=document.createElement('div');extra.className='di-stats-actions';
 extra.innerHTML='<button type="button" id="di-stats-pdf">📄 Esporta statistiche PDF</button><button type="button" id="di-stats-map">🗺️ Mostra tutti i voli sulla mappa</button><div id="di-stats-month-list"></div>';
 statsContent.append(extra);
@@ -1161,7 +1162,7 @@ mapButton.onclick=()=>{
   }catch(e){alert('Impossibile mostrare i voli sulla mappa.')}
  },550);
 };
-const statsContent=statsPanel.querySelector('#di-stats-content');
+
 statsPanel.querySelector('#di-stats-toggle').onclick=()=>{statsContent.hidden=!statsContent.hidden;statsPanel.querySelector('#di-stats-toggle').setAttribute('aria-expanded',String(!statsContent.hidden));statsPanel.querySelector('#di-stats-toggle span').textContent=statsContent.hidden?'▾':'▴';if(!statsContent.hidden)renderFlightStatistics()};
 function formatFlightTime(n){n=Math.round(n);return n>=60?Math.floor(n/60)+' h'+(n%60?' '+n%60+' min':''):n+' min'}
 function renderFlightStatistics(){
