@@ -610,7 +610,16 @@ function renderDrones(){const box=$('di-drones');box.replaceChildren();const act
 $('di-add-drone').onclick=()=>{const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value);if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}const a=load('drones');const id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident:$('di-drone-id').value.trim()});if(save('drones',a)){localStorage.setItem(key+'active-drone',id);renderDrones()}};
 function renderMaintenance(){const box=$('di-maint-list');box.replaceChildren();load('maintenance').sort((a,b)=>a.date.localeCompare(b.date)).forEach(m=>{const row=document.createElement('p');row.append(node('span',(m.date<new Date().toISOString().slice(0,10)?'⚠️ SCADUTO · ':'')+m.date+' · '+m.task+' '));const done=node('button','Completato');done.onclick=()=>{if(save('maintenance',load('maintenance').filter(x=>x.id!==m.id)))renderMaintenance()};row.append(done);box.append(row)});if(!box.children.length)box.append(node('p','Nessun promemoria. Gli avvisi sono visibili solo aprendo l’app.'))}
 $('di-maint-add').onclick=()=>{const task=$('di-maint-task').value.trim(),date=$('di-maint-date').value;if(!task||!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert('Inserisci attività e data.');return}const a=load('maintenance');a.push({id:String(Date.now())+Math.random(),task,date});if(save('maintenance',a))renderMaintenance()};
-function applyDark(){const dark=localStorage.getItem(key+'dark')==='1';document.documentElement.style.colorScheme=dark?'dark':'light';document.body.style.background=dark?'#10232d':'#f4f7fa';document.body.style.color=dark?'#e3edf3':'#122c39';$('planner').style.background=dark?'#203744':'#edf3f7';$('planner').style.color=dark?'#e3edf3':'#173544';$('detail').style.background=dark?'#203744':'white';$('detail').style.color=dark?'#e3edf3':'#122c39'}
+function applyDark(){
+ const dark=localStorage.getItem(key+'dark')==='1';
+ document.documentElement.style.colorScheme=dark?'dark':'light';
+ document.body.style.background=dark?'#10232d':'#f4f7fa';document.body.style.color=dark?'#e3edf3':'#122c39';
+ for(const id of ['planner','detail']){
+  const element=$(id);if(!element)continue;
+  element.style.background=dark?'#203744':id==='detail'?'white':'#edf3f7';
+  element.style.color=dark?'#e3edf3':id==='detail'?'#122c39':'#173544';
+ }
+}
 $('di-dark-mode').onclick=()=>{localStorage.setItem(key+'dark',localStorage.getItem(key+'dark')==='1'?'0':'1');applyDark()};
 applyDark();refresh();
 })();
