@@ -1126,7 +1126,16 @@ const searchWrap=document.createElement('div');searchWrap.className='di-flight-s
 searchWrap.innerHTML='<label for="di-flight-search-input">🔎 Cerca un volo</label><div class="di-flight-search-row"><input id="di-flight-search-input" type="search" placeholder="Cerca per località, nome o note…" autocomplete="off" aria-label="Cerca voli per località, nome o note"><button id="di-flight-search-clear" type="button" aria-label="Cancella ricerca" hidden>✕</button></div>';
 panel.insertBefore(searchWrap,panel.querySelector('.di-flights-stats'));
 const searchInput=searchWrap.querySelector('#di-flight-search-input'),searchClear=searchWrap.querySelector('#di-flight-search-clear');
-searchInput.addEventListener('input',()=>{searchClear.hidden=!searchInput.value;refresh()});
+searchInput.addEventListener('input',()=>{
+ searchClear.hidden=!searchInput.value;
+ /* La ricerca deve trovare i voli in tutto l'archivio, anche dopo aver scelto un giorno o Preferiti. */
+ if(searchInput.value.trim()){
+  selectedDay='';
+  filter='all';
+  panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter==='all')));
+ }
+ refresh();
+});
 searchClear.addEventListener('click',()=>{searchInput.value='';searchClear.hidden=true;refresh();searchInput.focus()});
 let filter='all';
 const favoriteKey='drone-italia-flight-favorites-v2',legacyKey='drone-italia-flight-favorites-v1';
@@ -1177,13 +1186,13 @@ function refresh(){
    refresh();
   };
   const term=searchInput.value.trim().toLocaleLowerCase('it-IT');
-  const searchable=[x.place,x.notes,x.when,row.querySelector('.di-flight-name')?.textContent].filter(Boolean).join(' ').toLocaleLowerCase('it-IT');
+  const searchable=[x.place,x.notes,x.when,row.querySelector('.di-flight-name')?.textContent,original?.textContent].filter(Boolean).join(' ').toLocaleLowerCase('it-IT');
   const show=(filter!=='favorites'||!!fav[id])&&(!selectedDay||flightDay(x)===selectedDay)&&(!term||searchable.includes(term));
   row.style.display=show?'':'none';
   row.classList.toggle('di-flight-filter-hidden',!show);
   if(show)count++;
  });
- panel.querySelector('#di-flights-count').textContent=count+' voli visualizzati';
+ panel.querySelector('#di-flights-count').textContent=searchInput.value.trim()?count+' risultati per «'+searchInput.value.trim()+'»':count+' voli visualizzati';
  empty.hidden=count>0;
  empty.textContent=searchInput.value.trim()?'Nessun volo corrisponde alla ricerca. Prova un’altra località o cancella il testo.':selectedDay?'Nessun volo registrato nel giorno selezionato.':filter==='favorites'?'Nessun preferito. Premi ☆ su un volo in Tutti.':'Nessun volo registrato.';
  if(typeof renderCalendar==='function')renderCalendar();
