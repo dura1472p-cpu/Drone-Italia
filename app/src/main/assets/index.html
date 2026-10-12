@@ -379,6 +379,8 @@ html,body{min-height:100%;height:100%}
 .di-flights-marker-wrap{background:transparent;border:0}.di-flights-marker{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#087ce1;color:white;border:3px solid white;box-shadow:0 2px 9px #17364c88;font-size:15px;font-weight:800}.di-flights-map-popup{min-width:175px;max-width:265px}.di-flights-map-popup>strong{display:block;color:#125f9f;font-size:14px;margin-bottom:7px}.di-flights-map-row{display:flex;flex-direction:column;gap:3px;padding:7px 0;border-top:1px solid #e2eaf0}.di-flights-map-row strong{font-size:12px;color:#24485f}.di-flights-map-row span{font-size:11px;color:#526f83}
 
 .di-flights-map-summary{background:#fff;color:#15577f;border-radius:9px;padding:8px 11px;font-weight:700;font-size:12px;box-shadow:0 2px 9px #2345}
+
+.di-flights-map-popup{max-height:260px;overflow-y:auto}.di-flights-map-row .di-map-flight-expand{margin:6px 0;background:#eaf4ff;border:0;border-radius:7px;padding:7px 10px;color:#1264a4;font-size:12px;font-weight:700}.di-map-flight-detail[hidden]{display:none!important}.di-map-flight-detail{padding:8px;background:#f4f8fc;border-radius:8px}.di-map-flight-detail p{margin:5px 0;font-size:12px;overflow-wrap:anywhere}.di-map-flight-detail img{display:block;width:100%;max-height:130px;object-fit:cover;border-radius:6px;margin:6px 0}.di-map-flight-detail button{display:block;width:100%;margin:6px 0;border:0;border-radius:7px;padding:9px 5px;background:#147bd2;color:#fff;font-size:12px}.di-map-photo-overlay{position:fixed;inset:0;z-index:99999;background:#071421eb;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px}.di-map-photo-overlay img{max-width:95vw;max-height:75vh;object-fit:contain}.di-map-photo-overlay button{align-self:flex-end;border:0;background:#fff;border-radius:8px;padding:10px;margin-bottom:12px}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -1184,7 +1186,20 @@ mapButton.onclick=()=>{
      const row=document.createElement('div');row.className='di-flights-map-row';
      const place=document.createElement('strong');place.textContent=(i+1)+'. '+(x.place||'Volo registrato');
      const detail=document.createElement('span');detail.textContent=String(x.when||'Data non indicata')+' · '+String(x.duration||0)+' min';
-     row.append(place,detail);popup.append(row);
+     const expand=document.createElement('button');expand.type='button';expand.className='di-map-flight-expand';expand.textContent='Dettagli ▾';expand.setAttribute('aria-expanded','false');
+     const more=document.createElement('div');more.className='di-map-flight-detail';more.hidden=true;
+     const model=document.createElement('p');model.textContent='🛩️ Drone: '+String(x.model||'Non indicato');
+     const notes=document.createElement('p');notes.textContent='📝 Note: '+String(x.notes||'Nessuna nota');
+     more.append(model,notes);
+     if(typeof x.photo==='string'&&x.photo.startsWith('data:image/')){
+      const photo=document.createElement('img');photo.src=x.photo;photo.alt='Fotografia del volo';photo.loading='lazy';more.append(photo);
+      const photoButton=document.createElement('button');photoButton.type='button';photoButton.textContent='📷 Apri fotografia';
+      photoButton.onclick=()=>{const overlay=document.createElement('div');overlay.className='di-map-photo-overlay';const close=document.createElement('button');close.type='button';close.textContent='✕ Chiudi';const img=document.createElement('img');img.src=x.photo;img.alt='Fotografia del volo ingrandita';close.onclick=()=>overlay.remove();overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};overlay.append(close,img);document.body.append(overlay)};more.append(photoButton);
+     }
+     const pdf=document.createElement('button');pdf.type='button';pdf.textContent='📄 Rapporto PDF del volo';
+     pdf.onclick=()=>printLogReport(x);more.append(pdf);
+     expand.onclick=()=>{more.hidden=!more.hidden;expand.textContent=more.hidden?'Dettagli ▾':'Chiudi dettagli ▴';expand.setAttribute('aria-expanded',String(!more.hidden));marker.getPopup().update()};
+     row.append(place,detail,expand,more);popup.append(row);
     });
     marker.bindPopup(popup,{maxWidth:300,maxHeight:280});group.addLayer(marker);
    });
