@@ -1200,13 +1200,55 @@ function openFlightGroup(point,marker){
  });
  header.append(heading,close);dialog.append(header,list);overlay.append(dialog);document.body.append(overlay);document.body.style.overflow='hidden';document.addEventListener('keydown',onKey);close.focus();
 }
-mapButton.onclick=()=>{
- const entries=getLogs().filter(x=>x&&x.lat!==''&&x.lng!==''&&x.lat!=null&&x.lng!=null&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Math.abs(Number(x.lat))<=90&&Math.abs(Number(x.lng))<=180);
- if(!entries.length){alert('Nessun volo contiene coordinate GPS. Apri un volo e salva la posizione per visualizzarlo sulla mappa.');return}
+/* Filtri della mappa: leggono lo stesso archivio del diario. */
+const mapFilters={year:'',month:'',model:'',place:''};
+let flightsMapActive=false,mapRenderTimer=null;
+function gpsFlights(){return getLogs().filter(x=>x&&x.lat!==''&&x.lng!==''&&x.lat!=null&&x.lng!=null&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Math.abs(Number(x.lat))<=90&&Math.abs(Number(x.lng))<=180)}
+function matchesMapFilters(x){
+ const day=flightDay(x);
+ return (!mapFilters.year||day.slice(0,4)===mapFilters.year)&&
+  (!mapFilters.month||day.slice(5,7)===mapFilters.month)&&
+  (!mapFilters.model||String(x.model||'').trim()===mapFilters.model)&&
+  (!mapFilters.place||String(x.place||'').toLocaleLowerCase('it-IT').includes(mapFilters.place.trim().toLocaleLowerCase('it-IT')));
+}
+const quickMap=document.getElementById('di-map-quick');
+const mapFilterPanel=document.createElement('section');mapFilterPanel.id='di-flight-map-filters';mapFilterPanel.hidden=true;
+mapFilterPanel.setAttribute('aria-label','Filtri dei voli sulla mappa');
+mapFilterPanel.innerHTML='<div><strong>Filtra voli</strong> <button type="button" id="di-flight-filter-close" aria-label="Chiudi filtri">✕</button></div><label>Anno<select id="di-flight-filter-year"></select></label><label>Mese<select id="di-flight-filter-month"><option value="">Tutti i mesi</option></select></label><label>Drone<select id="di-flight-filter-model"></select></label><label>Località<input type="search" id="di-flight-filter-place" placeholder="Cerca località"></label><button type="button" id="di-flight-filter-reset">Mostra tutti i voli</button><p id="di-flight-filter-count" role="status"></p><small>Solo i voli con coordinate GPS compaiono sulla mappa.</small>';
+const filterStyle=document.createElement('style');
+filterStyle.textContent='#di-flight-map-filters{position:absolute;top:66px;left:10px;right:10px;z-index:700;max-height:calc(100% - 150px);overflow-y:auto;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:16px;box-shadow:0 6px 24px #1235;color:#173044}#di-flight-map-filters[hidden]{display:none!important}#di-flight-map-filters>div{display:flex;align-items:center;justify-content:space-between}#di-flight-map-filters label{display:block;font-size:14px;margin:8px 0}#di-flight-map-filters select,#di-flight-map-filters input{display:block;width:100%;min-height:44px;margin-top:4px;font:inherit;padding:8px;border:1px solid #bbc9d1;border-radius:8px}#di-flight-map-filters p{font-size:14px}#di-flight-map-filters small{font-size:12px}';
+document.head.append(filterStyle);
+const field=name=>mapFilterPanel.querySelector('#di-flight-filter-'+name);
+const months=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+months.forEach((name,i)=>field('month').add(new Option(name,String(i+1).padStart(2,'0'))));
+function populateMapFilters(){
+ const logs=getLogs();
+ [['year','Tutti gli anni',Array.from(new Set(logs.map(x=>flightDay(x).slice(0,4)).filter(Boolean))).sort().reverse()],
+ ['model','Tutti i droni',Array.from(new Set(logs.map(x=>String(x&&x.model||'').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'it'))]].forEach(([name,label,values])=>{
+  const select=field(name);select.replaceChildren(new Option(label,''));
+  if(mapFilters[name]&&!values.includes(mapFilters[name]))values.push(mapFilters[name]);
+  values.forEach(value=>select.add(new Option(value,value)));select.value=mapFilters[name];
+ });
+}
+if(quickMap){
+ const btn=document.createElement('button');btn.type='button';btn.textContent='☷ Filtra voli';btn.setAttribute('aria-controls',mapFilterPanel.id);btn.setAttribute('aria-expanded','false');
+ quickMap.append(btn);quickMap.parentElement.append(mapFilterPanel);
+ function closeFilters(){mapFilterPanel.hidden=true;btn.setAttribute('aria-expanded','false');btn.focus()}
+ btn.onclick=()=>{populateMapFilters();mapFilterPanel.hidden=!mapFilterPanel.hidden;btn.setAttribute('aria-expanded',String(!mapFilterPanel.hidden));if(!mapFilterPanel.hidden){showFlightsOnMap(false);field('year').focus()}};
+ field('close').onclick=closeFilters;
+ mapFilterPanel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeFilters()}});
+}
+['year','month','model','place'].forEach(name=>field(name).addEventListener(name==='place'?'input':'change',()=>{mapFilters[name]=field(name).value;showFlightsOnMap(false)}));
+field('reset').onclick=()=>{Object.keys(mapFilters).forEach(name=>{mapFilters[name]='';field(name).value=''});showFlightsOnMap(false)};
+function showFlightsOnMap(openPage){
  if(typeof L==='undefined'||typeof map==='undefined'||!map){alert('La mappa non è disponibile. Controlla la connessione.');return}
- window.diFlightOpeningSavedLocation=true;window.droneItaliaOpenPage('map');window.diFlightOpeningSavedLocation=false;
- setTimeout(()=>{
+ flightsMapActive=true;
+ if(openPage){window.diFlightOpeningSavedLocation=true;window.droneItaliaOpenPage('map');window.diFlightOpeningSavedLocation=false}
+ clearTimeout(mapRenderTimer);
+ mapRenderTimer=setTimeout(()=>{
   try{
+   const allEntries=gpsFlights(),entries=allEntries.filter(matchesMapFilters);
+   const overlay=document.getElementById('di-flight-group-overlay');if(overlay)overlay.diClose();
    if(window.diAllFlightsLayer)map.removeLayer(window.diAllFlightsLayer);
    const group=L.featureGroup();
    /* Un indicatore per ogni posizione: i voli coincidenti restano tutti consultabili. */
@@ -1228,14 +1270,18 @@ mapButton.onclick=()=>{
     const marker=L.marker([point.lat,point.lng],{icon});
     marker.on('click',()=>openFlightGroup(point,marker));group.addLayer(marker);
    });
-   window.diAllFlightsLayer=group.addTo(map);map.invalidateSize({pan:false});map.fitBounds(group.getBounds().pad(.22),{maxZoom:14});
+   window.diAllFlightsLayer=group.addTo(map);map.invalidateSize({pan:false});if(entries.length)map.fitBounds(group.getBounds().pad(.22),{maxZoom:14});
+   const summary=entries.length+' di '+allEntries.length+' voli GPS · '+locations.length+' posizioni';
+   field('count').textContent=entries.length?summary:allEntries.length?'Nessun volo corrisponde ai filtri.':'Nessun volo contiene coordinate GPS.';
    const info=L.control({position:'bottomleft'});
-   info.onAdd=()=>{const div=L.DomUtil.create('div','di-flights-map-summary');div.textContent=entries.length+' voli GPS · '+locations.length+' posizioni';return div};
+   info.onAdd=()=>{const div=L.DomUtil.create('div','di-flights-map-summary');div.setAttribute('role','status');div.textContent=entries.length?summary:field('count').textContent;return div};
    if(window.diAllFlightsInfo)map.removeControl(window.diAllFlightsInfo);
    window.diAllFlightsInfo=info.addTo(map);
   }catch(e){alert('Impossibile mostrare i voli sulla mappa.')}
- },550);
-};
+ },openPage?550:120);
+}
+mapButton.onclick=()=>{Object.keys(mapFilters).forEach(name=>{mapFilters[name]='';field(name).value=''});populateMapFilters();showFlightsOnMap(true)};
+new MutationObserver(()=>{populateMapFilters();if(flightsMapActive)showFlightsOnMap(false)}).observe(box,{childList:true});
 
 statsPanel.querySelector('#di-stats-toggle').onclick=()=>{statsContent.hidden=!statsContent.hidden;statsPanel.querySelector('#di-stats-toggle').setAttribute('aria-expanded',String(!statsContent.hidden));statsPanel.querySelector('#di-stats-toggle span').textContent=statsContent.hidden?'▾':'▴';if(!statsContent.hidden)renderFlightStatistics()};
 function formatFlightTime(n){n=Math.round(n);return n>=60?Math.floor(n/60)+' h'+(n%60?' '+n%60+' min':''):n+' min'}
