@@ -363,6 +363,8 @@ html,body{min-height:100%;height:100%}
 #di-page-photos #di-photo-diagnostics{font-size:12px;color:#54708a;margin:0 12px 8px}
 
 #di-page-photos .di-photo-card{display:flex!important;flex-direction:column;padding:0!important}#di-page-photos .di-photo-open{display:block;width:100%;border:0;background:transparent;padding:0;text-align:left;color:#29465d;min-width:0}#di-page-photos .di-photo-open img{width:100%;aspect-ratio:1/1;object-fit:cover}#di-page-photos .di-photo-open span{display:block;padding:7px 6px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#di-page-photos .di-photo-delete{border:0;border-top:1px solid #e6edf4;background:#fff;color:#a13d3d;font-size:11px;padding:10px 2px;min-height:36px;width:100%;font-weight:600}#di-page-photos .di-photo-delete:disabled{opacity:.45}
+
+#di-page-flights .di-flights-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0 9px}#di-page-flights .di-flights-stats>div{background:#fff;border:1px solid #dce8f3;border-radius:13px;padding:12px 5px;text-align:center;box-shadow:0 2px 7px #183d6010}#di-page-flights .di-flights-stats strong{display:block;font-size:21px;color:#146fca;font-weight:800;white-space:nowrap}#di-page-flights .di-flights-stats span{display:block;font-size:11px;color:#58718a;margin-top:5px}#di-page-flights #di-logs>div.di-flight-card{box-shadow:0 3px 12px #183d6012;border-color:#d9e6f2;border-radius:15px}#di-page-flights #di-logs .di-flight-name{font-size:16px;color:#163d5d}#di-page-flights #di-logs .di-flight-date{font-size:12px;color:#607c92}#di-page-flights #di-logs .di-flight-meta{font-size:12px;color:#315c7a}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -1111,7 +1113,7 @@ panel.querySelector('#di-layers-base').onclick=()=>{const satellite=document.get
 const page=document.getElementById('di-page-flights'),box=document.getElementById('di-logs');
 if(!page||!box)return;
 const panel=document.createElement('section');panel.id='di-flights-dashboard';
-panel.innerHTML='<div class="di-flights-bar"><h2>▦ I miei voli</h2><button type="button" id="di-flights-add" aria-label="Nuovo volo">＋</button></div><div class="di-flights-tabs" role="group" aria-label="Filtra voli"><button type="button" data-filter="all" aria-pressed="true">Tutti</button><button type="button" data-filter="completed" aria-pressed="false">Completati</button><button type="button" data-filter="favorites" aria-pressed="false">Preferiti</button></div><div id="di-flights-count" role="status"></div>';
+panel.innerHTML='<div class="di-flights-bar"><h2>▦ I miei voli</h2><button type="button" id="di-flights-add" aria-label="Nuovo volo">＋</button></div><div class="di-flights-tabs" role="group" aria-label="Filtra voli"><button type="button" data-filter="all" aria-pressed="true">Tutti</button><button type="button" data-filter="completed" aria-pressed="false">Completati</button><button type="button" data-filter="favorites" aria-pressed="false">Preferiti</button></div><div class="di-flights-stats" aria-label="Riepilogo dei voli"><div><strong id="di-flights-total">0</strong><span>Voli registrati</span></div><div><strong id="di-flights-hours">0 min</strong><span>Tempo totale</span></div><div><strong id="di-flights-favorites">0</strong><span>Preferiti</span></div></div><div id="di-flights-count" role="status"></div>';
 page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 /* Elenco subito sotto i filtri, prima degli strumenti e dei moduli. */
 /* Non spostare il diario: le altre funzioni lo aggiornano nella posizione originale. */
@@ -1137,6 +1139,11 @@ if(localStorage.getItem(favoriteKey)===null){
 const empty=document.createElement('p');empty.id='di-flights-empty';empty.hidden=true;empty.textContent='Nessun volo in questa categoria.';box.after(empty);
 function refresh(){
  const logs=getLogs(),fav=getFav(),rows=Array.from(box.children).filter(el=>el.tagName==='DIV');
+ const totalMinutes=logs.reduce((sum,x)=>{const n=Number(x.duration);return sum+(Number.isFinite(n)&&n>0?n:0)},0);
+ const hours=Math.floor(totalMinutes/60),minutes=totalMinutes%60;
+ panel.querySelector('#di-flights-total').textContent=String(logs.length);
+ panel.querySelector('#di-flights-hours').textContent=hours?hours+' h'+(minutes?' '+minutes+' min':''):minutes+' min';
+ panel.querySelector('#di-flights-favorites').textContent=String(logs.filter(x=>!!fav[idOf(x)]).length);
  let count=0;
  rows.forEach((row,i)=>{
   const x=logs[i]||{},id=idOf(x),original=row.querySelector('p'),label=original?.textContent||'';
