@@ -970,11 +970,47 @@ function openPhotoFlight(x){
  if(typeof window.diOpenFlightInDiary!=='function'){alert('Diario non disponibile. Riapri la sezione Voli.');return}
  closeViewer();window.diOpenFlightInDiary(x.flight,x.index);
 }
-function closeViewer(){viewer.hidden=true;document.body.style.overflow=''}
+let visibleViewerPhotos=[],viewerPhotos=[],viewerIndex=0,viewerFocusBefore=null,viewerOverflowBefore='';
+const viewerNavigation=document.createElement('div');viewerNavigation.id='di-photo-navigation';
+viewerNavigation.innerHTML='<button type="button" id="di-photo-prev" aria-label="Foto precedente">‹ Precedente</button><span id="di-photo-position" role="status"></span><button type="button" id="di-photo-next" aria-label="Foto successiva">Successiva ›</button>';
+viewer.append(viewerNavigation);
+const viewerStyle=document.createElement('style');viewerStyle.textContent='#di-page-photos #di-photo-viewer{overflow-y:auto;justify-content:center;gap:10px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}#di-page-photos #di-photo-viewer img{max-height:58vh;max-height:58dvh}#di-photo-navigation{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;max-width:480px}#di-photo-navigation button{min-height:44px;background:#ffffff26;color:white;font-size:13px;padding:10px}#di-photo-navigation button:disabled{opacity:.35}#di-photo-position{color:white;font-size:13px;white-space:nowrap}';document.head.append(viewerStyle);
+function closeViewer(){if(viewer.hidden)return;viewer.hidden=true;document.body.style.overflow=viewerOverflowBefore;if(viewerFocusBefore&&viewerFocusBefore.isConnected)viewerFocusBefore.focus()}
+function showViewerPhoto(){
+ const x=viewerPhotos[viewerIndex];if(!x)return;
+ viewerFlight.hidden=x.kind!=='flight';viewerFlight.onclick=()=>openPhotoFlight(x);
+ viewer.querySelector('#di-photo-large').src=x.photo;
+ viewer.querySelector('#di-photo-caption').textContent=(x.place||'Foto personale')+' · '+String(x.when||'');
+ viewer.querySelector('#di-photo-position').textContent=(viewerIndex+1)+' / '+viewerPhotos.length;
+ viewer.querySelector('#di-photo-prev').disabled=viewerIndex===0;
+ viewer.querySelector('#di-photo-next').disabled=viewerIndex===viewerPhotos.length-1;
+}
+function moveViewerPhoto(step){
+ const next=viewerIndex+step;if(next<0||next>=viewerPhotos.length)return;
+ viewerIndex=next;showViewerPhoto();
+}
+viewer.querySelector('#di-photo-prev').onclick=()=>moveViewerPhoto(-1);
+viewer.querySelector('#di-photo-next').onclick=()=>moveViewerPhoto(1);
 viewer.querySelector('#di-photo-close').onclick=closeViewer;
 viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.hidden)closeViewer()});
-function openViewer(x){viewerFlight.hidden=x.kind!=='flight';viewerFlight.onclick=()=>openPhotoFlight(x);viewer.querySelector('#di-photo-large').src=x.photo;viewer.querySelector('#di-photo-caption').textContent=(x.place||'Volo')+' · '+String(x.when||'');viewer.hidden=false;document.body.style.overflow='hidden';viewer.querySelector('#di-photo-close').focus()}
+document.addEventListener('keydown',e=>{
+ if(viewer.hidden)return;
+ if(e.key==='Escape'){e.preventDefault();closeViewer()}
+ if(e.key==='ArrowLeft'){e.preventDefault();moveViewerPhoto(-1)}
+ if(e.key==='ArrowRight'){e.preventDefault();moveViewerPhoto(1)}
+ if(e.key==='Tab'){
+  const buttons=Array.from(viewer.querySelectorAll('button')).filter(b=>!b.hidden&&!b.disabled);
+  const first=buttons[0],last=buttons[buttons.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+ }
+});
+function openViewer(x){
+ viewerPhotos=visibleViewerPhotos.slice();viewerIndex=viewerPhotos.indexOf(x);
+ if(viewerIndex<0){viewerPhotos=[x];viewerIndex=0}
+ viewerFocusBefore=document.activeElement;viewerOverflowBefore=document.body.style.overflow;
+ showViewerPhoto();viewer.hidden=false;document.body.style.overflow='hidden';viewer.querySelector('#di-photo-close').focus();
+}
 const photoFilters={year:'',month:'',place:''};
 let photoCache={logs:[],fromGallery:[],error:''},photoRenderVersion=0;
 const photoFilterPanel=document.createElement('details');photoFilterPanel.id='di-photo-filters';photoFilterPanel.setAttribute('aria-label','Filtra fotografie');
@@ -1015,6 +1051,7 @@ if(photoFilters.year&&!years.includes(photoFilters.year))years.push(photoFilters
 photoField('year').replaceChildren(new Option('Tutti gli anni',''));
 years.forEach(year=>photoField('year').add(new Option(year,year)));photoField('year').value=photoFilters.year;
 const visiblePhotos=withPhotos.filter(matchesPhotoFilters);
+visibleViewerPhotos=visiblePhotos;
 counter.textContent=visiblePhotos.length+' di '+withPhotos.length+' foto';
 photoField('filter-count').textContent=visiblePhotos.length+' foto visualizzate su '+withPhotos.length;
 const activePhotoFilters=Object.values(photoFilters).filter(value=>value.trim()).length;
