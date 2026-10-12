@@ -360,6 +360,7 @@ html,body{min-height:100%;height:100%}
 #di-page-photos{padding:18px 12px 100px!important;background:#f2f6fb!important;min-height:100vh}#di-page-photos .di-photos-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 10px 0}#di-page-photos .di-photos-header h2{font-size:23px;margin:6px 0;color:#183c5a}#di-page-photos #di-photo-count{font-size:12px;color:#416480;background:#e0ecf8;padding:7px 10px;border-radius:18px;white-space:nowrap}#di-page-photos .di-photos-intro{font-size:13px;color:#5d758a;margin:8px 10px 18px}#di-page-photos .di-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px}#di-page-photos .di-photo-card{display:block;border:0!important;padding:0!important;text-align:left;min-width:0;overflow:hidden;border-radius:12px;background:white;box-shadow:0 2px 8px #24445c18}#di-page-photos .di-photo-card img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;display:block}#di-page-photos .di-photo-card span{display:block;padding:7px 6px;color:#29465d;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#di-page-photos .di-photo-card:focus-visible{outline:3px solid #1179ed}#di-page-photos #di-photo-viewer[hidden]{display:none!important}#di-page-photos #di-photo-viewer{position:fixed;inset:0;z-index:11000;background:#07131bef;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 16px 30px;box-sizing:border-box}#di-page-photos #di-photo-viewer img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:8px}#di-page-photos #di-photo-viewer p{color:#fff;text-align:center;font-size:14px}#di-page-photos #di-photo-close{position:absolute;top:22px;right:20px;border:0;background:#ffffff26;color:white;font-size:25px;border-radius:50%;width:46px;height:46px}#di-page-photos .di-photo-empty{grid-column:1/-1}
 
 #di-page-photos .di-photo-actions{display:flex;align-items:center;gap:9px;margin:8px 10px 18px;flex-wrap:wrap}#di-page-photos .di-photo-actions button{background:#1179ed;color:white;border:0;border-radius:12px;padding:13px 17px;font-size:14px;font-weight:700;min-height:46px}#di-page-photos .di-photo-actions select{flex:1;min-width:155px;max-width:100%;background:white;border:1px solid #d0dfeb;border-radius:11px;padding:12px 8px;font-size:12px;color:#274c69}#di-page-photos .di-photo-actions input[hidden]{display:none!important}
+#di-page-photos #di-photo-diagnostics{font-size:12px;color:#54708a;margin:0 12px 8px}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -814,7 +815,45 @@ const picker=document.createElement('input');picker.type='file';picker.accept='i
 const linkFlight=document.createElement('select');linkFlight.setAttribute('aria-label','Associa la foto a un volo');
 actions.append(addPhoto,linkFlight,picker);photos.append(actions);
 const photoStore='drone-italia-gallery-photos-v1';
-function galleryData(){try{const a=JSON.parse(localStorage.getItem(photoStore)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+/* IndexedDB: foto persistenti, senza il limite ristretto di localStorage. */
+let galleryDbPromise=null;
+function galleryDb(){
+ if(!galleryDbPromise)galleryDbPromise=new Promise((resolve,reject)=>{
+  if(!window.indexedDB){reject(Error('Archivio foto non supportato'));return}
+  const request=indexedDB.open('drone-italia-gallery',1);
+  request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('photos'))request.result.createObjectStore('photos',{keyPath:'id',autoIncrement:true})};
+  request.onsuccess=()=>resolve(request.result);
+  request.onerror=()=>reject(request.error||Error('Archivio foto non disponibile'));
+ });
+ return galleryDbPromise;
+}
+async function galleryData(){
+ const db=await galleryDb();
+ const saved=await new Promise((resolve,reject)=>{
+  const tx=db.transaction('photos','readonly'),req=tx.objectStore('photos').getAll();
+  req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error);
+ });
+ /* Recupera foto salvate dalle versioni precedenti, senza cancellarle prima del trasferimento. */
+ let legacy=[];try{const a=JSON.parse(localStorage.getItem(photoStore)||'[]');if(Array.isArray(a))legacy=a}catch(e){}
+ if(legacy.length){
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction('photos','readwrite'),store=tx.objectStore('photos');
+   legacy.forEach(x=>{if(x&&x.photo)store.add({photo:x.photo,place:x.place||'Foto personale',when:x.when||''})});
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+  });
+  localStorage.removeItem(photoStore);
+  return saved.concat(legacy);
+ }
+ return saved;
+}
+async function saveGalleryPhoto(x){
+ const db=await galleryDb();
+ await new Promise((resolve,reject)=>{
+  const tx=db.transaction('photos','readwrite');
+  tx.objectStore('photos').add(x);
+  tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('Foto non salvata'));tx.onabort=()=>reject(tx.error||Error('Archivio non disponibile'));
+ });
+}
 function flightData(){try{const a=JSON.parse(localStorage.getItem('drone-italia-beta-logs')||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
 function refreshFlightOptions(){
  const selected=linkFlight.value;linkFlight.replaceChildren();
@@ -838,13 +877,13 @@ picker.onchange=async()=>{
    if(logs[n].photo&&!confirm('Questo volo ha già una foto. Vuoi sostituirla?'))return;
    logs[n].photo=photo;localStorage.setItem('drone-italia-beta-logs',JSON.stringify(logs));
   }else{
-   const a=galleryData();a.push({photo,place:'Foto personale',when:new Date().toLocaleString('it-IT')});
-   localStorage.setItem(photoStore,JSON.stringify(a));
+   await saveGalleryPhoto({photo,place:'Foto personale',when:new Date().toLocaleString('it-IT')});
   }
-  renderPhotos();alert('Fotografia salvata nella galleria.');
+  await renderPhotos();alert('Fotografia salvata nella galleria.');
  }catch(e){alert('Non è stato possibile salvare la foto. Verifica lo spazio disponibile sul telefono.')}
  finally{picker.value='';addPhoto.disabled=false;addPhoto.textContent='＋ Aggiungi foto'}
 };
+const diagnostics=document.createElement('p');diagnostics.id='di-photo-diagnostics';diagnostics.setAttribute('role','status');photos.append(diagnostics);
 const grid=document.createElement('div');grid.className='di-photo-grid';photos.append(grid);
 const viewer=document.createElement('div');viewer.id='di-photo-viewer';viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Fotografia ingrandita');
 viewer.innerHTML='<button type="button" id="di-photo-close" aria-label="Chiudi fotografia">✕</button><img id="di-photo-large" alt="Fotografia del volo"><p id="di-photo-caption"></p>';
@@ -854,13 +893,18 @@ viewer.querySelector('#di-photo-close').onclick=closeViewer;
 viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.hidden)closeViewer()});
 function openViewer(x){viewer.querySelector('#di-photo-large').src=x.photo;viewer.querySelector('#di-photo-caption').textContent=(x.place||'Volo')+' · '+String(x.when||'');viewer.hidden=false;document.body.style.overflow='hidden';viewer.querySelector('#di-photo-close').focus()}
-function renderPhotos(){
+async function renderPhotos(){
 grid.replaceChildren();
 const logs=flightData();
-const withPhotos=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0).concat(galleryData().filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0)).reverse();
+const fromFlights=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0);
+let fromGallery=[],error='';
+try{fromGallery=await galleryData()}catch(e){error='Archivio foto non accessibile: '+(e&&e.message||'errore sconosciuto')}
+const withPhotos=fromFlights.concat(fromGallery.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0)).reverse();
 refreshFlightOptions();
 counter.textContent=withPhotos.length+' foto';
-if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Non ci sono foto salvate. Premi «＋ Aggiungi foto» per importarne una dal telefono.';grid.append(p);return}
+const diagnostics=document.getElementById('di-photo-diagnostics');
+if(diagnostics)diagnostics.textContent=fromFlights.length+' foto nei voli · '+fromGallery.length+' foto nella galleria'+(error?' · ⚠ '+error:'');
+if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent=error?'Impossibile aprire l’archivio delle foto. Non cancellare i dati dell’app.':'Non risultano foto salvate nei voli o nella galleria. Premi «＋ Aggiungi foto» per importarne una dal telefono.';grid.append(p);return}
 withPhotos.forEach(x=>{const card=document.createElement('button');card.type='button';card.className='di-photo-card';card.setAttribute('aria-label','Apri foto del volo '+(x.place||'')+' del '+String(x.when||''));const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo '+(x.place||'');img.loading='lazy';const label=document.createElement('span');label.textContent=x.place||'Volo';card.append(img,label);card.onclick=()=>openViewer(x);grid.append(card)});
 }
 const oldOpen=window.droneItaliaOpenPage;
