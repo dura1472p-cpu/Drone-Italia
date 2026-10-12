@@ -1265,6 +1265,21 @@ const statsPanel=document.createElement('section');statsPanel.id='di-flight-stat
 statsPanel.innerHTML='<button type="button" id="di-stats-toggle" aria-expanded="false">📊 Statistiche di volo <span>▾</span></button><div id="di-stats-content" hidden><div class="di-stats-cards"><div><strong id="di-stats-month-flights">0</strong><span>Voli questo mese</span></div><div><strong id="di-stats-month-time">0 min</strong><span>Tempo questo mese</span></div><div><strong id="di-stats-longest">—</strong><span>Volo più lungo</span></div></div><h4>Voli negli ultimi 6 mesi</h4><div id="di-stats-chart" class="di-stats-chart"></div><p id="di-stats-place"></p><p class="di-stats-note">Statistiche calcolate dai voli salvati. Le date non riconosciute non rientrano nei conteggi mensili.</p></div>';
 panel.append(statsPanel);
 const statsContent=statsPanel.querySelector('#di-stats-content');
+const droneStats=document.createElement('section');droneStats.id='di-stats-drones';
+droneStats.innerHTML='<h4>Utilizzo per drone</h4><p class="di-stats-note">Riepilogo di tutti i voli salvati.</p><div id="di-stats-drone-list"></div>';
+statsContent.append(droneStats);
+const droneStatsStyle=document.createElement('style');droneStatsStyle.textContent='#di-stats-drones{margin-top:18px}#di-stats-drones h4{margin:0 0 6px;color:#204b6d}#di-stats-drone-list{display:grid;gap:10px}.di-stats-drone-card{padding:12px;border:1px solid #dce8f3;border-radius:12px;background:#fff}.di-stats-drone-card strong{display:block;font-size:14px;overflow-wrap:anywhere}.di-stats-drone-card p{font-size:12px;color:#52718c;margin:6px 0 9px}.di-stats-drone-track{height:7px;border-radius:8px;background:#e8f1fa;overflow:hidden}.di-stats-drone-track span{display:block;height:100%;background:#1682db;border-radius:8px}';document.head.append(droneStatsStyle);
+function flightDroneSummary(logs){
+ const groups=new Map();
+ logs.forEach(x=>{
+  if(!x||typeof x!=='object')return;
+  const model=String(x.model||'').trim()||'Drone non indicato';
+  if(!groups.has(model))groups.set(model,{model,count:0,minutes:0});
+  const item=groups.get(model),duration=Number(x.duration);
+  item.count++;if(Number.isFinite(duration)&&duration>0)item.minutes+=duration;
+ });
+ return Array.from(groups.values()).sort((a,b)=>b.count-a.count||b.minutes-a.minutes||a.model.localeCompare(b.model,'it'));
+}
 const extra=document.createElement('div');extra.className='di-stats-actions';
 extra.innerHTML='<button type="button" id="di-stats-pdf">📄 Esporta statistiche PDF</button><button type="button" id="di-stats-map">🗺️ Mostra tutti i voli sulla mappa</button><div id="di-stats-month-list"></div>';
 statsContent.append(extra);
@@ -1277,8 +1292,9 @@ pdfButton.onclick=()=>{
  const locationRows=Object.entries(places).sort((a,b)=>b[1]-a[1]).map(([p,n])=>'<tr><td>'+safeHtml(p)+'</td><td>'+n+'</td></tr>').join('');
  const monthCounts={};logs.forEach(x=>{const d=flightDay(x);if(d)monthCounts[d.slice(0,7)]=(monthCounts[d.slice(0,7)]||0)+1});
  const monthRows=Object.entries(monthCounts).sort((a,b)=>b[0].localeCompare(a[0])).map(([m,n])=>'<tr><td>'+safeHtml(m)+'</td><td>'+n+'</td></tr>').join('');
+ const droneRows=flightDroneSummary(logs).map(x=>'<tr><td>'+safeHtml(x.model)+'</td><td>'+x.count+'</td><td>'+safeHtml(formatFlightTime(x.minutes))+'</td></tr>').join('');
  const flightRows=logs.map(x=>'<tr><td>'+safeHtml(x.when)+'</td><td>'+safeHtml(x.place||'Non indicata')+'</td><td>'+safeHtml(x.duration||0)+' min</td></tr>').join('');
- const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Statistiche Drone Italia</title><style>body{font-family:Arial,sans-serif;color:#20384b;padding:24px}h1{color:#1268a8}h2{margin-top:26px;color:#1268a8}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left}th{background:#eaf3fa}p{line-height:1.5}</style></head><body><h1>Drone Italia - Statistiche di volo</h1><p>Rapporto personale generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><p><b>Voli registrati:</b> '+logs.length+'<br><b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'<br><b>Volo piu lungo:</b> '+safeHtml(formatFlightTime(Math.max(0,...logs.map(x=>Number(x.duration)||0))))+'</p><h2>Voli per mese</h2><table><tr><th>Mese</th><th>Voli</th></tr>'+monthRows+'</table><h2>Localita</h2><table><tr><th>Localita</th><th>Voli</th></tr>'+locationRows+'</table><h2>Elenco voli</h2><table><tr><th>Data</th><th>Luogo</th><th>Durata</th></tr>'+flightRows+'</table><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
+ const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Statistiche Drone Italia</title><style>body{font-family:Arial,sans-serif;color:#20384b;padding:24px}h1{color:#1268a8}h2{margin-top:26px;color:#1268a8}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left}th{background:#eaf3fa}p{line-height:1.5}</style></head><body><h1>Drone Italia - Statistiche di volo</h1><p>Rapporto personale generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><p><b>Voli registrati:</b> '+logs.length+'<br><b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'<br><b>Volo piu lungo:</b> '+safeHtml(formatFlightTime(Math.max(0,...logs.map(x=>Number(x.duration)||0))))+'</p><h2>Utilizzo per drone</h2><table><tr><th>Drone</th><th>Voli</th><th>Tempo totale</th></tr>'+droneRows+'</table><h2>Voli per mese</h2><table><tr><th>Mese</th><th>Voli</th></tr>'+monthRows+'</table><h2>Localita</h2><table><tr><th>Localita</th><th>Voli</th></tr>'+locationRows+'</table><h2>Elenco voli</h2><table><tr><th>Data</th><th>Luogo</th><th>Durata</th></tr>'+flightRows+'</table><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
  if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport)window.DroneItaliaNative.printReport(html);else alert('Esportazione PDF disponibile nell’app Android aggiornata.');
 };
 function mappedFlightIndex(x,logs){
@@ -1465,6 +1481,17 @@ function renderFlightStatistics(){
  const months=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('it-IT',{month:'short'})})}
  const max=Math.max(1,...months.map(m=>counts[m.key]||0));
  months.forEach(m=>{const col=document.createElement('div');col.className='di-stats-column';const value=counts[m.key]||0;const num=document.createElement('strong');num.textContent=String(value);const bar=document.createElement('div');bar.className='di-stats-bar';bar.style.height=Math.max(4,Math.round(value/max*85))+'px';bar.setAttribute('aria-label',m.label+': '+value+' voli');const label=document.createElement('span');label.textContent=m.label;col.append(num,bar,label);chart.append(col)});
+ const droneList=droneStats.querySelector('#di-stats-drone-list');droneList.replaceChildren();
+ const droneSummary=flightDroneSummary(logs),droneMax=Math.max(1,...droneSummary.map(x=>x.count));
+ if(!droneSummary.length){const empty=document.createElement('p');empty.className='di-stats-note';empty.textContent='Registra un volo per vedere l’utilizzo dei droni.';droneList.append(empty)}
+ droneSummary.forEach(x=>{
+  const card=document.createElement('div');card.className='di-stats-drone-card';
+  const name=document.createElement('strong');name.textContent=x.model;
+  const meta=document.createElement('p');meta.textContent=x.count+' '+(x.count===1?'volo':'voli')+' · '+formatFlightTime(x.minutes);
+  const track=document.createElement('div');track.className='di-stats-drone-track';track.setAttribute('aria-hidden','true');
+  const bar=document.createElement('span');bar.style.width=Math.round(x.count/droneMax*100)+'%';track.append(bar);
+  card.append(name,meta,track);droneList.append(card);
+ });
  const places={};logs.forEach(x=>{const name=String(x.place||'').trim();if(name)places[name]=(places[name]||0)+1});
  const top=Object.entries(places).sort((a,b)=>b[1]-a[1])[0];
  statsPanel.querySelector('#di-stats-place').textContent=top?'📍 Località più frequente: '+top[0]+' ('+top[1]+' voli)':'📍 Nessuna località registrata.';
