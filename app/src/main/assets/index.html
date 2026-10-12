@@ -1487,8 +1487,19 @@ function refresh(){
 }
 /* Calendario voli: legge le date dai voli esistenti senza modificare l'archivio. */
 const calendar=document.createElement('section');calendar.id='di-flight-calendar';
-calendar.innerHTML='<div class="di-calendar-head"><h3>📅 Calendario voli</h3><button type="button" id="di-calendar-prev" aria-label="Mese precedente">‹</button><strong id="di-calendar-month"></strong><button type="button" id="di-calendar-next" aria-label="Mese successivo">›</button></div><div class="di-calendar-days" id="di-calendar-days"></div><p id="di-calendar-selection" role="status">Tocca un giorno per vedere i voli.</p><button type="button" id="di-calendar-clear" hidden>Mostra tutti i giorni</button>';
+calendar.innerHTML='<div class="di-calendar-head"><h3>📅 Calendario voli</h3><button type="button" id="di-calendar-prev" aria-label="Mese precedente">‹</button><strong id="di-calendar-month"></strong><button type="button" id="di-calendar-next" aria-label="Mese successivo">›</button></div><div class="di-calendar-days" id="di-calendar-days"></div><p id="di-calendar-message" role="status">Tocca un giorno per vedere i voli.</p><button type="button" id="di-calendar-selection" hidden aria-controls="di-logs"></button><button type="button" id="di-calendar-clear" hidden>Mostra tutti i giorni</button>';
 panel.append(calendar);
+const calendarStyle=document.createElement('style');calendarStyle.textContent='#di-flight-calendar .di-calendar-day{background:#f5f8fc!important;color:#24445d!important}#di-flight-calendar .di-calendar-day.has-flights{background:#e4f2ff!important;color:#075da8!important;border-bottom:3px solid #2584d8!important}#di-flight-calendar .di-calendar-day.selected{background:#086cc3!important;color:white!important;border-bottom:3px solid #086cc3!important}#di-flight-calendar #di-calendar-selection{display:block;width:100%;background:#e8f3ff!important;color:#075da8!important;text-align:left;font-size:14px!important}#di-flight-calendar button[hidden]{display:none!important}#di-flight-calendar .di-calendar-head button{color:#1665a5!important}';
+document.head.append(calendarStyle);
+function resetDiaryFiltersForCalendar(){
+ filter='all';searchInput.value='';searchClear.hidden=true;
+ panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter==='all')));
+}
+function openCalendarFlights(){
+ const firstVisible=Array.from(box.children).find(row=>row.classList.contains('di-flight-card')&&!row.classList.contains('di-flight-filter-hidden'));
+ if(!firstVisible)return;
+ firstVisible.setAttribute('tabindex','-1');firstVisible.focus({preventScroll:true});firstVisible.scrollIntoView({behavior:'smooth',block:'start'});
+}
 let calendarMonth=new Date();calendarMonth.setDate(1);let selectedDay='';
 function flightDay(x){
  const raw=String(x&&x.when||'').trim();
@@ -1512,16 +1523,19 @@ function renderCalendar(){
   btn.className='di-calendar-day'+(counts[key]?' has-flights':'')+(selectedDay===key?' selected':'');
   btn.setAttribute('aria-label',day+' '+calendarMonth.toLocaleDateString('it-IT',{month:'long'})+(counts[key]?', '+counts[key]+' voli':''));
   btn.setAttribute('aria-pressed',String(selectedDay===key));
-  btn.onclick=()=>{selectedDay=selectedDay===key?'':key;renderCalendar();refresh();};
+  btn.onclick=()=>{selectedDay=selectedDay===key?'':key;resetDiaryFiltersForCalendar();refresh();if(selectedDay&&counts[key])openCalendarFlights()};
   days.append(btn);
  }
  const chosen=logs.filter(x=>flightDay(x)===selectedDay).length;
- calendar.querySelector('#di-calendar-selection').textContent=selectedDay?new Date(selectedDay+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})+': '+chosen+' voli':'Tocca un giorno per vedere i voli.';
+ const message=calendar.querySelector('#di-calendar-message'),selection=calendar.querySelector('#di-calendar-selection');
+ message.textContent=selectedDay?new Date(selectedDay+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})+': '+chosen+' voli':'Tocca un giorno per vedere i voli. I giorni azzurri contengono voli; il blu indica la selezione.';
+ selection.hidden=!selectedDay||chosen===0;selection.textContent='Apri i '+chosen+' voli del giorno →';
  calendar.querySelector('#di-calendar-clear').hidden=!selectedDay;
 }
-calendar.querySelector('#di-calendar-prev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};
-calendar.querySelector('#di-calendar-next').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};
-calendar.querySelector('#di-calendar-clear').onclick=()=>{selectedDay='';renderCalendar();refresh()};
+calendar.querySelector('#di-calendar-prev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);selectedDay='';refresh()};
+calendar.querySelector('#di-calendar-next').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);selectedDay='';refresh()};
+calendar.querySelector('#di-calendar-clear').onclick=()=>{selectedDay='';refresh()};
+calendar.querySelector('#di-calendar-selection').onclick=()=>{resetDiaryFiltersForCalendar();refresh();openCalendarFlights()};
 panel.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
  filter=btn.dataset.filter;
  panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
