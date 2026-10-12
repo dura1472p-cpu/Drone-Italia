@@ -365,6 +365,8 @@ html,body{min-height:100%;height:100%}
 #di-page-photos .di-photo-card{display:flex!important;flex-direction:column;padding:0!important}#di-page-photos .di-photo-open{display:block;width:100%;border:0;background:transparent;padding:0;text-align:left;color:#29465d;min-width:0}#di-page-photos .di-photo-open img{width:100%;aspect-ratio:1/1;object-fit:cover}#di-page-photos .di-photo-open span{display:block;padding:7px 6px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#di-page-photos .di-photo-delete{border:0;border-top:1px solid #e6edf4;background:#fff;color:#a13d3d;font-size:11px;padding:10px 2px;min-height:36px;width:100%;font-weight:600}#di-page-photos .di-photo-delete:disabled{opacity:.45}
 
 #di-page-flights .di-flights-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0 9px}#di-page-flights .di-flights-stats>div{background:#fff;border:1px solid #dce8f3;border-radius:13px;padding:12px 5px;text-align:center;box-shadow:0 2px 7px #183d6010}#di-page-flights .di-flights-stats strong{display:block;font-size:21px;color:#146fca;font-weight:800;white-space:nowrap}#di-page-flights .di-flights-stats span{display:block;font-size:11px;color:#58718a;margin-top:5px}#di-page-flights #di-logs>div.di-flight-card{box-shadow:0 3px 12px #183d6012;border-color:#d9e6f2;border-radius:15px}#di-page-flights #di-logs .di-flight-name{font-size:16px;color:#163d5d}#di-page-flights #di-logs .di-flight-date{font-size:12px;color:#607c92}#di-page-flights #di-logs .di-flight-meta{font-size:12px;color:#315c7a}
+
+#di-flight-calendar{background:#fff;border:1px solid #dce8f3;border-radius:15px;padding:13px;margin:14px 0;box-shadow:0 2px 9px #183d6010}#di-flight-calendar .di-calendar-head{display:flex;align-items:center;gap:9px;justify-content:space-between}#di-flight-calendar h3{font-size:15px;margin:0 auto 0 0}#di-flight-calendar .di-calendar-head button{border:1px solid #dce8f3;border-radius:8px;background:#f3f8ff;font-size:22px;min-width:34px}#di-flight-calendar #di-calendar-month{font-size:12px;min-width:94px;text-align:center;text-transform:capitalize}#di-flight-calendar .di-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px;text-align:center}#di-flight-calendar .di-calendar-weekday{font-size:11px;font-weight:700;color:#71879a;padding:7px 0}#di-flight-calendar .di-calendar-day{min-height:35px;border:0;border-radius:9px;background:#f5f8fc;color:#24445d;font-size:13px}#di-flight-calendar .di-calendar-day.has-flights{background:#d7ecff;color:#075da8;font-weight:800;box-shadow:inset 0 -3px #2584d8}#di-flight-calendar .di-calendar-day.selected{background:#086cc3;color:#fff}#di-flight-calendar #di-calendar-selection{font-size:12px;color:#58718a;margin:12px 0 4px}#di-flight-calendar #di-calendar-clear{background:#eef6ff;border:0;border-radius:8px;color:#086cc3;padding:8px 12px}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -1166,15 +1168,53 @@ function refresh(){
    try{localStorage.setItem(favoriteKey,JSON.stringify(f))}catch(e){alert('Impossibile salvare i preferiti');return}
    refresh();
   };
-  const show=filter!=='favorites'||!!fav[id];
+  const show=(filter!=='favorites'||!!fav[id])&&(!selectedDay||flightDay(x)===selectedDay);
   row.style.display=show?'':'none';
   row.classList.toggle('di-flight-filter-hidden',!show);
   if(show)count++;
  });
  panel.querySelector('#di-flights-count').textContent=count+' voli visualizzati';
  empty.hidden=count>0;
- empty.textContent=filter==='favorites'?'Nessun preferito. Premi ☆ su un volo in Tutti.':'Nessun volo registrato.';
+ empty.textContent=selectedDay?'Nessun volo registrato nel giorno selezionato.':filter==='favorites'?'Nessun preferito. Premi ☆ su un volo in Tutti.':'Nessun volo registrato.';
+ if(typeof renderCalendar==='function')renderCalendar();
 }
+/* Calendario voli: legge le date dai voli esistenti senza modificare l'archivio. */
+const calendar=document.createElement('section');calendar.id='di-flight-calendar';
+calendar.innerHTML='<div class="di-calendar-head"><h3>📅 Calendario voli</h3><button type="button" id="di-calendar-prev" aria-label="Mese precedente">‹</button><strong id="di-calendar-month"></strong><button type="button" id="di-calendar-next" aria-label="Mese successivo">›</button></div><div class="di-calendar-days" id="di-calendar-days"></div><p id="di-calendar-selection" role="status">Tocca un giorno per vedere i voli.</p><button type="button" id="di-calendar-clear" hidden>Mostra tutti i giorni</button>';
+panel.append(calendar);
+let calendarMonth=new Date();calendarMonth.setDate(1);let selectedDay='';
+function flightDay(x){
+ const raw=String(x.when||'');
+ let m=raw.match(/(\\d{4})-(\\d{2})-(\\d{2})/);
+ if(m)return m[1]+'-'+m[2]+'-'+m[3];
+ m=raw.match(/(\\d{1,2})[\\/.-](\\d{1,2})[\\/.-](\\d{4})/);
+ if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+ return '';
+}
+function renderCalendar(){
+ const month=calendarMonth.getMonth(),year=calendarMonth.getFullYear(),days=calendar.querySelector('#di-calendar-days');
+ calendar.querySelector('#di-calendar-month').textContent=calendarMonth.toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+ days.replaceChildren();
+ ['L','M','M','G','V','S','D'].forEach(d=>{const e=document.createElement('span');e.className='di-calendar-weekday';e.textContent=d;days.append(e)});
+ const offset=(new Date(year,month,1).getDay()+6)%7;
+ for(let i=0;i<offset;i++)days.append(document.createElement('span'));
+ const logs=getLogs(),counts={};logs.forEach(x=>{const d=flightDay(x);if(d)counts[d]=(counts[d]||0)+1});
+ for(let day=1;day<=new Date(year,month+1,0).getDate();day++){
+  const key=year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+  const btn=document.createElement('button');btn.type='button';btn.textContent=String(day);
+  btn.className='di-calendar-day'+(counts[key]?' has-flights':'')+(selectedDay===key?' selected':'');
+  btn.setAttribute('aria-label',day+' '+calendarMonth.toLocaleDateString('it-IT',{month:'long'})+(counts[key]?', '+counts[key]+' voli':''));
+  btn.setAttribute('aria-pressed',String(selectedDay===key));
+  btn.onclick=()=>{selectedDay=selectedDay===key?'':key;renderCalendar();refresh();};
+  days.append(btn);
+ }
+ const chosen=logs.filter(x=>flightDay(x)===selectedDay).length;
+ calendar.querySelector('#di-calendar-selection').textContent=selectedDay?new Date(selectedDay+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'})+': '+chosen+' voli':'Tocca un giorno per vedere i voli.';
+ calendar.querySelector('#di-calendar-clear').hidden=!selectedDay;
+}
+calendar.querySelector('#di-calendar-prev').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()-1);renderCalendar()};
+calendar.querySelector('#di-calendar-next').onclick=()=>{calendarMonth.setMonth(calendarMonth.getMonth()+1);renderCalendar()};
+calendar.querySelector('#di-calendar-clear').onclick=()=>{selectedDay='';renderCalendar();refresh()};
 panel.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
  filter=btn.dataset.filter;
  panel.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
