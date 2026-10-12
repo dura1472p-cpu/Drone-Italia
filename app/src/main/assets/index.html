@@ -756,6 +756,7 @@ const buttons={};
 let previousPage='home';
 function openPage(name,anchor){
  const reopeningMap=name==='map'&&previousPage!=='map';
+ if(name==='flights'&&previousPage!=='flights'&&typeof window.diResetCalendarSelection==='function')window.diResetCalendarSelection();
  previousPage=name;
  if(reopeningMap){
   if(window.droneItaliaLastGps&&typeof map!=='undefined'&&map){
@@ -1544,6 +1545,8 @@ panel.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click
  (firstVisible||flightList).scrollIntoView({behavior:'smooth',block:'start'});
 }));
 new MutationObserver(refresh).observe(box,{childList:true});
+/* Ogni nuovo ingresso nel diario parte senza un giorno selezionato. */
+window.diResetCalendarSelection=()=>{selectedDay='';refresh()};
 refresh();
 })();
 </script>
