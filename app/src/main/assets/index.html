@@ -358,6 +358,8 @@ html,body{min-height:100%;height:100%}
 #di-page-flights #di-flights-list-section{margin:0 10px 16px;padding:4px 8px 12px;min-height:64px;scroll-margin-top:18px}#di-page-flights #di-flights-list-section #di-logs>div.di-flight-card{margin:12px 0!important}#di-page-flights #di-flights-list-section #di-flights-empty{margin:10px 0!important}
 #di-page-flights .di-flight-star[aria-pressed=true]{color:#e7a722!important}#di-page-flights .di-flight-star[aria-pressed=false]{color:#8293a3!important}
 #di-page-photos{padding:18px 12px 100px!important;background:#f2f6fb!important;min-height:100vh}#di-page-photos .di-photos-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 10px 0}#di-page-photos .di-photos-header h2{font-size:23px;margin:6px 0;color:#183c5a}#di-page-photos #di-photo-count{font-size:12px;color:#416480;background:#e0ecf8;padding:7px 10px;border-radius:18px;white-space:nowrap}#di-page-photos .di-photos-intro{font-size:13px;color:#5d758a;margin:8px 10px 18px}#di-page-photos .di-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px}#di-page-photos .di-photo-card{display:block;border:0!important;padding:0!important;text-align:left;min-width:0;overflow:hidden;border-radius:12px;background:white;box-shadow:0 2px 8px #24445c18}#di-page-photos .di-photo-card img{width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;display:block}#di-page-photos .di-photo-card span{display:block;padding:7px 6px;color:#29465d;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#di-page-photos .di-photo-card:focus-visible{outline:3px solid #1179ed}#di-page-photos #di-photo-viewer[hidden]{display:none!important}#di-page-photos #di-photo-viewer{position:fixed;inset:0;z-index:11000;background:#07131bef;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 16px 30px;box-sizing:border-box}#di-page-photos #di-photo-viewer img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:8px}#di-page-photos #di-photo-viewer p{color:#fff;text-align:center;font-size:14px}#di-page-photos #di-photo-close{position:absolute;top:22px;right:20px;border:0;background:#ffffff26;color:white;font-size:25px;border-radius:50%;width:46px;height:46px}#di-page-photos .di-photo-empty{grid-column:1/-1}
+
+#di-page-photos .di-photo-actions{display:flex;align-items:center;gap:9px;margin:8px 10px 18px;flex-wrap:wrap}#di-page-photos .di-photo-actions button{background:#1179ed;color:white;border:0;border-radius:12px;padding:13px 17px;font-size:14px;font-weight:700;min-height:46px}#di-page-photos .di-photo-actions select{flex:1;min-width:155px;max-width:100%;background:white;border:1px solid #d0dfeb;border-radius:11px;padding:12px 8px;font-size:12px;color:#274c69}#di-page-photos .di-photo-actions input[hidden]{display:none!important}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -806,6 +808,43 @@ const title=document.createElement('h2');title.className='di-page-title';title.t
 const counter=document.createElement('span');counter.id='di-photo-count';counter.setAttribute('aria-live','polite');
 header.append(title,counter);photos.append(header);
 const intro=document.createElement('p');intro.className='di-photos-intro';intro.textContent='Le fotografie dei tuoi voli, tutte in un unico posto. Tocca una foto per ingrandirla.';photos.append(intro);
+const actions=document.createElement('div');actions.className='di-photo-actions';
+const addPhoto=document.createElement('button');addPhoto.type='button';addPhoto.textContent='＋ Aggiungi foto';
+const picker=document.createElement('input');picker.type='file';picker.accept='image/*';picker.hidden=true;
+const linkFlight=document.createElement('select');linkFlight.setAttribute('aria-label','Associa la foto a un volo');
+actions.append(addPhoto,linkFlight,picker);photos.append(actions);
+const photoStore='drone-italia-gallery-photos-v1';
+function galleryData(){try{const a=JSON.parse(localStorage.getItem(photoStore)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+function flightData(){try{const a=JSON.parse(localStorage.getItem('drone-italia-beta-logs')||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+function refreshFlightOptions(){
+ const selected=linkFlight.value;linkFlight.replaceChildren();
+ const general=document.createElement('option');general.value='';general.textContent='Solo nella galleria';linkFlight.append(general);
+ flightData().forEach((x,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent='Volo '+(x.place||'registrato')+' · '+(x.when||'');linkFlight.append(o)});
+ if(Array.from(linkFlight.options).some(o=>o.value===selected))linkFlight.value=selected;
+}
+addPhoto.onclick=()=>picker.click();
+picker.onchange=async()=>{
+ const file=picker.files&&picker.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')||file.size>10000000){alert('Seleziona una fotografia fino a 10 MB.');picker.value='';return}
+ addPhoto.disabled=true;addPhoto.textContent='Salvataggio foto…';
+ try{
+  const photo=await new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);
+   img.onload=()=>{try{const scale=Math.min(1,1000/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(img.width*scale));cv.height=Math.max(1,Math.round(img.height*scale));cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);resolve(cv.toDataURL('image/jpeg',.7))}catch(e){reject(e)}finally{URL.revokeObjectURL(url)}};
+   img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Immagine non leggibile'))};img.src=url});
+  const index=linkFlight.value;
+  if(index!==''){
+   const logs=flightData(),n=Number(index);
+   if(!logs[n])throw Error('Volo non trovato');
+   if(logs[n].photo&&!confirm('Questo volo ha già una foto. Vuoi sostituirla?'))return;
+   logs[n].photo=photo;localStorage.setItem('drone-italia-beta-logs',JSON.stringify(logs));
+  }else{
+   const a=galleryData();a.push({photo,place:'Foto personale',when:new Date().toLocaleString('it-IT')});
+   localStorage.setItem(photoStore,JSON.stringify(a));
+  }
+  renderPhotos();alert('Fotografia salvata nella galleria.');
+ }catch(e){alert('Non è stato possibile salvare la foto. Verifica lo spazio disponibile sul telefono.')}
+ finally{picker.value='';addPhoto.disabled=false;addPhoto.textContent='＋ Aggiungi foto'}
+};
 const grid=document.createElement('div');grid.className='di-photo-grid';photos.append(grid);
 const viewer=document.createElement('div');viewer.id='di-photo-viewer';viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Fotografia ingrandita');
 viewer.innerHTML='<button type="button" id="di-photo-close" aria-label="Chiudi fotografia">✕</button><img id="di-photo-large" alt="Fotografia del volo"><p id="di-photo-caption"></p>';
@@ -817,12 +856,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.hidden)clos
 function openViewer(x){viewer.querySelector('#di-photo-large').src=x.photo;viewer.querySelector('#di-photo-caption').textContent=(x.place||'Volo')+' · '+String(x.when||'');viewer.hidden=false;document.body.style.overflow='hidden';viewer.querySelector('#di-photo-close').focus()}
 function renderPhotos(){
 grid.replaceChildren();
-let logs=[];
-try{logs=JSON.parse(localStorage.getItem('drone-italia-beta-logs')||'[]')}catch(e){}
-if(!Array.isArray(logs))logs=[];
-const withPhotos=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.startsWith('data:image/')).reverse();
+const logs=flightData();
+const withPhotos=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0).concat(galleryData().filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0)).reverse();
+refreshFlightOptions();
 counter.textContent=withPhotos.length+' foto';
-if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Nessuna fotografia presente. Vai in Voli → + Nuovo volo e aggiungi una foto per visualizzarla qui.';grid.append(p);return}
+if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Non ci sono foto salvate. Premi «＋ Aggiungi foto» per importarne una dal telefono.';grid.append(p);return}
 withPhotos.forEach(x=>{const card=document.createElement('button');card.type='button';card.className='di-photo-card';card.setAttribute('aria-label','Apri foto del volo '+(x.place||'')+' del '+String(x.when||''));const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo '+(x.place||'');img.loading='lazy';const label=document.createElement('span');label.textContent=x.place||'Volo';card.append(img,label);card.onclick=()=>openViewer(x);grid.append(card)});
 }
 const oldOpen=window.droneItaliaOpenPage;
