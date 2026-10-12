@@ -975,21 +975,54 @@ viewer.querySelector('#di-photo-close').onclick=closeViewer;
 viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.hidden)closeViewer()});
 function openViewer(x){viewerFlight.hidden=x.kind!=='flight';viewerFlight.onclick=()=>openPhotoFlight(x);viewer.querySelector('#di-photo-large').src=x.photo;viewer.querySelector('#di-photo-caption').textContent=(x.place||'Volo')+' · '+String(x.when||'');viewer.hidden=false;document.body.style.overflow='hidden';viewer.querySelector('#di-photo-close').focus()}
+const photoFilters={year:'',month:'',place:''};
+let photoCache={logs:[],fromGallery:[],error:''},photoRenderVersion=0;
+const photoFilterPanel=document.createElement('section');photoFilterPanel.id='di-photo-filters';photoFilterPanel.setAttribute('aria-label','Filtra fotografie');
+photoFilterPanel.innerHTML='<label>Anno<select id="di-photo-year"><option value="">Tutti gli anni</option></select></label><label>Mese<select id="di-photo-month"><option value="">Tutti i mesi</option></select></label><label>Località<input type="search" id="di-photo-place" placeholder="Cerca località"></label><button type="button" id="di-photo-reset">Mostra tutte le foto</button><p id="di-photo-filter-count" role="status"></p>';
+grid.before(photoFilterPanel);
+const photoFilterStyle=document.createElement('style');photoFilterStyle.textContent='#di-photo-filters{padding:14px;margin:12px 8px;background:white;border:1px solid #dce6ef;border-radius:14px}#di-photo-filters label{display:block;margin-bottom:10px;font-size:13px;color:#36556e}#di-photo-filters input,#di-photo-filters select{display:block;width:100%;min-height:44px;padding:9px;margin-top:4px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}#di-photo-filter-count{font-size:13px;color:#52718c;margin-bottom:0}';document.head.append(photoFilterStyle);
+const photoField=name=>photoFilterPanel.querySelector('#di-photo-'+name);
+['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].forEach((name,i)=>photoField('month').add(new Option(name,String(i+1).padStart(2,'0'))));
+function photoDay(x){
+ const raw=String(x.when||'');let m=raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+ if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+ m=raw.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+ return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';
+}
+function matchesPhotoFilters(x){
+ const day=photoDay(x);
+ return (!photoFilters.year||day.slice(0,4)===photoFilters.year)&&(!photoFilters.month||day.slice(5,7)===photoFilters.month)&&
+ (!photoFilters.place||String(x.place||'').toLocaleLowerCase('it-IT').includes(photoFilters.place.trim().toLocaleLowerCase('it-IT')));
+}
+['year','month','place'].forEach(name=>photoField(name).addEventListener(name==='place'?'input':'change',()=>{photoFilters[name]=photoField(name).value;renderPhotoResults()}));
+photoField('reset').onclick=()=>{Object.keys(photoFilters).forEach(name=>{photoFilters[name]='';photoField(name).value=''});renderPhotoResults()};
 async function renderPhotos(){
+ const version=++photoRenderVersion,logs=flightData();let fromGallery=[],error='';
+ try{fromGallery=await galleryData()}catch(e){error='Archivio foto non accessibile: '+(e&&e.message||'errore sconosciuto')}
+ if(version!==photoRenderVersion)return;
+ photoCache={logs,fromGallery,error};renderPhotoResults();
+}
+function renderPhotoResults(){
 grid.replaceChildren();
-const logs=flightData();
+const {logs,fromGallery,error}=photoCache;
 const fromFlights=logs.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim().length>0);
-let fromGallery=[],error='';
-try{fromGallery=await galleryData()}catch(e){error='Archivio foto non accessibile: '+(e&&e.message||'errore sconosciuto')}
 const withPhotos=logs.map((x,i)=>({photo:x&&x.photo,place:x&&x.place,when:x&&x.when,kind:'flight',index:i,flight:x}))
  .filter(x=>typeof x.photo==='string'&&x.photo.trim())
  .concat(fromGallery.filter(x=>x&&typeof x.photo==='string'&&x.photo.trim()).map(x=>({...x,kind:'gallery'}))).reverse();
 refreshFlightOptions();
-counter.textContent=withPhotos.length+' foto';
+const years=Array.from(new Set(withPhotos.map(x=>photoDay(x).slice(0,4)).filter(Boolean))).sort().reverse();
+if(photoFilters.year&&!years.includes(photoFilters.year))years.push(photoFilters.year);
+photoField('year').replaceChildren(new Option('Tutti gli anni',''));
+years.forEach(year=>photoField('year').add(new Option(year,year)));photoField('year').value=photoFilters.year;
+const visiblePhotos=withPhotos.filter(matchesPhotoFilters);
+counter.textContent=visiblePhotos.length+' di '+withPhotos.length+' foto';
+photoField('filter-count').textContent=visiblePhotos.length+' foto visualizzate su '+withPhotos.length;
+
 const diagnostics=document.getElementById('di-photo-diagnostics');
 if(diagnostics)diagnostics.textContent=fromFlights.length+' foto nei voli · '+fromGallery.length+' foto nella galleria'+(error?' · ⚠ '+error:'');
 if(!withPhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent=error?'Impossibile aprire l’archivio delle foto. Non cancellare i dati dell’app.':'Non risultano foto salvate nei voli o nella galleria. Premi «＋ Aggiungi foto» per importarne una dal telefono.';grid.append(p);return}
-withPhotos.forEach(x=>{
+if(!visiblePhotos.length){const p=document.createElement('p');p.className='di-photo-empty';p.textContent='Nessuna foto corrisponde ai filtri. Premi «Mostra tutte le foto» per azzerarli.';grid.append(p);return}
+visiblePhotos.forEach(x=>{
  const card=document.createElement('article');card.className='di-photo-card';
  const open=document.createElement('button');open.type='button';open.className='di-photo-open';open.setAttribute('aria-label','Apri foto '+(x.place||'')+' del '+String(x.when||''));
  const img=document.createElement('img');img.src=x.photo;img.alt='Foto '+(x.place||'');img.loading='lazy';
