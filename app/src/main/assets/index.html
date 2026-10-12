@@ -491,6 +491,7 @@ function save(k,v){try{localStorage.setItem(key+k,JSON.stringify(v));return true
 function node(tag,text){const e=document.createElement(tag);e.textContent=text;return e}
 function render(k,target,format){const box=$(target);box.replaceChildren();const arr=load(k);if(!arr.length){box.append(node('p','Nessun elemento salvato.'));return}arr.forEach((item,i)=>{const row=node('p',format(item));const b=node('button','Elimina');b.type='button';b.onclick=()=>{const a=load(k);a.splice(i,1);save(k,a);render(k,target,format)};row.append(' ',b);box.append(row)})}
 const formats={favorites:x=>(x.name?x.name+' · ':'')+x.lat.toFixed(5)+', '+x.lng.toFixed(5),plans:x=>x.date+' · '+x.alt+' m · '+x.lat.toFixed(5)+', '+x.lng.toFixed(5)+' · '+x.notes,logs:x=>x.when+' · '+x.duration+' min · '+x.notes};
+window.diFlightDefaultDrone=()=>droneModel();
 function droneModel(){const a=load('drones'),active=localStorage.getItem(key+'active-drone');const d=a.find(x=>x.id===active);if(d)return d.name;try{return JSON.parse(localStorage.getItem('drone-profile')||'null')?.model||'Non indicato'}catch(e){return 'Non indicato'}}
 function showPlan(p){const box=$('di-plan-preview');box.style.display='block';box.textContent='RIEPILOGO PIANO PERSONALE\n\n📍 Coordinate: '+Number(p.lat).toFixed(5)+', '+Number(p.lng).toFixed(5)+'\n📅 Data e ora: '+p.date+'\n📏 Quota prevista: '+p.alt+' m (manuale)\n🚁 Drone: '+(p.model||'Non indicato')+'\n📝 Note: '+(p.notes||'Nessuna')+'\n\n⚠️ Piano non verificato: non costituisce autorizzazione al volo.';box.scrollIntoView({behavior:'smooth',block:'nearest'})}
 function renderPlans(){const box=$('di-plans');box.replaceChildren();const arr=load('plans');if(!arr.length){box.append(node('p','Nessun elemento salvato.'));return}arr.forEach((p,i)=>{const row=document.createElement('div');row.style.margin='12px 0';row.append(node('span',formats.plans(p)+' '));const view=node('button','Visualizza piano');view.type='button';view.onclick=()=>showPlan(p);row.append(view,' ');const edit=node('button','Modifica');edit.type='button';edit.onclick=()=>{const date=prompt('Data e ora (AAAA-MM-GGTHH:MM)',p.date);if(date===null)return;const alt=prompt('Quota prevista in metri',String(p.alt));if(alt===null)return;const notes=prompt('Note',p.notes||'');if(notes===null)return;if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(date)||!Number.isFinite(Number(alt))||Number(alt)<0||Number(alt)>10000){alert('Data o quota non valida.');return}const a=load('plans');a[i]={...a[i],date,alt:Number(alt),notes:notes.slice(0,200)};if(save('plans',a))renderPlans()};row.append(edit,' ');const del=node('button','Elimina');del.type='button';del.onclick=()=>{const a=load('plans');a.splice(i,1);save('plans',a);renderPlans()};row.append(del);box.append(row)})}
@@ -535,7 +536,7 @@ if(edit){
  if(editIndex<0){alert('Il volo è stato modificato o eliminato. Annulla e riaprilo dal diario.');return}
  if(!$('di-edit-when').value.trim()){alert('Inserisci la data del volo.');return}
 }
-const updated=buildSavedFlight(edit? a[editIndex]:null,{when:edit?$('di-edit-when').value.trim():new Date().toLocaleString('it-IT'),duration,notes:$('di-log-notes').value,place:$('di-log-place').value,droneBattery:$('di-battery-drone').value,radioBattery:$('di-battery-radio').value,photo,lat:selected?.lat,lng:selected?.lng,model:edit?$('di-edit-model').value:droneModel()},!!file);
+const updated=buildSavedFlight(edit? a[editIndex]:null,{when:edit?$('di-edit-when').value.trim():new Date().toLocaleString('it-IT'),duration,notes:$('di-log-notes').value,place:$('di-log-place').value,droneBattery:$('di-battery-drone').value,radioBattery:$('di-battery-radio').value,photo,lat:selected?.lat,lng:selected?.lng,model:$('di-flight-drone')?$('di-flight-drone').value:droneModel()},!!file);
 if(edit)a[editIndex]=updated;else a.push(updated);
 if(save('logs',a)){
  if(edit){migrateEditedFavorite(edit.original,updated,a);if(window.diFlightEditSaved)window.diFlightEditSaved()}
@@ -1754,7 +1755,7 @@ const hint=document.createElement('p');hint.className='di-form-hint';hint.textCo
 const cancel=document.createElement('button');cancel.type='button';cancel.className='di-form-cancel';cancel.textContent='Annulla';save.after(cancel);
 function toggle(show){form.hidden=!show;add.setAttribute('aria-expanded',String(show));if(show){form.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('di-log-place')?.focus(),250)}}
 function clearFlightForm(){
- window.diFlightEdit=null;title.textContent='Diario voli';save.textContent='Registra volo';editFields.hidden=true;
+ window.diFlightEdit=null;title.textContent='Diario voli';save.textContent='Registra volo';editFields.hidden=true;populateFlightDrones(window.diFlightDefaultDrone?window.diFlightDefaultDrone():'Non indicato');
  for(const id of ['di-duration','di-log-notes','di-log-place','di-battery-drone','di-battery-radio','di-log-photo']){const input=document.getElementById(id);if(input)input.value=''}
  window.diFlightPickingOnMap=false;const back=document.getElementById('di-flight-map-return');if(back)back.hidden=true;
  window.diFlightChosenPoint=null;window.diFlightPendingMapPoint=null;delete form.dataset.flightLat;delete form.dataset.flightLng;window.diFlightGpsPending=false;
@@ -1763,13 +1764,26 @@ function clearFlightForm(){
 add.onclick=()=>{if(form.hidden)clearFlightForm();toggle(form.hidden)};
 cancel.onclick=()=>{clearFlightForm();toggle(false)};
 const editFields=document.createElement('div');editFields.hidden=true;
-editFields.innerHTML='<label>Data e ora del volo <input id="di-edit-when" type="text" maxlength="80" placeholder="Es. 12/10/2026, 15:30"></label><label>Drone <input id="di-edit-model" maxlength="80" placeholder="Modello drone"></label><p>La foto esistente viene mantenuta se non ne scegli una nuova.</p>';
+editFields.innerHTML='<label>Data e ora del volo <input id="di-edit-when" type="text" maxlength="80" placeholder="Es. 12/10/2026, 15:30"></label><p>La foto esistente viene mantenuta se non ne scegli una nuova.</p>';
 hint.after(editFields);
+const droneLabel=document.createElement('label');droneLabel.textContent='Drone utilizzato';
+const droneSelect=document.createElement('select');droneSelect.id='di-flight-drone';droneSelect.setAttribute('aria-label','Drone utilizzato per questo volo');droneLabel.append(droneSelect);editFields.after(droneLabel);
+function flightDroneChoices(drones,model){
+ return Array.from(new Set(['Non indicato',...drones.filter(x=>x&&typeof x.name==='string').map(x=>x.name),model].filter(x=>typeof x==='string'&&x.trim())));
+}
+function populateFlightDrones(model){
+ let drones=[];try{const data=JSON.parse(localStorage.getItem('drone-italia-beta-drones')||'[]');if(Array.isArray(data))drones=data}catch(e){}
+ droneSelect.replaceChildren();
+ flightDroneChoices(drones,model).forEach(name=>droneSelect.add(new Option(name,name)));
+ droneSelect.value=model||'Non indicato';
+}
+const droneStyle=document.createElement('style');droneStyle.textContent='#di-new-flight-form #di-flight-drone{display:block;width:100%;min-height:44px;padding:10px;border:1px solid #bbc9d1;border-radius:8px;font:inherit;margin:6px 0 14px;background:#fff;color:#173044}';document.head.append(droneStyle);
+populateFlightDrones(window.diFlightDefaultDrone?window.diFlightDefaultDrone():'Non indicato');
 window.diEditFlight=(x,index)=>{
  clearFlightForm();
  window.diFlightEdit={index,snapshot:JSON.stringify(x),original:{...x}};
- title.textContent='Modifica volo';save.textContent='Salva modifiche';editFields.hidden=false;
- const values={'di-edit-when':x.when,'di-edit-model':x.model,'di-duration':x.duration,'di-log-notes':x.notes,'di-log-place':x.place,'di-battery-drone':x.droneBattery,'di-battery-radio':x.radioBattery};
+ title.textContent='Modifica volo';save.textContent='Salva modifiche';editFields.hidden=false;populateFlightDrones(x.model||'Non indicato');
+ const values={'di-edit-when':x.when,'di-duration':x.duration,'di-log-notes':x.notes,'di-log-place':x.place,'di-battery-drone':x.droneBattery,'di-battery-radio':x.radioBattery};
  Object.entries(values).forEach(([id,value])=>{document.getElementById(id).value=value==null?'':String(value)});
  if(x.lat!=null&&x.lng!=null&&x.lat!==''&&x.lng!==''&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))){
   form.dataset.flightLat=String(x.lat);form.dataset.flightLng=String(x.lng);window.diFlightChosenPoint={lat:Number(x.lat),lng:Number(x.lng)};
