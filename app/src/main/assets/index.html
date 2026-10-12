@@ -367,6 +367,8 @@ html,body{min-height:100%;height:100%}
 #di-page-flights .di-flights-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0 9px}#di-page-flights .di-flights-stats>div{background:#fff;border:1px solid #dce8f3;border-radius:13px;padding:12px 5px;text-align:center;box-shadow:0 2px 7px #183d6010}#di-page-flights .di-flights-stats strong{display:block;font-size:21px;color:#146fca;font-weight:800;white-space:nowrap}#di-page-flights .di-flights-stats span{display:block;font-size:11px;color:#58718a;margin-top:5px}#di-page-flights #di-logs>div.di-flight-card{box-shadow:0 3px 12px #183d6012;border-color:#d9e6f2;border-radius:15px}#di-page-flights #di-logs .di-flight-name{font-size:16px;color:#163d5d}#di-page-flights #di-logs .di-flight-date{font-size:12px;color:#607c92}#di-page-flights #di-logs .di-flight-meta{font-size:12px;color:#315c7a}
 
 #di-flight-calendar{background:#fff;border:1px solid #dce8f3;border-radius:15px;padding:13px;margin:14px 0;box-shadow:0 2px 9px #183d6010}#di-flight-calendar .di-calendar-head{display:flex;align-items:center;gap:9px;justify-content:space-between}#di-flight-calendar h3{font-size:15px;margin:0 auto 0 0}#di-flight-calendar .di-calendar-head button{border:1px solid #dce8f3;border-radius:8px;background:#f3f8ff;font-size:22px;min-width:34px}#di-flight-calendar #di-calendar-month{font-size:12px;min-width:94px;text-align:center;text-transform:capitalize}#di-flight-calendar .di-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px;text-align:center}#di-flight-calendar .di-calendar-weekday{font-size:11px;font-weight:700;color:#71879a;padding:7px 0}#di-flight-calendar .di-calendar-day{min-height:35px;border:0;border-radius:9px;background:#f5f8fc;color:#24445d;font-size:13px}#di-flight-calendar .di-calendar-day.has-flights{background:#d7ecff;color:#075da8;font-weight:800;box-shadow:inset 0 -3px #2584d8}#di-flight-calendar .di-calendar-day.selected{background:#086cc3;color:#fff}#di-flight-calendar #di-calendar-selection{font-size:12px;color:#58718a;margin:12px 0 4px}#di-flight-calendar #di-calendar-clear{background:#eef6ff;border:0;border-radius:8px;color:#086cc3;padding:8px 12px}
+
+#di-page-flights .di-flight-search{margin:13px 0 8px}#di-page-flights .di-flight-search label{display:block;font-size:13px;font-weight:700;color:#294f6f;margin-bottom:7px}#di-page-flights .di-flight-search-row{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #cddfec;border-radius:12px;padding:4px 8px}#di-page-flights #di-flight-search-input{flex:1;min-width:0;border:0!important;outline:0;background:transparent;padding:10px 4px;font-size:14px;color:#183e5c;box-shadow:none!important}#di-page-flights #di-flight-search-clear{border:0;background:#eaf3fc;color:#315f80;border-radius:9px;min-width:35px;min-height:35px;font-size:16px}#di-page-flights #di-flight-search-clear[hidden]{display:none!important}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -1120,6 +1122,12 @@ page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 /* Elenco subito sotto i filtri, prima degli strumenti e dei moduli. */
 /* Non spostare il diario: le altre funzioni lo aggiornano nella posizione originale. */
 const flightList=box;
+const searchWrap=document.createElement('div');searchWrap.className='di-flight-search';
+searchWrap.innerHTML='<label for="di-flight-search-input">🔎 Cerca un volo</label><div class="di-flight-search-row"><input id="di-flight-search-input" type="search" placeholder="Cerca per località, nome o note…" autocomplete="off" aria-label="Cerca voli per località, nome o note"><button id="di-flight-search-clear" type="button" aria-label="Cancella ricerca" hidden>✕</button></div>';
+panel.insertBefore(searchWrap,panel.querySelector('.di-flights-stats'));
+const searchInput=searchWrap.querySelector('#di-flight-search-input'),searchClear=searchWrap.querySelector('#di-flight-search-clear');
+searchInput.addEventListener('input',()=>{searchClear.hidden=!searchInput.value;refresh()});
+searchClear.addEventListener('click',()=>{searchInput.value='';searchClear.hidden=true;refresh();searchInput.focus()});
 let filter='all';
 const favoriteKey='drone-italia-flight-favorites-v2',legacyKey='drone-italia-flight-favorites-v1';
 const flightStore='drone-italia-beta-logs';
@@ -1168,14 +1176,16 @@ function refresh(){
    try{localStorage.setItem(favoriteKey,JSON.stringify(f))}catch(e){alert('Impossibile salvare i preferiti');return}
    refresh();
   };
-  const show=(filter!=='favorites'||!!fav[id])&&(!selectedDay||flightDay(x)===selectedDay);
+  const term=searchInput.value.trim().toLocaleLowerCase('it-IT');
+  const searchable=[x.place,x.notes,x.when,row.querySelector('.di-flight-name')?.textContent].filter(Boolean).join(' ').toLocaleLowerCase('it-IT');
+  const show=(filter!=='favorites'||!!fav[id])&&(!selectedDay||flightDay(x)===selectedDay)&&(!term||searchable.includes(term));
   row.style.display=show?'':'none';
   row.classList.toggle('di-flight-filter-hidden',!show);
   if(show)count++;
  });
  panel.querySelector('#di-flights-count').textContent=count+' voli visualizzati';
  empty.hidden=count>0;
- empty.textContent=selectedDay?'Nessun volo registrato nel giorno selezionato.':filter==='favorites'?'Nessun preferito. Premi ☆ su un volo in Tutti.':'Nessun volo registrato.';
+ empty.textContent=searchInput.value.trim()?'Nessun volo corrisponde alla ricerca. Prova un’altra località o cancella il testo.':selectedDay?'Nessun volo registrato nel giorno selezionato.':filter==='favorites'?'Nessun preferito. Premi ☆ su un volo in Tutti.':'Nessun volo registrato.';
  if(typeof renderCalendar==='function')renderCalendar();
 }
 /* Calendario voli: legge le date dai voli esistenti senza modificare l'archivio. */
