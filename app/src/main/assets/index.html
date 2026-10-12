@@ -371,6 +371,8 @@ html,body{min-height:100%;height:100%}
 #di-page-flights .di-flight-search{margin:13px 0 8px}#di-page-flights .di-flight-search label{display:block;font-size:13px;font-weight:700;color:#294f6f;margin-bottom:7px}#di-page-flights .di-flight-search-row{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #cddfec;border-radius:12px;padding:4px 8px}#di-page-flights #di-flight-search-input{flex:1;min-width:0;border:0!important;outline:0;background:transparent;padding:10px 4px;font-size:14px;color:#183e5c;box-shadow:none!important}#di-page-flights #di-flight-search-clear{border:0;background:#eaf3fc;color:#315f80;border-radius:9px;min-width:35px;min-height:35px;font-size:16px}#di-page-flights #di-flight-search-clear[hidden]{display:none!important}
 
 #di-flight-quick-results[hidden]{display:none!important}#di-flight-quick-results{display:flex;flex-direction:column;gap:7px;margin:10px 0 4px}#di-flight-quick-results .di-quick-heading{font-size:13px;color:#2b628f;margin:2px 0}#di-flight-quick-results .di-quick-result{display:flex;flex-direction:column;text-align:left;gap:4px;width:100%;padding:12px 13px;border:1px solid #d9e7f3;border-radius:11px;background:#fff;color:#244a6a;box-shadow:0 2px 7px #183d6010}#di-flight-quick-results .di-quick-result strong{font-size:14px}#di-flight-quick-results .di-quick-result span{font-size:12px;color:#668095}#di-flight-quick-results>p{font-size:13px;color:#60788b}
+
+#di-flight-statistics{background:#fff;border:1px solid #dce8f3;border-radius:15px;margin:12px 0;padding:12px;box-shadow:0 2px 9px #183d6010}#di-flight-statistics #di-stats-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;background:transparent;border:0;font-weight:800;font-size:15px;color:#1e4d72;padding:5px;text-align:left}#di-flight-statistics #di-stats-content[hidden]{display:none!important}#di-flight-statistics .di-stats-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:15px 0}#di-flight-statistics .di-stats-cards>div{border:1px solid #dce8f3;border-radius:10px;text-align:center;padding:12px 4px;background:#f6faff}#di-flight-statistics .di-stats-cards strong{display:block;font-size:17px;color:#0873d2;white-space:nowrap}#di-flight-statistics .di-stats-cards span{display:block;font-size:10px;color:#56718a;margin-top:5px}#di-flight-statistics h4{margin:14px 0 6px;font-size:13px;color:#315a79}#di-flight-statistics .di-stats-chart{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;min-height:125px;padding:8px 0}#di-flight-statistics .di-stats-column{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;font-size:11px;color:#54718a}#di-flight-statistics .di-stats-bar{width:75%;max-width:42px;border-radius:6px 6px 2px 2px;background:#1684e9}#di-flight-statistics .di-stats-column strong{font-size:12px;color:#1761a4}#di-flight-statistics #di-stats-place{font-size:13px;color:#315b7c}#di-flight-statistics .di-stats-note{font-size:11px;color:#7a8d9c}
 </style></head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -1124,6 +1126,29 @@ page.insertBefore(panel,page.querySelector('#flight-tools')||page.firstChild);
 /* Elenco subito sotto i filtri, prima degli strumenti e dei moduli. */
 /* Non spostare il diario: le altre funzioni lo aggiornano nella posizione originale. */
 const flightList=box;
+const statsPanel=document.createElement('section');statsPanel.id='di-flight-statistics';
+statsPanel.innerHTML='<button type="button" id="di-stats-toggle" aria-expanded="false">📊 Statistiche di volo <span>▾</span></button><div id="di-stats-content" hidden><div class="di-stats-cards"><div><strong id="di-stats-month-flights">0</strong><span>Voli questo mese</span></div><div><strong id="di-stats-month-time">0 min</strong><span>Tempo questo mese</span></div><div><strong id="di-stats-longest">—</strong><span>Volo più lungo</span></div></div><h4>Voli negli ultimi 6 mesi</h4><div id="di-stats-chart" class="di-stats-chart"></div><p id="di-stats-place"></p><p class="di-stats-note">Statistiche calcolate dai voli salvati. Le date non riconosciute non rientrano nei conteggi mensili.</p></div>';
+panel.append(statsPanel);
+const statsContent=statsPanel.querySelector('#di-stats-content');
+statsPanel.querySelector('#di-stats-toggle').onclick=()=>{statsContent.hidden=!statsContent.hidden;statsPanel.querySelector('#di-stats-toggle').setAttribute('aria-expanded',String(!statsContent.hidden));statsPanel.querySelector('#di-stats-toggle span').textContent=statsContent.hidden?'▾':'▴';if(!statsContent.hidden)renderFlightStatistics()};
+function formatFlightTime(n){n=Math.round(n);return n>=60?Math.floor(n/60)+' h'+(n%60?' '+n%60+' min':''):n+' min'}
+function renderFlightStatistics(){
+ const logs=getLogs(),now=new Date(),monthKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+ const duration=x=>{const n=Number(x.duration);return Number.isFinite(n)&&n>0?n:0};
+ const thisMonth=logs.filter(x=>flightDay(x).slice(0,7)===monthKey);
+ statsPanel.querySelector('#di-stats-month-flights').textContent=String(thisMonth.length);
+ statsPanel.querySelector('#di-stats-month-time').textContent=formatFlightTime(thisMonth.reduce((a,x)=>a+duration(x),0));
+ const longest=logs.reduce((max,x)=>Math.max(max,duration(x)),0);
+ statsPanel.querySelector('#di-stats-longest').textContent=longest?formatFlightTime(longest):'—';
+ const counts={};logs.forEach(x=>{const day=flightDay(x);if(day)counts[day.slice(0,7)]=(counts[day.slice(0,7)]||0)+1});
+ const chart=statsPanel.querySelector('#di-stats-chart');chart.replaceChildren();
+ const months=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('it-IT',{month:'short'})})}
+ const max=Math.max(1,...months.map(m=>counts[m.key]||0));
+ months.forEach(m=>{const col=document.createElement('div');col.className='di-stats-column';const value=counts[m.key]||0;const num=document.createElement('strong');num.textContent=String(value);const bar=document.createElement('div');bar.className='di-stats-bar';bar.style.height=Math.max(4,Math.round(value/max*85))+'px';bar.setAttribute('aria-label',m.label+': '+value+' voli');const label=document.createElement('span');label.textContent=m.label;col.append(num,bar,label);chart.append(col)});
+ const places={};logs.forEach(x=>{const name=String(x.place||'').trim();if(name)places[name]=(places[name]||0)+1});
+ const top=Object.entries(places).sort((a,b)=>b[1]-a[1])[0];
+ statsPanel.querySelector('#di-stats-place').textContent=top?'📍 Località più frequente: '+top[0]+' ('+top[1]+' voli)':'📍 Nessuna località registrata.';
+}
 const searchWrap=document.createElement('div');searchWrap.className='di-flight-search';
 searchWrap.innerHTML='<label for="di-flight-search-input">🔎 Cerca un volo</label><div class="di-flight-search-row"><input id="di-flight-search-input" type="search" placeholder="Cerca per località, nome o note…" autocomplete="off" aria-label="Cerca voli per località, nome o note"><button id="di-flight-search-clear" type="button" aria-label="Cancella ricerca" hidden>✕</button></div>';
 panel.insertBefore(searchWrap,panel.querySelector('.di-flights-stats'));
@@ -1218,6 +1243,7 @@ function refresh(){
  empty.hidden=count>0;
  empty.textContent=searchInput.value.trim()?'Nessun volo corrisponde alla ricerca. Prova un’altra località o cancella il testo.':selectedDay?'Nessun volo registrato nel giorno selezionato.':filter==='favorites'?'Nessun preferito. Premi ☆ su un volo in Tutti.':'Nessun volo registrato.';
  if(typeof renderCalendar==='function')renderCalendar();
+ if(!statsContent.hidden)renderFlightStatistics();
 }
 /* Calendario voli: legge le date dai voli esistenti senza modificare l'archivio. */
 const calendar=document.createElement('section');calendar.id='di-flight-calendar';
