@@ -24,6 +24,11 @@ import android.app.DownloadManager;
 import android.os.Environment;
 import android.util.Base64;
 import java.io.OutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import android.content.ClipData;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 public class MainActivity extends Activity {
  private WebView web; private LocationManager manager; private LocationListener listener;
  private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303;
@@ -104,6 +109,35 @@ public class MainActivity extends Activity {
  try{DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);request.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"drone-italia-download");((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(request);}catch(Exception e){Toast.makeText(this,"Download non disponibile",Toast.LENGTH_LONG).show();}
  });
  web.addJavascriptInterface(new Object(){
+ @JavascriptInterface public void shareFlight(String text,String photo){
+ if(text==null||text.length()>20000)return;
+ try{
+ Uri attachment=null;
+ if(photo!=null&&!photo.isEmpty()){
+  if(photo.length()>3000000||!photo.startsWith("data:image/"))throw new IllegalArgumentException();
+  int comma=photo.indexOf(',');if(comma<0)throw new IllegalArgumentException();
+  byte[] data=Base64.decode(photo.substring(comma+1),Base64.DEFAULT);
+  BitmapFactory.Options bounds=new BitmapFactory.Options();bounds.inJustDecodeBounds=true;BitmapFactory.decodeByteArray(data,0,data.length,bounds);
+  if(bounds.outWidth<=0||bounds.outHeight<=0)throw new IllegalArgumentException();
+  BitmapFactory.Options options=new BitmapFactory.Options();options.inSampleSize=1;
+  while(Math.max(bounds.outWidth,bounds.outHeight)/options.inSampleSize>1600)options.inSampleSize*=2;
+  Bitmap bitmap=BitmapFactory.decodeByteArray(data,0,data.length,options);if(bitmap==null)throw new IllegalArgumentException();
+  File dir=new File(getCacheDir(),"flight-shares");if(!dir.exists()&&!dir.mkdirs())throw new IllegalStateException();
+  File[] old=dir.listFiles();if(old!=null)for(File file:old)if(System.currentTimeMillis()-file.lastModified()>86400000L)file.delete();
+  File file=new File(dir,"flight-"+System.currentTimeMillis()+".jpg");
+  try(FileOutputStream out=new FileOutputStream(file)){if(!bitmap.compress(Bitmap.CompressFormat.JPEG,90,out))throw new IllegalStateException();}finally{bitmap.recycle();}
+  attachment=Uri.parse("content://"+getPackageName()+".sharedflight/"+file.getName());
+ }
+ final Uri image=attachment;
+ runOnUiThread(()->{
+  try{
+   Intent send=new Intent(Intent.ACTION_SEND);send.setType(image==null?"text/plain":"image/jpeg");send.putExtra(Intent.EXTRA_TEXT,text);send.putExtra(Intent.EXTRA_SUBJECT,"Volo Drone Italia");
+   if(image!=null){send.putExtra(Intent.EXTRA_STREAM,image);send.setClipData(ClipData.newUri(getContentResolver(),"Foto del volo",image));send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);}
+   startActivity(Intent.createChooser(send,"Condividi volo"));
+  }catch(Exception e){Toast.makeText(MainActivity.this,"Condivisione non disponibile",Toast.LENGTH_LONG).show();}
+ });
+ }catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Foto non condivisibile. Riprova senza foto.",Toast.LENGTH_LONG).show());}
+ }
  @JavascriptInterface public void setDarkTheme(boolean enabled){darkTheme=enabled;}
  @JavascriptInterface public void locate(){runOnUiThread(()->MainActivity.this.locate());}
  @JavascriptInterface public void saveBackup(String encoded){
