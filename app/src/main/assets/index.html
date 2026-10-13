@@ -432,6 +432,30 @@ html.di-home-backdrop body::before{content:"";position:fixed;inset:0;z-index:0;p
 html.di-dark.di-home-backdrop body::before{opacity:1}
 html.di-home-backdrop #di-page-home{position:relative;z-index:1}
 </style>
+
+<style id="di-flight-collapsible-cards">
+#di-page-flights #di-logs>.di-flight-card{position:relative;padding:0!important;overflow:hidden;border:1px solid #dce6ef;border-radius:17px!important}
+#di-page-flights .di-flight-disclosure{padding:0;background:transparent}
+#di-page-flights .di-flight-head{display:flex!important;flex-direction:column!important;gap:5px!important;position:relative;list-style:none;cursor:pointer;padding:17px 64px 17px 17px!important;margin:0!important;min-height:96px;outline-offset:-3px}
+#di-page-flights .di-flight-head::-webkit-details-marker{display:none}
+#di-page-flights .di-flight-head::after{content:'Apri dettagli ▾';font-size:11px;color:#1268a8;margin-top:4px}
+#di-page-flights .di-flight-disclosure[open]>.di-flight-head::after{content:'Chiudi dettagli ▴'}
+#di-page-flights .di-flight-head .di-flight-notes{display:none!important}
+#di-page-flights .di-flight-card>.di-flight-star{position:absolute;right:12px;top:13px;z-index:2;width:40px!important;height:40px!important;min-height:40px!important}
+#di-page-flights .di-flight-details-body{padding:0 17px 17px;border-top:1px solid #e5edf5}
+#di-page-flights .di-flight-details-body>img{display:block;width:100%;max-width:100%!important;max-height:240px!important;object-fit:contain;border-radius:12px;margin:14px 0;background:#f1f6fb}
+#di-page-flights .di-flight-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:9px 12px;margin:16px 0;font-size:13px;line-height:1.45}
+#di-page-flights .di-flight-fields dt{color:#52718c;font-weight:600;min-width:0}
+#di-page-flights .di-flight-fields dd{margin:0;color:#173044;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+#di-page-flights .di-flight-detail-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#di-page-flights .di-flight-detail-actions button{width:100%;min-width:0;min-height:44px;margin:0!important;padding:10px 7px!important;font-size:12px!important;border-radius:10px!important;white-space:normal}
+#di-page-flights .di-flight-detail-actions .di-flight-delete-action{background:#fff0f2!important;color:#a33143!important;grid-column:1/-1;box-shadow:none}
+html.di-dark #di-page-flights .di-flight-details-body{border-color:#33475b}
+html.di-dark #di-page-flights .di-flight-fields dt{color:#afc0d1}
+html.di-dark #di-page-flights .di-flight-fields dd{color:#e4edf6}
+html.di-dark #di-page-flights .di-flight-head::after{color:#b9dcff}
+html.di-dark #di-page-flights .di-flight-detail-actions .di-flight-delete-action{background:#492c35!important;color:#ffb5be!important}
+</style>
 </head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -1692,6 +1716,7 @@ function openMappedFlightInDiary(x){
  const row=Array.from(box.children).filter(el=>el.tagName==='DIV')[index];
  if(!row)return;
  box.querySelectorAll('.di-flight-map-selected').forEach(el=>el.classList.remove('di-flight-map-selected'));
+ if(row.diOpenDetails)row.diOpenDetails();
  row.classList.add('di-flight-map-selected');row.setAttribute('tabindex','-1');
  row.focus({preventScroll:true});row.scrollIntoView({behavior:'smooth',block:'center'});
 }
@@ -1918,6 +1943,56 @@ if(localStorage.getItem(favoriteKey)===null){
  try{localStorage.setItem(favoriteKey,JSON.stringify(migrated))}catch(e){}
 }
 const empty=document.createElement('p');empty.id='di-flights-empty';empty.hidden=true;empty.textContent='Nessun volo in questa categoria.';box.after(empty);
+
+function decorateFlightCard(row,x){
+ let disclosure=row.querySelector('.di-flight-disclosure');
+ if(!disclosure){
+  const oldSummary=row.querySelector('.di-flight-summary');if(!oldSummary)return;
+  disclosure=document.createElement('details');disclosure.className='di-flight-disclosure';
+  const head=document.createElement('summary');head.className='di-flight-summary di-flight-head';
+  while(oldSummary.firstChild)head.append(oldSummary.firstChild);
+  oldSummary.remove();
+  const body=document.createElement('div');body.className='di-flight-details-body';
+  const metadata=document.createElement('dl');metadata.className='di-flight-fields';
+  const actions=document.createElement('div');actions.className='di-flight-detail-actions';
+  const original=row.querySelector('.di-flight-original');if(original)body.append(original);
+  Array.from(row.childNodes).forEach(child=>{
+   if(child.nodeType!==1){child.remove();return}
+   if(child.classList.contains('di-flight-star'))return;
+   if(child.tagName==='BUTTON'){
+    if(child.textContent.trim()==='Elimina')child.classList.add('di-flight-delete-action');
+    actions.append(child);return;
+   }
+   if(child.tagName==='P')child.remove();
+   else body.append(child);
+  });
+  body.append(metadata,actions);disclosure.append(head,body);row.append(disclosure);
+  row.diOpenDetails=()=>{disclosure.open=true};
+  disclosure.addEventListener('toggle',()=>{
+   if(disclosure.open)box.querySelectorAll('.di-flight-disclosure').forEach(other=>{if(other!==disclosure)other.open=false});
+  });
+ }
+ const estimated=!!(x.durationEstimate&&x.durationEstimate.minutes===Number(x.duration));
+ const meta=disclosure.querySelector('.di-flight-meta');
+ if(meta)meta.textContent=String(x.duration||0)+' min · '+(estimated?'Durata stimata':'Durata inserita');
+ const metadata=disclosure.querySelector('.di-flight-fields');metadata.replaceChildren();
+ const field=(label,value)=>{const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=String(value);metadata.append(dt,dd)};
+ field('Drone',x.model||'Non indicato');
+ field('Durata',String(x.duration||0)+' min · '+(estimated?'Stimata da distanza e velocità':'Inserita dall’utente'));
+ if(estimated)field('Velocità della stima',x.durationEstimate.speed+' m/s');
+ const route=window.diNormalizeManualRoute?window.diNormalizeManualRoute(x.route):null;
+ if(route){
+  field('Percorso',route.type==='gpx'?'Importato da GPX':'Inserito manualmente');
+  field('Punti',route.points.length);
+  if(window.diManualRouteDistance){const meters=window.diManualRouteDistance(route.points,route.segmentStarts);field('Lunghezza',meters>=1000?(meters/1000).toLocaleString('it-IT',{maximumFractionDigits:1})+' km':Math.round(meters)+' m')}
+  if(route.type==='gpx'&&route.sourceFile)field('File GPX',route.sourceFile);
+ }else field('Percorso','Non associato');
+ if(x.lat!==''&&x.lng!==''&&x.lat!=null&&x.lng!=null&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng)))field('Posizione',Number(x.lat).toFixed(5)+', '+Number(x.lng).toFixed(5));
+ field('Batteria drone',x.droneBattery===''||x.droneBattery==null?'Non indicata':x.droneBattery+'%');
+ field('Batteria radiocomando',x.radioBattery===''||x.radioBattery==null?'Non indicata':x.radioBattery+'%');
+ if(x.notes)field('Note',x.notes);
+}
+
 function refresh(){
  const logs=getLogs(),fav=getFav(),rows=Array.from(box.children).filter(el=>el.tagName==='DIV');
  const totalMinutes=logs.reduce((sum,x)=>{const n=Number(x.duration);return sum+(Number.isFinite(n)&&n>0?n:0)},0);
@@ -1947,6 +2022,7 @@ function refresh(){
    try{localStorage.setItem(favoriteKey,JSON.stringify(f))}catch(e){alert('Impossibile salvare i preferiti');return}
    refresh();
   };
+  decorateFlightCard(row,x);
   const term=searchInput.value.trim().toLocaleLowerCase('it-IT');
   const searchable=[x.place,x.notes,x.when,row.querySelector('.di-flight-name')?.textContent,original?.textContent].filter(Boolean).join(' ').toLocaleLowerCase('it-IT');
   const show=(filter!=='favorites'||!!fav[id])&&(!selectedDay||flightDay(x)===selectedDay)&&(!term||searchable.includes(term));
@@ -1967,6 +2043,7 @@ function refresh(){
    button.append(title,detail);
    button.onclick=()=>{
     /* Apri la scheda originale senza spostarla: mantiene attivi GPS, preferiti e azioni. */
+    if(row.diOpenDetails)row.diOpenDetails();
     row.scrollIntoView({behavior:'smooth',block:'center'});
    };
    quickResults.append(button);
@@ -1992,6 +2069,7 @@ function resetDiaryFiltersForCalendar(){
 function openCalendarFlights(){
  const firstVisible=Array.from(box.children).find(row=>row.classList.contains('di-flight-card')&&!row.classList.contains('di-flight-filter-hidden'));
  if(!firstVisible)return;
+ if(firstVisible.diOpenDetails)firstVisible.diOpenDetails();
  firstVisible.setAttribute('tabindex','-1');firstVisible.focus({preventScroll:true});firstVisible.scrollIntoView({behavior:'smooth',block:'start'});
 }
 let calendarMonth=new Date();calendarMonth.setDate(1);let selectedDay='';
