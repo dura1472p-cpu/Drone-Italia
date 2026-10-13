@@ -501,6 +501,33 @@ html.di-dark #di-battery-manager h3,html.di-dark .di-battery-card strong{color:#
 html.di-dark #di-battery-manager input,html.di-dark #di-battery-manager select,html.di-dark #di-battery-manager textarea,html.di-dark #di-new-flight-form #di-flight-battery{background:#21354a;color:#e4edf6;border-color:#40566d;color-scheme:dark}
 html.di-dark .di-battery-help,html.di-dark #di-battery-status,html.di-dark .di-battery-card p{color:#afc0d1}
 </style>
+<style id="di-home-ready-style">
+#di-home-ready{margin:14px 10px 18px;padding:16px;border:1px solid #d5e5f1;border-radius:18px;background:linear-gradient(140deg,#f7fbff,#eaf4fc);box-shadow:0 5px 18px #153e5a12}
+#di-home-ready .di-home-ready-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+#di-home-ready h2{font-size:17px;color:#173a60;margin:0;letter-spacing:-.3px}
+.di-home-ready-heading>span{font-size:10px;color:#587186}
+#di-home-ready .di-home-ready-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#di-home-ready .di-home-ready-tile,#di-home-ready .di-home-ready-last{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;width:100%;box-sizing:border-box;border:1px solid #dce8f2;border-radius:12px;margin:0;padding:12px;background:#fff;color:#173044;box-shadow:none;min-height:44px;font:inherit}
+#di-home-ready .di-home-ready-last{margin-top:9px}
+#di-home-ready .di-home-ready-last:disabled{opacity:1;cursor:default}
+#di-home-ready .di-home-ready-label{font-size:10px;letter-spacing:.2px;color:#587186;font-weight:600}
+#di-home-ready strong{font-size:14px;line-height:1.4;color:#174b73;overflow-wrap:anywhere;max-width:100%}
+#di-home-ready .di-home-ready-meta{font-size:11px;line-height:1.5;color:#587186;white-space:pre-line;overflow-wrap:anywhere}
+#di-home-ready .di-home-ready-warning{background:#fff7ec;border-color:#eed7b4}
+#di-home-ready .di-home-ready-warning strong{color:#92591c}
+#di-home-ready .di-home-ready-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}
+#di-home-ready .di-home-ready-actions button{width:100%;min-height:44px;border-radius:11px;padding:11px 7px;margin:0;font-size:12px;white-space:normal}
+#di-home-preflight{background:#e0edf9;color:#19527e;box-shadow:none}
+#di-home-register{background:#1179ed;color:#fff}
+html.di-dark #di-home-ready{background:linear-gradient(140deg,#192a3b,#21354a);border-color:#33475b}
+html.di-dark #di-home-ready .di-home-ready-tile,html.di-dark #di-home-ready .di-home-ready-last{background:#21354a;border-color:#40566d}
+html.di-dark #di-home-ready h2,html.di-dark #di-home-ready strong{color:#e4edf6}
+html.di-dark #di-home-ready .di-home-ready-label,html.di-dark #di-home-ready .di-home-ready-meta,html.di-dark .di-home-ready-heading>span{color:#afc0d1}
+html.di-dark #di-home-ready .di-home-ready-warning{background:#423624;border-color:#71583c}
+html.di-dark #di-home-ready .di-home-ready-warning strong{color:#ffd69b}
+html.di-dark #di-home-preflight{background:#2c435a;color:#e4edf6}
+@media(max-width:340px){#di-home-ready .di-home-ready-grid{grid-template-columns:1fr}}
+</style>
 </head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -2202,7 +2229,8 @@ function clearFlightForm(){
  window.diFlightChosenPoint=null;window.diFlightPendingMapPoint=null;delete form.dataset.flightLat;delete form.dataset.flightLng;window.diFlightGpsPending=false;
  const status=document.getElementById('di-flight-location-status');if(status)status.textContent='Posizione non impostata: puoi registrare il volo anche senza GPS.';
 }
-add.onclick=()=>{if(form.hidden){clearFlightForm();if(window.diResetPreflightChecklist)window.diResetPreflightChecklist()}toggle(form.hidden)};
+window.diStartNewFlight=()=>{if(save.disabled)return;clearFlightForm();if(window.diResetPreflightChecklist)window.diResetPreflightChecklist();toggle(true)};
+add.onclick=()=>{if(form.hidden)window.diStartNewFlight();else toggle(false)};
 cancel.onclick=()=>{clearFlightForm();toggle(false)};
 const editFields=document.createElement('div');editFields.hidden=true;
 editFields.innerHTML='<label>Data e ora del volo <input id="di-edit-when" type="text" maxlength="80" placeholder="Es. 12/10/2026, 15:30"></label><p>La foto esistente viene mantenuta se non ne scegli una nuova.</p>';
@@ -2608,6 +2636,56 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  };
  get('di-battery-cancel').onclick=()=>{reset();status('Modifica annullata.')};
  window.diRefreshBatteries=render;reset();render();if(window.diRefreshFlightLogs)window.diRefreshFlightLogs();
+})();
+
+</script>
+<script>
+/* Riepilogo personale della Home, aggiornato dai dati locali. */
+(function(){
+ const get=id=>document.getElementById(id),page=get('di-page-home'),overview=get('di-home-overview');if(!page||!overview)return;
+ function read(kind){try{const a=JSON.parse(localStorage.getItem('drone-italia-beta-'+kind)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}}
+ function localDay(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+ function buildHomeReady(drones,batteries,maintenance,logs,activeId,now){
+  const drone=drones.find(d=>d&&d.id===activeId)||null;
+  const batteriesCount=drone?batteries.filter(b=>b&&b.droneId===drone.id&&!b.archived).length:0;
+  const today=localDay(now),limit=localDay(new Date(now.getFullYear(),now.getMonth(),now.getDate()+7));
+  const relevant=maintenance.filter(m=>m&&m.completed!==true&&typeof m.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(m.date)&&Number.isFinite(Date.parse(m.date))&&new Date(m.date).toISOString().slice(0,10)===m.date&&m.date<=limit).sort((a,b)=>a.date.localeCompare(b.date));
+  const overdue=relevant.filter(m=>m.date<today).length,dueToday=relevant.filter(m=>m.date===today).length,soon=relevant.filter(m=>m.date>today).length;
+  let lastIndex=-1;for(let i=logs.length-1;i>=0;i--)if(logs[i]&&typeof logs[i]==='object'&&!Array.isArray(logs[i])){lastIndex=i;break}
+  return {drone,batteriesCount,overdue,dueToday,soon,firstDue:relevant[0]||null,last:lastIndex>=0?logs[lastIndex]:null,lastIndex};
+ }
+ const section=document.createElement('section');section.id='di-home-ready';section.setAttribute('aria-labelledby','di-home-ready-title');
+ section.innerHTML='<div class="di-home-ready-heading"><h2 id="di-home-ready-title">Il tuo riepilogo</h2><span>Dati personali</span></div><div class="di-home-ready-grid"><button type="button" id="di-home-active-drone" class="di-home-ready-tile"><span class="di-home-ready-label">Drone attivo</span><strong id="di-home-active-name"></strong><span id="di-home-active-batteries" class="di-home-ready-meta"></span></button><button type="button" id="di-home-maintenance" class="di-home-ready-tile"><span class="di-home-ready-label">Manutenzioni</span><strong id="di-home-maint-count"></strong><span id="di-home-maint-detail" class="di-home-ready-meta"></span></button></div><button type="button" id="di-home-last-flight" class="di-home-ready-last"><span class="di-home-ready-label">Ultimo volo registrato</span><strong id="di-home-last-place"></strong><span id="di-home-last-info" class="di-home-ready-meta"></span></button><div class="di-home-ready-actions"><button type="button" id="di-home-preflight">Prima del volo</button><button type="button" id="di-home-register">+ Registra volo</button></div>';
+ overview.after(section);
+ function openSettings(anchor){window.droneItaliaOpenPage('settings',anchor)}
+ get('di-home-active-drone').onclick=()=>openSettings('di-drones');
+ get('di-home-maintenance').onclick=()=>openSettings('di-maint-list');
+ get('di-home-preflight').onclick=()=>{
+  window.droneItaliaOpenPage('flights','ft-check');
+  const tab=document.querySelector('#flight-tools [data-pane="check"]');if(tab)tab.click();
+ };
+ get('di-home-register').onclick=()=>{
+  window.droneItaliaOpenPage('flights');
+  if(window.diStartNewFlight)window.diStartNewFlight();
+ };
+ function render(){
+  const logs=read('logs'),x=buildHomeReady(read('drones'),read('batteries'),read('maintenance'),logs,localStorage.getItem('drone-italia-beta-active-drone'),new Date());
+  get('di-home-active-name').textContent=x.drone?x.drone.name:'Scegli un drone';
+  get('di-home-active-batteries').textContent=x.drone?x.batteriesCount+' '+(x.batteriesCount===1?'batteria associata':'batterie associate')+' · non archiviate':'Apri il tuo archivio in Altro';
+  const total=x.overdue+x.dueToday+x.soon;
+  get('di-home-maint-count').textContent=total?(x.overdue?'Scadute: '+x.overdue:x.dueToday?'Oggi: '+x.dueToday:'In scadenza: '+x.soon):'Nessuna scadenza vicina';
+  get('di-home-maintenance').classList.toggle('di-home-ready-warning',total>0);
+  get('di-home-maint-detail').textContent=total?['Oggi: '+x.dueToday,'Entro 7 giorni: '+x.soon].join(' · ')+(x.firstDue?'\n'+String(x.firstDue.task||'Manutenzione')+' · '+x.firstDue.date.split('-').reverse().join('/'):''):'Promemoria di tutti i droni · prossimi 7 giorni';
+  get('di-home-last-place').textContent=x.last?x.last.place||'Località non indicata':'Nessun volo registrato';
+  get('di-home-last-info').textContent=x.last?[x.last.when||'Data non indicata',String(x.last.duration||0)+' min',x.last.model||'Drone non indicato'].join(' · '):'Inizia il tuo diario con “Registra volo”.';
+  get('di-home-last-flight').disabled=!x.last;
+  get('di-home-last-flight').onclick=()=>{const fresh=read('logs');let index=fresh.length-1;while(index>=0&&(!fresh[index]||typeof fresh[index]!=='object'||Array.isArray(fresh[index])))index--;if(index>=0&&window.diOpenFlightInDiary)window.diOpenFlightInDiary(fresh[index],index);else render()};
+ }
+ new MutationObserver(()=>{if(page.classList.contains('di-active'))render()}).observe(page,{attributes:true,attributeFilter:['class']});
+ ['di-logs','di-drones','di-maint-list','di-battery-list'].forEach(id=>{const target=get(id);if(target)new MutationObserver(()=>{if(page.classList.contains('di-active'))render()}).observe(target,{childList:true})});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&page.classList.contains('di-active'))render()});
+ window.addEventListener('storage',()=>{if(page.classList.contains('di-active'))render()});
+ render();
 })();
 
 </script>
