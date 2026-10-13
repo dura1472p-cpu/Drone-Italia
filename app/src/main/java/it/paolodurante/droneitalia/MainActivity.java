@@ -10,6 +10,13 @@ import android.location.*;
 import android.webkit.*;
 import android.widget.*;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Gravity;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Window;
+import android.view.WindowManager;
 import android.print.PrintManager;
 import android.print.PrintAttributes;
 import android.content.Context;
@@ -21,6 +28,54 @@ public class MainActivity extends Activity {
  private WebView web; private LocationManager manager; private LocationListener listener;
  private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303;
  private byte[] pendingBackup;
+
+ private int noticeDp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
+ private GradientDrawable noticeBackground(int color,int border,float radius){
+ GradientDrawable background=new GradientDrawable();background.setColor(color);background.setCornerRadius(noticeDp(radius));
+ if(border!=0)background.setStroke(noticeDp(1),border);return background;
+ }
+ private Button noticeButton(String text,boolean primary){
+ Button button=new Button(this);button.setText(text);button.setAllCaps(false);button.setTextSize(15);button.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+ button.setTextColor(primary?Color.WHITE:Color.rgb(19,78,123));button.setMinHeight(noticeDp(48));button.setMinimumHeight(noticeDp(48));
+ button.setPadding(noticeDp(14),noticeDp(10),noticeDp(14),noticeDp(10));
+ button.setBackground(noticeBackground(primary?Color.rgb(18,112,211):Color.rgb(237,245,253),primary?0:Color.rgb(214,229,243),12));
+ return button;
+ }
+ private void showAppNotice(String message,boolean confirmation,JsResult result){
+ if(isFinishing()||isDestroyed()){result.cancel();return;}
+ LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(noticeDp(24),noticeDp(24),noticeDp(24),noticeDp(22));
+ panel.setBackground(noticeBackground(Color.WHITE,0,22));
+ LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);
+ TextView icon=new TextView(this);icon.setText("!");icon.setTextSize(24);icon.setTypeface(Typeface.DEFAULT,Typeface.BOLD);icon.setGravity(Gravity.CENTER);
+ icon.setTextColor(Color.rgb(160,100,9));icon.setBackground(noticeBackground(Color.rgb(255,243,215),0,20));icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+ header.addView(icon,new LinearLayout.LayoutParams(noticeDp(40),noticeDp(40)));
+ TextView title=new TextView(this);title.setText("ATTENZIONE!");title.setTextColor(Color.rgb(23,48,68));title.setTextSize(20);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+ LinearLayout.LayoutParams titleParams=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);titleParams.setMargins(noticeDp(12),0,0,0);header.addView(title,titleParams);panel.addView(header);
+ final int maxMessageHeight=Math.round(getResources().getDisplayMetrics().heightPixels*.40f);
+ ScrollView scroll=new ScrollView(this){@Override protected void onMeasure(int widthSpec,int heightSpec){super.onMeasure(widthSpec,View.MeasureSpec.makeMeasureSpec(maxMessageHeight,View.MeasureSpec.AT_MOST));}};
+ TextView body=new TextView(this);body.setText(message);body.setTextColor(Color.rgb(65,88,106));body.setTextSize(16);body.setLineSpacing(noticeDp(4),1);body.setPadding(0,0,0,noticeDp(2));scroll.addView(body);
+ LinearLayout.LayoutParams bodyParams=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);bodyParams.setMargins(0,noticeDp(18),0,noticeDp(22));panel.addView(scroll,bodyParams);
+ LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
+ final AlertDialog dialog=new AlertDialog.Builder(this).setView(panel).create();
+ final boolean[] resolved={false};
+ if(confirmation){
+ Button cancel=noticeButton("Annulla",false);LinearLayout.LayoutParams cancelParams=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);cancelParams.setMargins(0,0,noticeDp(10),0);actions.addView(cancel,cancelParams);
+ cancel.setOnClickListener(v->{if(!resolved[0]){resolved[0]=true;result.cancel();}dialog.dismiss();});
+ }
+ Button accept=noticeButton(confirmation?"Conferma":"OK",true);actions.addView(accept,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1));
+ accept.setOnClickListener(v->{if(!resolved[0]){resolved[0]=true;result.confirm();}dialog.dismiss();});
+ panel.addView(actions);dialog.setCanceledOnTouchOutside(false);
+ dialog.setOnDismissListener(d->{if(!resolved[0]){resolved[0]=true;result.cancel();}});
+ dialog.show();
+ Window window=dialog.getWindow();if(window!=null){
+ window.setBackgroundDrawableResource(android.R.color.transparent);
+ window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+ WindowManager.LayoutParams params=window.getAttributes();params.dimAmount=.48f;window.setAttributes(params);
+ int width=Math.min(noticeDp(520),getResources().getDisplayMetrics().widthPixels-noticeDp(40));
+ window.setLayout(width,ViewGroup.LayoutParams.WRAP_CONTENT);
+ }
+ }
+
  @Override public void onCreate(Bundle state) {
  super.onCreate(state);
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
@@ -29,15 +84,10 @@ public class MainActivity extends Activity {
  web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(true);
  web.setWebChromeClient(new WebChromeClient(){
  @Override public boolean onJsAlert(WebView view,String url,String message,JsResult result){
- new AlertDialog.Builder(MainActivity.this).setTitle("ATTENZIONE!").setMessage(message)
- .setPositiveButton("OK",(dialog,which)->result.confirm())
- .setOnCancelListener(dialog->result.cancel()).show();return true;
+ showAppNotice(message,false,result);return true;
  }
  @Override public boolean onJsConfirm(WebView view,String url,String message,JsResult result){
- new AlertDialog.Builder(MainActivity.this).setTitle("ATTENZIONE!").setMessage(message)
- .setPositiveButton("Conferma",(dialog,which)->result.confirm())
- .setNegativeButton("Annulla",(dialog,which)->result.cancel())
- .setOnCancelListener(dialog->result.cancel()).show();return true;
+ showAppNotice(message,true,result);return true;
  }
  @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
  if(fileCallback!=null)fileCallback.onReceiveValue(null);
