@@ -153,7 +153,7 @@ public class MainActivity extends Activity {
  }
  @JavascriptInterface public void saveRouteGpx(String xml){
  try{
-  if(xml==null||xml.length()>200000||!xml.startsWith("<?xml"))throw new IllegalArgumentException("Percorso non valido");
+  if(xml==null||xml.length()>1000000||!xml.startsWith("<?xml"))throw new IllegalArgumentException("Percorso non valido");
   final byte[] bytes=xml.getBytes(java.nio.charset.StandardCharsets.UTF_8);
   runOnUiThread(()->{
    try{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/gpx+xml");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-percorso.gpx");startActivityForResult(intent,ROUTE_SAVE);}
