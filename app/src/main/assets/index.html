@@ -1,4 +1,4 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://app.local/jszip.min.js"></script>
 <style id="di-startup-style">
 html:not(.di-ready){background:#0e639e}
 html:not(.di-ready) body{visibility:hidden}
@@ -505,7 +505,7 @@ const advice={signal:['Perdita del segnale','Controlla gli avvisi del radiocoman
 <h3>Promemoria manutenzione</h3><label>Attività <input id="di-maint-task" maxlength="100" placeholder="Controllo eliche"></label><label>Data prevista <input id="di-maint-date" type="date"></label><label>Drone del promemoria <select id="di-maint-drone" aria-label="Drone associato alla manutenzione"></select></label><button type="button" id="di-maint-add">Salva promemoria</button> <button type="button" id="di-maint-cancel" hidden>Annulla</button><p id="di-maint-status" role="status"></p><div id="di-maint-list"></div><h3>Diario voli</h3><label>Batteria drone al decollo (%) <input id="di-battery-drone" type="number" min="0" max="100" placeholder="es. 95"></label><label>Batteria radiocomando al decollo (%) <input id="di-battery-radio" type="number" min="0" max="100" placeholder="es. 80"></label><label>Luogo del volo <input id="di-log-place" maxlength="100" placeholder="Località"></label><br><label>Foto del volo <input id="di-log-photo" type="file" accept="image/*"></label><p>Le foto vengono ridotte per il salvataggio locale. Non includere dati sensibili.</p>
 <label>Durata effettiva (min) <input id="di-duration" type="number" min="1" max="1440"></label><br>
 <label>Note volo <input id="di-log-notes" maxlength="200"></label><br>
-<button type="button" id="di-save-log">Registra volo</button><div id="di-logs"></div><h3>Backup e ripristino</h3><button type="button" id="di-backup">Esporta backup JSON</button><label>Ripristina backup <input type="file" id="di-restore" accept="application/json,.json"></label><p id="di-backup-status" role="status"></p><h3>Meteo indicativo (fonte Open-Meteo)</h3><label>Punto da consultare <select id="di-weather-center"><option value="selected">Punto scelto sulla mappa</option><option value="gps">Ultima posizione GPS</option></select></label><button type="button" id="di-weather">Aggiorna meteo</button><p id="di-weather-status" role="status">Richiede Internet. Non sostituisce una valutazione meteo aeronautica.</p><h3>Aspetto</h3><button type="button" id="di-dark-mode">Attiva / disattiva modalità scura</button><h3>Rapporto personale</h3><button type="button" id="di-report">Stampa / Salva rapporto in PDF</button><p>Il PDF si salva usando la funzione di stampa del dispositivo, se disponibile.</p>
+<button type="button" id="di-save-log">Registra volo</button><div id="di-logs"></div><h3>Backup e ripristino</h3><button type="button" id="di-backup">Esporta backup ZIP</button><label>Ripristina backup <input type="file" id="di-restore" accept="application/json,application/zip,.json,.zip"></label><p id="di-backup-status" role="status"></p><h3>Meteo indicativo (fonte Open-Meteo)</h3><label>Punto da consultare <select id="di-weather-center"><option value="selected">Punto scelto sulla mappa</option><option value="gps">Ultima posizione GPS</option></select></label><button type="button" id="di-weather">Aggiorna meteo</button><p id="di-weather-status" role="status">Richiede Internet. Non sostituisce una valutazione meteo aeronautica.</p><h3>Aspetto</h3><button type="button" id="di-dark-mode">Attiva / disattiva modalità scura</button><h3>Rapporto personale</h3><button type="button" id="di-report">Stampa / Salva rapporto in PDF</button><p>Il PDF si salva usando la funzione di stampa del dispositivo, se disponibile.</p>
 <p style="font-size:13px">I dati sono memorizzati localmente nella WebView, non sincronizzati. Disinstallare o cancellare i dati dell'app può eliminarli. La quota indicata non viene verificata rispetto a restrizioni reali.</p>
 </section>
 <script>
@@ -579,18 +579,57 @@ $('di-radius').onclick=()=>{if(!map){$('di-map-tools-status').textContent='Mappa
 $('di-clear-radius').onclick=()=>{if(radiusCircle&&map){map.removeLayer(radiusCircle);radiusCircle=null;$('di-map-tools-status').textContent='Cerchio rimosso dalla mappa.'}else{$('di-map-tools-status').textContent='Nessun cerchio da cancellare.'}};
 $('di-satellite').onclick=()=>{if(!map){$('di-map-tools-status').textContent='Mappa non disponibile.';return}const status=$('di-map-tools-status');if(!satelliteLayer){satelliteLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri, Maxar, Earthstar Geographics'});satelliteLayer.on('tileerror',()=>{if(map.hasLayer(satelliteLayer))status.textContent='Immagini satellitari non disponibili: verifica la connessione Internet.'});satelliteLayer.on('tileload',()=>{if(map.hasLayer(satelliteLayer))status.textContent='Vista satellitare attiva. Immagini non necessariamente aggiornate.'})}if(map.hasLayer(satelliteLayer)){map.removeLayer(satelliteLayer);$('di-satellite').textContent='Vista satellitare';status.textContent='Vista stradale attiva.'}else{satelliteLayer.addTo(map);satelliteLayer.bringToFront();$('di-satellite').textContent='Vista stradale';status.textContent='Caricamento immagini satellitari…'}document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>map.invalidateSize(),350)};
 function validateDroneBackup(d){
- if(!d||![1,2].includes(d.version)||!['favorites','plans','logs'].every(k=>Array.isArray(d[k])))throw Error('Formato non valido');
+ if(!d||![1,2,3].includes(d.version)||!['favorites','plans','logs'].every(k=>Array.isArray(d[k])))throw Error('Formato non valido');
  if(!['drones','maintenance'].every(k=>d[k]===undefined||Array.isArray(d[k])))throw Error('Archivio non valido');
  if(d.favorites.length>5000||d.plans.length>5000||d.logs.length>2000||(d.drones||[]).length>100||(d.maintenance||[]).length>2000)throw Error('Backup troppo grande');
  if(!d.favorites.every(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&Math.abs(x.lat)<=90&&Math.abs(x.lng)<=180)||!d.plans.every(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&typeof x.date==='string')||!d.logs.every(x=>x&&typeof x==='object'&&!Array.isArray(x)))throw Error('Dati backup non validi');
  const validPhoto=photo=>typeof photo==='string'&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=\s]+$/.test(photo)&&photo.length<=3000000;
  if(d.logs.some(x=>x.photo&&!validPhoto(x.photo)))throw Error('Foto del backup non valida o troppo grande');
- if(d.version===2&&(!Array.isArray(d.galleryPhotos)||d.galleryPhotos.length>2000||!d.galleryPhotos.every(x=>x&&validPhoto(x.photo)&&typeof x.place==='string'&&typeof x.when==='string')))throw Error('Foto della galleria non valide');
+ if(d.version>=2&&(!Array.isArray(d.galleryPhotos)||d.galleryPhotos.length>2000||!d.galleryPhotos.every(x=>x&&validPhoto(x.photo)&&typeof x.place==='string'&&typeof x.when==='string')))throw Error('Foto della galleria non valide');
  if(d.flightFavorites!==undefined&&(!d.flightFavorites||typeof d.flightFavorites!=='object'||Array.isArray(d.flightFavorites)||Object.values(d.flightFavorites).some(x=>typeof x!=='boolean')))throw Error('Preferiti dei voli non validi');
+ if(d.version===3){if(!window.diMapsBackup)throw Error('Archivio mappe non disponibile');d.mapArchive=window.diMapsBackup.validate(d.mapArchive)}
  return d;
 }
+async function encodeBackupZip(data){
+ if(typeof JSZip==='undefined')throw Error('Componente ZIP non disponibile. Aggiorna l’app.');
+ const zip=new JSZip(),packed={...data,logs:data.logs.map(x=>({...x})),galleryPhotos:data.galleryPhotos.map(x=>({...x}))};let count=0,photoBytes=0;
+ [...packed.logs,...packed.galleryPhotos].forEach(x=>{
+  if(!x.photo)return;
+  const match=x.photo.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/);if(!match)throw Error('Fotografia non valida');
+  const base64=match[2].replace(/\s/g,''),file='photos/'+(count++)+'.'+match[1];photoBytes+=Math.ceil(base64.length*3/4);
+  if(photoBytes>50000000)throw Error('Le fotografie superano il limite ZIP di 50 MB');
+  zip.file(file,base64,{base64:true});x.photo={file,mime:match[1]};
+ });
+ const json=JSON.stringify(packed);if(new TextEncoder().encode(json).length>12000000)throw Error('Dati e mappe oltre 12 MB');
+ zip.file('data.json',json);const bytes=await zip.generateAsync({type:'uint8array',compression:'STORE'});
+ if(bytes.length>50000000)throw Error('Archivio ZIP oltre 50 MB');return bytes;
+}
+async function decodeBackupZip(bytes){
+ if(typeof JSZip==='undefined')throw Error('Componente ZIP non disponibile');
+ const zip=await JSZip.loadAsync(bytes),files=Object.values(zip.files);let size=0;
+ if(files.length>5000)throw Error('Troppi elementi nello ZIP');
+ files.forEach(file=>{
+  if(file.dir)return;
+  if(file.unsafeOriginalName&&file.unsafeOriginalName!==file.name)throw Error('Percorso ZIP non valido');
+  if(!/^(data\.json|photos\/\d+\.(jpeg|png|webp))$/.test(file.name))throw Error('Contenuto ZIP non riconosciuto');
+  const length=file._data&&file._data.uncompressedSize;
+  if(!Number.isFinite(length)||length>12000000)throw Error('Elemento ZIP troppo grande');
+  size+=length;if(size>70000000)throw Error('Contenuto ZIP oltre 70 MB');
+ });
+ const manifest=zip.file('data.json');if(!manifest)throw Error('Dati del backup mancanti');
+ const d=JSON.parse(await manifest.async('string'));
+ if(d.version!==3||!Array.isArray(d.logs)||!Array.isArray(d.galleryPhotos)||d.logs.length>2000||d.galleryPhotos.length>2000)throw Error('Formato ZIP non valido');
+ for(const record of [...d.logs,...d.galleryPhotos]){
+  if(!record||typeof record!=='object')throw Error('Elemento backup non valido');if(!record.photo)continue;
+  const ref=record.photo;
+  if(typeof ref!=='object'||!['jpeg','png','webp'].includes(ref.mime)||typeof ref.file!=='string'||!/^photos\/\d+\.(jpeg|png|webp)$/.test(ref.file)||!ref.file.endsWith('.'+ref.mime))throw Error('Riferimento foto non valido');
+  const file=zip.file(ref.file);if(!file||file._data.uncompressedSize>2250000)throw Error('Foto mancante o troppo grande');
+  record.photo='data:image/'+ref.mime+';base64,'+await file.async('base64');
+ }
+ return validateDroneBackup(d);
+}
 function backupSummary(d){
- return d.logs.length+' voli ('+d.logs.filter(x=>!!x.photo).length+' foto associate)\n'+(d.galleryPhotos||[]).length+' foto personali\n'+(d.drones||[]).length+' droni · '+d.plans.length+' piani · '+d.favorites.length+' luoghi preferiti';
+ return d.logs.length+' voli ('+d.logs.filter(x=>!!x.photo).length+' foto associate)\n'+(d.galleryPhotos||[]).length+' foto personali\n'+(d.drones||[]).length+' droni · '+d.plans.length+' piani · '+d.favorites.length+' luoghi preferiti'+(d.version===3?'\n'+d.mapArchive.maps.length+' mappe importate':'');
 }
 let backupBusy=false;
 $('di-backup').onclick=async()=>{
@@ -598,34 +637,36 @@ $('di-backup').onclick=async()=>{
  try{
   if(!window.diGalleryBackup)throw Error('Archivio della galleria non disponibile');
   const galleryPhotos=(await window.diGalleryBackup.read()).map(x=>({photo:x.photo,place:String(x.place||'Foto personale'),when:String(x.when||'')}));
-  const obj={version:2,created:new Date().toISOString(),favorites:load('favorites'),plans:load('plans'),logs:load('logs'),profile:localStorage.getItem('drone-profile'),drones:load('drones'),maintenance:load('maintenance'),activeDrone:localStorage.getItem(key+'active-drone'),dark:localStorage.getItem(key+'dark'),galleryPhotos,flightFavorites:JSON.parse(localStorage.getItem('drone-italia-flight-favorites-v2')||'{}')};
-  validateDroneBackup(obj);const data=JSON.stringify(obj);
-  if(new TextEncoder().encode(data).length>12000000)throw Error('Backup oltre 12 MB. Riduci le foto prima di esportare.');
-  if(window.DroneItaliaNative&&window.DroneItaliaNative.saveBackup){
-   const bytes=new TextEncoder().encode(data);let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
-   window.DroneItaliaNative.saveBackup(btoa(binary));$('di-backup-status').textContent='Backup preparato: '+backupSummary(obj)+'. Scegli dove salvarlo nella finestra Android.';
-  }else throw Error('Backup disponibile solo nell’APK Android aggiornato.');
+  const obj={version:3,created:new Date().toISOString(),favorites:load('favorites'),plans:load('plans'),logs:load('logs'),profile:localStorage.getItem('drone-profile'),drones:load('drones'),maintenance:load('maintenance'),activeDrone:localStorage.getItem(key+'active-drone'),dark:localStorage.getItem(key+'dark'),galleryPhotos,mapArchive:window.diMapsBackup?window.diMapsBackup.read():null,flightFavorites:JSON.parse(localStorage.getItem('drone-italia-flight-favorites-v2')||'{}')};
+  validateDroneBackup(obj);$('di-backup-status').textContent='Preparazione del backup ZIP…';const bytes=await encodeBackupZip(obj);
+  if(window.DroneItaliaNative&&window.DroneItaliaNative.saveBackupZip){
+   let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+   window.DroneItaliaNative.saveBackupZip(btoa(binary));$('di-backup-status').textContent='Backup ZIP preparato: '+backupSummary(obj)+'. Scegli dove salvarlo nella finestra Android.';
+  }else throw Error('Backup ZIP disponibile nell’APK Android aggiornato.');
  }catch(err){$('di-backup-status').textContent='Esportazione non riuscita: '+err.message}
  finally{backupBusy=false;$('di-backup').disabled=false}
 };
 $('di-restore').onchange=async e=>{
  const f=e.target.files[0];if(!f||backupBusy)return;backupBusy=true;$('di-backup').disabled=true;
  try{
-  if(f.size>12000000)throw Error('File oltre 12 MB');
-  const d=validateDroneBackup(JSON.parse(await f.text()));
+  if(f.size>50000000)throw Error('File oltre 50 MB');$('di-backup-status').textContent='Lettura del backup…';
+  const header=new Uint8Array(await f.slice(0,4).arrayBuffer()),isZip=header[0]===80&&header[1]===75;
+  if(!isZip&&f.size>12000000)throw Error('Backup JSON oltre 12 MB');
+  const d=isZip?await decodeBackupZip(await f.arrayBuffer()):validateDroneBackup(JSON.parse(await f.text()));
   const galleryNote=d.version===1?'Questo backup precedente non contiene le foto personali: quelle attuali saranno mantenute.':'Le foto personali attuali saranno sostituite con quelle del backup.';
   if(!confirm('Anteprima del backup:\n\n'+backupSummary(d)+'\n\n'+galleryNote+'\nVoli e altri dati locali saranno sostituiti. Confermi il ripristino?'))return;
-  if(d.version===2&&!window.diGalleryBackup)throw Error('Archivio della galleria non disponibile');
-  if(d.version===2)await window.diGalleryBackup.read();
+  if(d.version>=2&&!window.diGalleryBackup)throw Error('Archivio della galleria non disponibile');
+  if(d.version>=2)await window.diGalleryBackup.read();
   const writes=new Map(['favorites','plans','logs','drones','maintenance'].map(k=>[key+k,JSON.stringify(d[k]||[])]));
   if(typeof d.activeDrone==='string')writes.set(key+'active-drone',d.activeDrone);else writes.set(key+'active-drone',null);
   if(d.dark==='1'||d.dark==='0')writes.set(key+'dark',d.dark);
   if(typeof d.profile==='string')writes.set('drone-profile',d.profile);
   if(d.flightFavorites!==undefined)writes.set('drone-italia-flight-favorites-v2',JSON.stringify(d.flightFavorites));
+  if(d.version===3){writes.set('drone-italia-imported-geojson-v2',JSON.stringify(d.mapArchive.maps));writes.set('drone-italia-map-visibility-v1',JSON.stringify(d.mapArchive.hiddenIds));writes.set('di-hide-existing-imports-20261012','1')}
   const old=new Map(Array.from(writes.keys()).map(k=>[k,localStorage.getItem(k)]));
   try{
    for(const [k,v] of writes){if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}
-   if(d.version===2)await window.diGalleryBackup.replace(d.galleryPhotos);
+   if(d.version>=2)await window.diGalleryBackup.replace(d.galleryPhotos);
   }catch(err){
    let rollbackFailed=false;for(const [k,v] of old){try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){rollbackFailed=true}}
    throw Error(rollbackFailed?'Memoria non disponibile: verifica i dati locali prima di riprovare.':'Ripristino annullato: spazio insufficiente o archivio non disponibile. I dati precedenti sono stati mantenuti.');
@@ -892,6 +933,18 @@ const good=data.features.filter(f=>f&&f.type==='Feature'&&validGeometry(f.geomet
 if(!good.length)throw Error('Nessun poligono valido trovato.');
 return {type:'FeatureCollection',features:good};
 }
+window.diMapsBackup={
+ validate(data){
+  if(!data||!Array.isArray(data.maps)||data.maps.length>20||!Array.isArray(data.hiddenIds))throw Error('Archivio mappe non valido');
+  const ids=new Set(),maps=data.maps.map(x=>{
+   if(!x||typeof x.id!=='string'||!x.id||ids.has(x.id)||typeof x.filename!=='string')throw Error('Identificativo mappa non valido');
+   ids.add(x.id);return {id:x.id,filename:x.filename.slice(0,120),geojson:sanitize(x.geojson)};
+  });
+  if(JSON.stringify(maps).length>5000000)throw Error('Archivio mappe oltre 5 MB');
+  return {maps,hiddenIds:data.hiddenIds.filter(id=>typeof id==='string'&&ids.has(id)).slice(0,20)};
+ },
+ read(){return this.validate({maps:JSON.parse(localStorage.getItem(key)||'[]'),hiddenIds:JSON.parse(localStorage.getItem(visibilityKey)||'[]')})}
+};
 function persist(next){
 const encoded=JSON.stringify(next);
 if(encoded.length>3500000)throw Error('Archivio pieno: massimo 3,5 MB complessivi. Elimina una mappa per aggiungerne altre.');
