@@ -815,6 +815,9 @@ $('di-maint-add').onclick=()=>{
 function applyDark(){
  const dark=localStorage.getItem(key+'dark')==='1';
  document.documentElement.style.colorScheme=dark?'dark':'light';
+ document.documentElement.classList.toggle('di-dark',dark);
+ const toggle=$('di-dark-mode');if(toggle){toggle.textContent=dark?'Attiva modalità chiara':'Attiva modalità scura';toggle.setAttribute('aria-pressed',String(dark))}
+ if(window.DroneItaliaNative&&typeof window.DroneItaliaNative.setDarkTheme==='function')window.DroneItaliaNative.setDarkTheme(dark);
  document.body.style.background=dark?'#10232d':'#f4f7fa';document.body.style.color=dark?'#e3edf3':'#122c39';
  for(const id of ['planner','detail']){
   const element=$(id);if(!element)continue;
@@ -1689,7 +1692,33 @@ function filteredFlightsReport(entries){
  const selected=[['Anno',mapFilters.year||'Tutti'],['Mese',mapFilters.month?months[Number(mapFilters.month)-1]:'Tutti'],['Drone',mapFilters.model||'Tutti'],['Località',mapFilters.place.trim()||'Tutte']];
  const filters=selected.map(([label,value])=>'<li><b>'+label+':</b> '+safeHtml(value)+'</li>').join('');
  const rows=entries.map(x=>'<tr><td>'+safeHtml(x.when||'Non indicata')+'</td><td>'+safeHtml(x.place||'Non indicata')+'</td><td>'+safeHtml(x.model||'Non indicato')+'</td><td>'+safeHtml(formatFlightTime(Math.max(0,Number(x.duration)||0)))+'</td><td>'+safeHtml(Number(x.lat).toFixed(5)+', '+Number(x.lng).toFixed(5))+'</td></tr>').join('');
- return '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Voli filtrati Drone Italia</title><style>@page{size:A4 landscape;margin:15mm}body{font:14px Arial,sans-serif;color:#20384b}h1,h2{color:#1268a8}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left;overflow-wrap:anywhere}th{background:#eaf3fa}thead{display:table-header-group}tr{break-inside:avoid}ul{padding-left:20px}p{line-height:1.5}</style></head><body><h1>Drone Italia — Voli filtrati sulla mappa</h1><p>Rapporto generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><h2>Filtri applicati</h2><ul>'+filters+'</ul><p><b>Voli:</b> '+entries.length+' · <b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'</p><table><thead><tr><th>Data</th><th>Località</th><th>Drone</th><th>Durata</th><th>Coordinate GPS</th></tr></thead><tbody>'+rows+'</tbody></table><p>Il rapporto include solo i voli con coordinate GPS corrispondenti ai filtri selezionati.</p><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
+ return '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Voli filtrati Drone Italia</title><style>@page{size:A4 landscape;margin:15mm}body{font:14px Arial,sans-serif;color:#20384b}h1,h2{color:#1268a8}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left;overflow-wrap:anywhere}th{background:#eaf3fa}thead{display:table-header-group}tr{break-inside:avoid}ul{padding-left:20px}p{line-height:1.5}</style>
+<style id="di-unified-theme">
+.di-page input:focus-visible,.di-page select:focus-visible,.di-page button:focus-visible,summary:focus-visible{outline:3px solid #2789e5;outline-offset:3px}
+#di-page-settings .di-tool-group>button{background:#126bc4;color:#fff}
+#di-page-settings #di-drone-cancel,#di-page-settings #di-maint-cancel{background:#eaf3fd;color:#145b96}
+#di-page-settings .di-tool-group input,#di-page-settings .di-tool-group select{min-height:44px}
+html.di-dark{--di-ink:#e4edf6;--di-muted:#afc0d1;--di-border:#33475b;--di-surface:#192a3b;--di-shadow:0 4px 18px #0003}
+html.di-dark body,html.di-dark .di-page,html.di-dark #di-page-photos{background:#101d2a!important;color:#e4edf6!important}
+html.di-dark .di-page .di-tool-group,html.di-dark #di-flights-dashboard,html.di-dark #di-flight-statistics,html.di-dark #di-flight-calendar,html.di-dark #di-new-flight-form,html.di-dark .di-flight-card,html.di-dark #di-photo-filters,html.di-dark #di-page-photos .di-photo-card,html.di-dark #di-weather-card,html.di-dark #di-drones .di-drone-card,html.di-dark #di-maint-list .di-maint-card,html.di-dark .di-stats-drone-card,html.di-dark .di-stats-month,html.di-dark #di-page-flights #flight-tools,html.di-dark #flight-tools .box,html.di-dark #di-detail,html.di-dark #detail{background:#192a3b!important;color:#e4edf6!important;border-color:#33475b!important;color-scheme:dark!important;box-shadow:0 4px 16px #0002!important}
+html.di-dark .di-page h2,html.di-dark .di-page h3,html.di-dark .di-page h4,html.di-dark .di-page label,html.di-dark .di-page strong,html.di-dark .di-flight-group-panel h2{color:#e4edf6!important}
+html.di-dark .di-page p,html.di-dark .di-page li,html.di-dark .di-page small,html.di-dark .di-flight-date,html.di-dark .di-flight-meta,html.di-dark .di-flight-notes,html.di-dark #di-page-photos .di-photo-open span,html.di-dark #di-page-photos .di-photo-open span+span,html.di-dark .di-calendar-weekday,html.di-dark #di-photo-filter-badge,html.di-dark .di-drone-number span{color:#afc0d1!important}
+html.di-dark .di-page input:not([type=checkbox]),html.di-dark .di-page select,html.di-dark #di-new-flight-form #di-flight-drone,html.di-dark #di-photo-filters input,html.di-dark #di-photo-filters select{background:#102030!important;color:#e4edf6!important;border-color:#445a70!important;color-scheme:dark}
+html.di-dark input::placeholder{color:#91a8bd!important}
+html.di-dark #di-app-nav{background:#192a3bf5!important;border-color:#33475b!important}
+html.di-dark #di-app-nav button{background:transparent!important;color:#afc0d1!important}
+html.di-dark #di-app-nav button[aria-current=page]{background:#1276db!important;color:white!important}
+html.di-dark #di-stats-toggle,html.di-dark .di-flights-tabs button,html.di-dark #di-flights-dashboard .di-flights-stats>div,html.di-dark .di-stats-cards>div,html.di-dark .di-drone-number,html.di-dark #di-weather-card .di-weather-value,html.di-dark .di-flight-star,html.di-dark #di-flight-calendar .di-calendar-day,html.di-dark #di-flight-calendar .di-calendar-day.has-flights,html.di-dark #di-flight-calendar .di-calendar-head button{background:#223a50!important;color:#d9eafb!important;border-color:#445a70!important}
+html.di-dark #di-flight-calendar .di-calendar-day.selected,html.di-dark .di-flights-tabs button[aria-pressed=true]{background:#1276db!important;color:white!important}
+html.di-dark #di-photo-filters summary,html.di-dark #di-photo-reset,html.di-dark #di-page-photos .di-photo-flight-link,html.di-dark #di-stats-map,html.di-dark #di-calendar-clear,html.di-dark #di-calendar-selection,html.di-dark #di-drone-cancel,html.di-dark #di-maint-cancel{background:#223a50!important;color:#b9dcff!important}
+html.di-dark #di-page-photos .di-photo-delete{background:#192a3b!important;color:#ffb5be!important;border-color:#33475b!important}
+html.di-dark .di-maint-overdue,html.di-dark .di-drone-overdue strong{color:#ffb5be!important}
+html.di-dark #di-page-settings footer,html.di-dark #di-photo-count,html.di-dark .di-stats-drone-track{background:#223a50!important;color:#afc0d1!important}
+html.di-dark #di-weather-card th,html.di-dark #di-weather-card td{color:#d9eafb!important;border-color:#33475b!important}
+html.di-dark #di-flight-map-filters,html.di-dark #di-layers-panel,html.di-dark .di-flight-group-panel,html.di-dark .di-flight-group-panel header,html.di-dark .di-flight-group-card,html.di-dark .di-flight-group-details{background:#192a3b!important;color:#e4edf6!important;border-color:#33475b!important}
+html.di-dark #di-flight-map-filters input,html.di-dark #di-flight-map-filters select{background:#102030!important;color:#e4edf6!important;border-color:#445a70!important}
+</style>
+</head><body><h1>Drone Italia — Voli filtrati sulla mappa</h1><p>Rapporto generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><h2>Filtri applicati</h2><ul>'+filters+'</ul><p><b>Voli:</b> '+entries.length+' · <b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'</p><table><thead><tr><th>Data</th><th>Località</th><th>Drone</th><th>Durata</th><th>Coordinate GPS</th></tr></thead><tbody>'+rows+'</tbody></table><p>Il rapporto include solo i voli con coordinate GPS corrispondenti ai filtri selezionati.</p><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
 }
 field('pdf').onclick=()=>{
  const entries=gpsFlights().filter(matchesMapFilters);
