@@ -480,7 +480,7 @@ const advice={signal:['Perdita del segnale','Controlla gli avvisi del radiocoman
 <h3>Promemoria manutenzione</h3><label>Attività <input id="di-maint-task" maxlength="100" placeholder="Controllo eliche"></label><label>Data prevista <input id="di-maint-date" type="date"></label><label>Drone del promemoria <select id="di-maint-drone" aria-label="Drone associato alla manutenzione"></select></label><button type="button" id="di-maint-add">Salva promemoria</button> <button type="button" id="di-maint-cancel" hidden>Annulla</button><p id="di-maint-status" role="status"></p><div id="di-maint-list"></div><h3>Diario voli</h3><label>Batteria drone al decollo (%) <input id="di-battery-drone" type="number" min="0" max="100" placeholder="es. 95"></label><label>Batteria radiocomando al decollo (%) <input id="di-battery-radio" type="number" min="0" max="100" placeholder="es. 80"></label><label>Luogo del volo <input id="di-log-place" maxlength="100" placeholder="Località"></label><br><label>Foto del volo <input id="di-log-photo" type="file" accept="image/*"></label><p>Le foto vengono ridotte per il salvataggio locale. Non includere dati sensibili.</p>
 <label>Durata effettiva (min) <input id="di-duration" type="number" min="1" max="1440"></label><br>
 <label>Note volo <input id="di-log-notes" maxlength="200"></label><br>
-<button type="button" id="di-save-log">Registra volo</button><div id="di-logs"></div><h3>Backup e ripristino</h3><button type="button" id="di-backup">Esporta backup JSON</button><label>Ripristina backup <input type="file" id="di-restore" accept="application/json,.json"></label><p id="di-backup-status" role="status"></p><h3>Meteo indicativo (fonte Open-Meteo)</h3><button type="button" id="di-weather">Consulta meteo del punto</button><p id="di-weather-status" role="status">Richiede Internet. Non sostituisce una valutazione meteo aeronautica.</p><h3>Aspetto</h3><button type="button" id="di-dark-mode">Attiva / disattiva modalità scura</button><h3>Rapporto personale</h3><button type="button" id="di-report">Stampa / Salva rapporto in PDF</button><p>Il PDF si salva usando la funzione di stampa del dispositivo, se disponibile.</p>
+<button type="button" id="di-save-log">Registra volo</button><div id="di-logs"></div><h3>Backup e ripristino</h3><button type="button" id="di-backup">Esporta backup JSON</button><label>Ripristina backup <input type="file" id="di-restore" accept="application/json,.json"></label><p id="di-backup-status" role="status"></p><h3>Meteo indicativo (fonte Open-Meteo)</h3><label>Punto da consultare <select id="di-weather-center"><option value="selected">Punto scelto sulla mappa</option><option value="gps">Ultima posizione GPS</option></select></label><button type="button" id="di-weather">Aggiorna meteo</button><p id="di-weather-status" role="status">Richiede Internet. Non sostituisce una valutazione meteo aeronautica.</p><h3>Aspetto</h3><button type="button" id="di-dark-mode">Attiva / disattiva modalità scura</button><h3>Rapporto personale</h3><button type="button" id="di-report">Stampa / Salva rapporto in PDF</button><p>Il PDF si salva usando la funzione di stampa del dispositivo, se disponibile.</p>
 <p style="font-size:13px">I dati sono memorizzati localmente nella WebView, non sincronizzati. Disinstallare o cancellare i dati dell'app può eliminarli. La quota indicata non viene verificata rispetto a restrizioni reali.</p>
 </section>
 <script>
@@ -605,7 +605,52 @@ $('di-restore').onchange=async e=>{
 window.diPrintLogReport=printLogReport;
 function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
-$('di-weather').onclick=async()=>{const out=$('di-weather-status');if(!selected){out.textContent='Seleziona prima un punto sulla mappa.';return}out.textContent='Caricamento meteo...';try{const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;try{response=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(selected.lat)+'&longitude='+encodeURIComponent(selected.lng)+'&current=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation&timezone=auto',{signal:controller.signal})}finally{clearTimeout(timeout)}if(!response.ok)throw Error('HTTP '+response.status);const d=await response.json(),w=d.current;if(!w)throw Error('Dati non disponibili');out.textContent='Fonte: Open-Meteo · '+w.time+' · Temperatura '+w.temperature_2m+' °C · Vento a 10 m '+w.wind_speed_10m+' km/h · Raffiche '+w.wind_gusts_10m+' km/h · Precipitazioni '+w.precipitation+' mm. Dati indicativi: verifica sul posto e nel manuale del drone.'}catch(e){out.textContent='Meteo non disponibile: controlla la connessione. Nessuna valutazione automatica di sicurezza.'}};
+const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
+const weatherStyle=document.createElement('style');weatherStyle.textContent='#di-weather-card[hidden]{display:none!important}#di-weather-card{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce6ef;border-radius:15px}#di-weather-card h4{margin:0 0 8px;color:#174b73}#di-weather-card .di-weather-meta{font-size:12px;line-height:1.5;color:#52718c;overflow-wrap:anywhere}#di-weather-card .di-weather-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#di-weather-card .di-weather-value{padding:12px;border-radius:11px;background:#f0f7fd}#di-weather-card .di-weather-value span{display:block;font-size:12px;color:#52718c}#di-weather-card .di-weather-value strong{display:block;font-size:20px;color:#1268a8;margin-top:4px}#di-weather-card .di-weather-hours{overflow-x:auto}#di-weather-card table{border-collapse:collapse;min-width:420px;width:100%;font-size:12px}#di-weather-card th,#di-weather-card td{padding:10px 6px;border-bottom:1px solid #e1eaf2;text-align:left;white-space:nowrap}#di-weather-card th{color:#36556e}#di-weather-center{display:block;width:100%;min-height:44px;margin:6px 0 12px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(weatherStyle);
+function weatherNumber(value,unit){
+ return value===null||value===undefined||value===''||!Number.isFinite(Number(value))?'—':Number(value).toLocaleString('it-IT',{maximumFractionDigits:1})+' '+unit;
+}
+function weatherPoint(point){
+ if(!point||point.lat===null||point.lng===null||point.lat===undefined||point.lng===undefined||point.lat===''||point.lng==='')return null;
+ const lat=Number(point.lat),lng=Number(point.lng);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180?{lat,lng}:null;
+}
+function renderWeather(data,point,source){
+ const current=data.current;if(!current||typeof current.time!=='string')throw Error('Dati non disponibili');
+ weatherCard.replaceChildren();
+ weatherCard.append(node('h4','Condizioni attuali'));
+ const meta=node('p',source+' · '+point.lat.toFixed(5)+', '+point.lng.toFixed(5)+'\nDati: '+current.time.replace('T',' ')+' · '+String(data.timezone||'ora del punto')+'\nConsultato: '+new Date().toLocaleString('it-IT'));meta.className='di-weather-meta';meta.style.whiteSpace='pre-line';weatherCard.append(meta);
+ const values=document.createElement('div');values.className='di-weather-values';
+ [['Temperatura',current.temperature_2m,'°C'],['Vento a 10 m',current.wind_speed_10m,'km/h'],['Raffiche a 10 m',current.wind_gusts_10m,'km/h'],['Precipitazioni',current.precipitation,'mm']].forEach(([label,value,unit])=>{
+  const item=document.createElement('div');item.className='di-weather-value';item.append(node('span',label),node('strong',weatherNumber(value,unit)));values.append(item);
+ });weatherCard.append(values,node('h4','Previsioni orarie'));
+ const hourly=data.hourly||{},times=Array.isArray(hourly.time)?hourly.time:[],cutoff=current.time.slice(0,13)+':00';
+ const indexes=times.map((time,i)=>({time,i})).filter(x=>typeof x.time==='string'&&x.time>=cutoff).slice(0,6);
+ if(indexes.length){
+  const wrap=document.createElement('div');wrap.className='di-weather-hours';wrap.setAttribute('tabindex','0');wrap.setAttribute('aria-label','Previsioni orarie, scorri per vedere tutte le colonne');
+  const table=document.createElement('table'),head=document.createElement('thead'),header=document.createElement('tr');
+  ['Data e ora','Temp.','Vento','Raffiche','Pioggia'].forEach(label=>{const th=node('th',label);th.scope='col';header.append(th)});head.append(header);table.append(head);
+  const body=document.createElement('tbody');
+  indexes.forEach(({time,i})=>{const row=document.createElement('tr');const label=time.slice(8,10)+'/'+time.slice(5,7)+' '+time.slice(11,16);row.append(node('td',label));
+   [['temperature_2m','°C'],['wind_speed_10m','km/h'],['wind_gusts_10m','km/h'],['precipitation','mm']].forEach(([key,unit])=>row.append(node('td',weatherNumber(Array.isArray(hourly[key])?hourly[key][i]:null,unit))));
+   body.append(row);
+  });table.append(body);wrap.append(table);weatherCard.append(wrap);
+ }else weatherCard.append(node('p','Previsioni orarie non disponibili.'));
+ const note=node('p','Fonte: Open-Meteo. Dati indicativi: verifica le condizioni sul posto e i limiti del drone. Non costituiscono una valutazione di sicurezza del volo.');note.className='di-weather-meta';weatherCard.append(note);weatherCard.hidden=false;
+}
+$('di-weather').onclick=async()=>{
+ const out=$('di-weather-status'),button=$('di-weather'),gps=$('di-weather-center').value==='gps',point=weatherPoint(gps?window.droneItaliaLastGps:selected);
+ weatherCard.hidden=true;
+ if(!point){out.textContent=gps?'Acquisisci prima la posizione dalla mappa con «La mia posizione».':'Seleziona prima un punto sulla mappa.';return}
+ button.disabled=true;out.textContent='Caricamento meteo…';
+ try{
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;
+  const params=new URLSearchParams({latitude:String(point.lat),longitude:String(point.lng),current:'temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation',hourly:'temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation',forecast_hours:'12',wind_speed_unit:'kmh',temperature_unit:'celsius',precipitation_unit:'mm',timezone:'auto'});
+  try{response=await fetch('https://api.open-meteo.com/v1/forecast?'+params,{signal:controller.signal})}finally{clearTimeout(timeout)}
+  if(!response.ok)throw Error('HTTP '+response.status);
+  renderWeather(await response.json(),point,gps?'Ultima posizione GPS':'Punto scelto sulla mappa');out.textContent='Meteo aggiornato. Scorri la tabella per confrontare le ore.';
+ }catch(e){out.textContent='Meteo non disponibile: controlla la connessione e riprova.'}
+ finally{button.disabled=false}
+};
 
 function droneArchiveSummary(drone,logs,maintenance,today){
  const flights=logs.filter(x=>x&&(x.droneId?x.droneId===drone.id:String(x.model||'').trim()===String(drone.name||'').trim()));
