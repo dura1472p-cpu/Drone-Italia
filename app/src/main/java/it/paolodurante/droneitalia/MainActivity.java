@@ -53,16 +53,17 @@ public class MainActivity extends Activity {
  LinearLayout.LayoutParams titleParams=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);titleParams.setMargins(noticeDp(12),0,0,0);header.addView(title,titleParams);panel.addView(header);
  final int maxMessageHeight=Math.round(getResources().getDisplayMetrics().heightPixels*.40f);
  ScrollView scroll=new ScrollView(this){@Override protected void onMeasure(int widthSpec,int heightSpec){super.onMeasure(widthSpec,View.MeasureSpec.makeMeasureSpec(maxMessageHeight,View.MeasureSpec.AT_MOST));}};
- TextView body=new TextView(this);body.setText(message);body.setTextColor(Color.rgb(65,88,106));body.setTextSize(16);body.setLineSpacing(noticeDp(4),1);body.setPadding(0,0,0,noticeDp(2));scroll.addView(body);
+ final boolean maintenanceNotice=confirmation&&message.startsWith("PROMEMORIA MANUTENZIONE\n");
+ TextView body=new TextView(this);body.setText(maintenanceNotice?message.substring("PROMEMORIA MANUTENZIONE\n".length()):message);body.setTextColor(Color.rgb(65,88,106));body.setTextSize(16);body.setLineSpacing(noticeDp(4),1);body.setPadding(0,0,0,noticeDp(2));scroll.addView(body);
  LinearLayout.LayoutParams bodyParams=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);bodyParams.setMargins(0,noticeDp(18),0,noticeDp(22));panel.addView(scroll,bodyParams);
  LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
  final AlertDialog dialog=new AlertDialog.Builder(this).setView(panel).create();
  final boolean[] resolved={false};
  if(confirmation){
- Button cancel=noticeButton("Annulla",false);LinearLayout.LayoutParams cancelParams=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);cancelParams.setMargins(0,0,noticeDp(10),0);actions.addView(cancel,cancelParams);
+ Button cancel=noticeButton(maintenanceNotice?"Chiudi":"Annulla",false);LinearLayout.LayoutParams cancelParams=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);cancelParams.setMargins(0,0,noticeDp(10),0);actions.addView(cancel,cancelParams);
  cancel.setOnClickListener(v->{if(!resolved[0]){resolved[0]=true;result.cancel();}dialog.dismiss();});
  }
- Button accept=noticeButton(confirmation?"Conferma":"OK",true);actions.addView(accept,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1));
+ Button accept=noticeButton(maintenanceNotice?"Apri manutenzioni":confirmation?"Conferma":"OK",true);actions.addView(accept,new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1));
  accept.setOnClickListener(v->{if(!resolved[0]){resolved[0]=true;result.confirm();}dialog.dismiss();});
  panel.addView(actions);dialog.setCanceledOnTouchOutside(false);
  dialog.setOnDismissListener(d->{if(!resolved[0]){resolved[0]=true;result.cancel();}});
@@ -186,5 +187,9 @@ public class MainActivity extends Activity {
  private void stopLocation(){if(manager!=null&&listener!=null){manager.removeUpdates(listener);listener=null;}}
  @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==10){if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED)locate();else Toast.makeText(this,"Puoi usare la mappa senza GPS",Toast.LENGTH_LONG).show();}}
  @Override protected void onStop(){stopLocation();super.onStop();}
+ @Override protected void onResume(){
+ super.onResume();
+ if(web!=null)web.postDelayed(()->{if(!isFinishing()&&!isDestroyed())web.evaluateJavascript("if(window.diCheckMaintenanceAtStartup)window.diCheckMaintenanceAtStartup();",null);},1200);
+ }
  @Override protected void onDestroy(){web.destroy();super.onDestroy();}
 }
