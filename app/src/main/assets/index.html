@@ -528,6 +528,48 @@ html.di-dark #di-home-ready .di-home-ready-warning strong{color:#ffd69b}
 html.di-dark #di-home-preflight{background:#2c435a;color:#e4edf6}
 @media(max-width:340px){#di-home-ready .di-home-ready-grid{grid-template-columns:1fr}}
 </style>
+<style id="di-home-fit-style">
+html.di-home-backdrop body{padding-bottom:0!important}
+#di-page-home{margin:6px auto 0!important;padding:8px!important;height:var(--di-home-fit-height,calc(100dvh - 78px))!important;min-height:0!important;box-sizing:border-box!important;border-radius:20px}
+#di-page-home.di-active{display:grid!important;grid-template-rows:minmax(64px,1fr) 40px 178px 128px;gap:6px;align-content:stretch}
+#di-page-home>*{min-width:0;min-height:0}
+#di-page-home #di-home-hero{position:relative;display:flex!important;align-items:flex-start!important;justify-content:center!important;margin:0!important;width:100%!important;height:100%!important;aspect-ratio:auto!important;border-radius:13px!important;padding:12px!important;box-sizing:border-box;background-image:linear-gradient(90deg,#0737569c,transparent 80%),url("https://app.local/home-background-hd.jpg")!important;background-size:cover!important;background-position:center top!important}
+#di-page-home #di-home-hero::before{display:none!important}
+#di-page-home #di-home-hero h2{display:block!important;visibility:visible!important;font-size:22px!important;line-height:1.2!important;margin:0!important;color:#fff;text-shadow:0 2px 6px #062b47}
+#di-page-home #di-home-map-action{position:absolute;right:8px;bottom:8px;left:auto;width:auto!important;margin:0!important;min-height:44px!important;height:44px!important;padding:8px 12px!important;border-radius:10px!important;font-size:11px!important;gap:10px;box-sizing:border-box}
+#di-page-home #di-home-overview{margin:0!important;padding:4px!important;border-radius:11px!important;display:grid;align-items:center}
+#di-page-home #di-home-overview strong{font-size:15px;line-height:1.2}
+#di-page-home #di-home-overview span{font-size:9px;line-height:1.2;margin-top:2px}
+#di-page-home #di-home-ready{margin:0!important;padding:6px!important;border-radius:12px!important;box-sizing:border-box;display:grid;grid-template-rows:56px 52px 44px;gap:6px}
+#di-home-ready .di-home-ready-heading{position:absolute!important;width:1px;height:1px;margin:-1px!important;padding:0;overflow:hidden;clip-path:inset(50%)}
+#di-page-home #di-home-ready .di-home-ready-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#di-page-home #di-home-ready .di-home-ready-tile{padding:6px 8px!important;gap:2px!important;justify-content:center}
+#di-page-home #di-home-ready .di-home-ready-label{font-size:9px;line-height:1.2}
+#di-page-home #di-home-ready strong{font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#di-page-home #di-home-ready .di-home-ready-meta{font-size:10px;line-height:1.3;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#di-page-home #di-home-ready .di-home-ready-last{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"label place" "info info";gap:3px 8px;align-content:center;margin:0!important;padding:6px 8px!important;min-height:44px}
+#di-home-last-flight>.di-home-ready-label{grid-area:label}
+#di-home-last-place{grid-area:place;text-align:right}
+#di-home-last-info{grid-area:info}
+#di-page-home #di-home-ready .di-home-ready-actions{margin:0!important;gap:6px}
+#di-page-home #di-home-ready .di-home-ready-actions button{height:44px;padding:7px!important;font-size:11px}
+#di-page-home #di-home-sections-title{display:none!important}
+#di-page-home #di-home-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr));gap:6px!important;margin:0!important}
+#di-page-home #di-home-grid button{display:flex!important;flex-direction:column;justify-content:center!important;align-items:center!important;gap:4px!important;min-height:44px!important;height:100%;padding:6px 3px!important;border-radius:12px!important;text-align:center}
+#di-page-home #di-home-grid button::after{display:none!important}
+#di-page-home #di-home-grid .di-home-icon{width:28px!important;height:28px!important;min-width:28px!important;border-radius:8px!important;margin:0!important}
+#di-page-home #di-home-grid .di-home-icon svg{width:24px!important;height:24px!important}
+#di-page-home #di-home-grid .di-home-label{font-size:10px!important;line-height:1.2;font-weight:700;white-space:normal}
+#di-page-home #di-home-grid .di-home-desc{display:none!important}
+#di-page-home.di-home-tight{padding:5px!important;grid-template-rows:minmax(44px,1fr) 34px 156px 100px;gap:4px}
+#di-page-home.di-home-tight #di-home-hero h2{font-size:19px!important}
+#di-page-home.di-home-tight #di-home-ready{padding:4px!important;grid-template-rows:48px 44px 44px;gap:4px}
+#di-page-home.di-home-tight #di-home-ready .di-home-ready-tile{padding:4px 6px!important}
+#di-page-home.di-home-tight #di-home-grid button{gap:2px!important;padding:3px!important}
+#di-page-home.di-home-tight #di-home-grid .di-home-icon{width:23px!important;height:23px!important;min-width:23px!important}
+#di-page-home.di-home-tight #di-home-grid .di-home-icon svg{width:21px!important;height:21px!important}
+#di-page-home.di-home-short{height:auto!important;grid-template-rows:64px 34px 156px 100px;margin-bottom:72px!important}
+</style>
 </head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -2688,5 +2730,26 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  render();
 })();
 
+</script>
+<script>
+(function(){
+ const home=document.getElementById('di-page-home'),hero=document.getElementById('di-home-hero'),action=document.getElementById('di-home-map-action');if(!home||!hero)return;
+ if(action)hero.append(action);
+ document.querySelectorAll('#di-home-grid button').forEach(card=>{const label=card.querySelector('.di-home-label'),desc=card.querySelector('.di-home-desc');if(label&&desc)card.setAttribute('aria-label',label.textContent+'. '+desc.textContent)});
+ function fitHome(){
+  if(!home.classList.contains('di-active'))return;
+  const nav=document.getElementById('di-app-nav'),viewport=window.visualViewport?window.visualViewport.height:window.innerHeight;
+  const bottom=nav?Math.min(nav.getBoundingClientRect().top,viewport):viewport-64;
+  const available=Math.floor(bottom-home.getBoundingClientRect().top-8);
+  home.style.setProperty('--di-home-fit-height',Math.max(1,available)+'px');
+  if(home.classList.contains('di-home-tight')!==(available<550))home.classList.toggle('di-home-tight',available<550);if(home.classList.contains('di-home-short')!==(available<365))home.classList.toggle('di-home-short',available<365);
+  home.querySelectorAll('.di-home-ready-meta,#di-home-ready strong').forEach(el=>el.title=el.textContent);
+ }
+ let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;fitHome()})}
+ new MutationObserver(schedule).observe(home,{attributes:true,attributeFilter:['class']});
+ const summary=document.getElementById('di-home-ready');if(summary)new MutationObserver(schedule).observe(summary,{childList:true,subtree:true,characterData:true});
+ window.addEventListener('resize',schedule);if(window.visualViewport)window.visualViewport.addEventListener('resize',schedule);
+ schedule();
+})();
 </script>
 </body></html>
