@@ -31,7 +31,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 public class MainActivity extends Activity {
  private WebView web; private LocationManager manager; private LocationListener listener;
- private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303;
+ private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303, ROUTE_SAVE=304;
  private byte[] pendingBackup;
  private volatile boolean darkTheme=false;
 
@@ -151,6 +151,16 @@ public class MainActivity extends Activity {
   runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/zip");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.zip");startActivityForResult(intent,BACKUP_SAVE);});
  }catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup ZIP non disponibile",Toast.LENGTH_LONG).show());}
  }
+ @JavascriptInterface public void saveRouteGpx(String xml){
+ try{
+  if(xml==null||xml.length()>200000||!xml.startsWith("<?xml"))throw new IllegalArgumentException("Percorso non valido");
+  final byte[] bytes=xml.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+  runOnUiThread(()->{
+   try{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/gpx+xml");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-percorso.gpx");startActivityForResult(intent,ROUTE_SAVE);}
+   catch(Exception e){pendingBackup=null;Toast.makeText(MainActivity.this,"Esportazione GPX non disponibile",Toast.LENGTH_LONG).show();}
+  });
+ }catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Percorso non esportabile",Toast.LENGTH_LONG).show());}
+ }
  @JavascriptInterface public void saveMaps(String encoded){
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>5000000)throw new IllegalArgumentException("Archivio mappe troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-mappe.json");startActivityForResult(intent,MAPS_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Esportazione mappe non disponibile",Toast.LENGTH_LONG).show());}
  }
@@ -184,7 +194,7 @@ public class MainActivity extends Activity {
  setContentView(box);web.loadUrl("https://app.local/index.html");
  }
  @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}
- if(request==BACKUP_SAVE||request==MAPS_SAVE){if(result==RESULT_OK&&data!=null&&data.getData()!=null&&pendingBackup!=null){try(OutputStream out=getContentResolver().openOutputStream(data.getData())){if(out==null)throw new Exception("Destinazione non disponibile");out.write(pendingBackup);Toast.makeText(this,"Backup salvato",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,"Errore salvataggio backup",Toast.LENGTH_LONG).show();}}pendingBackup=null;}}
+ if(request==BACKUP_SAVE||request==MAPS_SAVE||request==ROUTE_SAVE){if(result==RESULT_OK&&data!=null&&data.getData()!=null&&pendingBackup!=null){try(OutputStream out=getContentResolver().openOutputStream(data.getData())){if(out==null)throw new Exception("Destinazione non disponibile");out.write(pendingBackup);Toast.makeText(this,request==ROUTE_SAVE?"Percorso GPX salvato":"Backup salvato",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,request==ROUTE_SAVE?"Errore salvataggio percorso":"Errore salvataggio backup",Toast.LENGTH_LONG).show();}}pendingBackup=null;}}
  private void locate(){
  boolean fine=checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED;
  boolean coarse=checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED;
