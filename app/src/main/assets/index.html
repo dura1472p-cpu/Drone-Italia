@@ -487,6 +487,20 @@ html.di-dark #flight-tools #ft-check .ft-check-done,html.di-dark #flight-tools #
 html.di-dark #flight-tools #ft-check .ft-check-done strong{color:#c3efdb}
 html.di-dark #flight-tools #ft-clear{background:#2c435a;color:#e4edf6}
 </style>
+<style id="di-battery-style">
+#di-battery-manager{margin:14px 10px;padding:17px;background:#fff;border:1px solid #dce6ef;border-radius:17px}
+#di-battery-manager h3{margin:0 0 9px;color:#173a60}#di-battery-manager label{display:block;font-size:13px;font-weight:600;margin:12px 0}
+#di-battery-manager input,#di-battery-manager select,#di-battery-manager textarea,#di-new-flight-form #di-flight-battery{display:block;width:100%;box-sizing:border-box;font:inherit;color:#173044;background:#fff;min-height:44px;padding:10px;border:1px solid #cddfea;border-radius:10px;margin-top:6px}
+.di-battery-help,#di-battery-status{font-size:12px;color:#587186;line-height:1.5}
+#di-battery-manager .di-battery-card{margin:12px 0;padding:14px;border:1px solid #dce6ef;border-radius:13px;background:#f8fbfe;overflow-wrap:anywhere}
+.di-battery-card h4{margin:0 0 8px}.di-battery-card p{font-size:13px;color:#587186;white-space:pre-wrap}.di-battery-card strong{font-size:14px;color:#1268a8}
+.di-battery-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.di-battery-actions button{min-height:44px;border-radius:10px;margin:0!important}
+#di-battery-cancel[hidden]{display:none!important}
+html.di-dark #di-battery-manager,html.di-dark #di-battery-manager .di-battery-card{background:#192a3b;color:#e4edf6;border-color:#33475b}
+html.di-dark #di-battery-manager h3,html.di-dark .di-battery-card strong{color:#b9dcff}
+html.di-dark #di-battery-manager input,html.di-dark #di-battery-manager select,html.di-dark #di-battery-manager textarea,html.di-dark #di-new-flight-form #di-flight-battery{background:#21354a;color:#e4edf6;border-color:#40566d;color-scheme:dark}
+html.di-dark .di-battery-help,html.di-dark #di-battery-status,html.di-dark .di-battery-card p{color:#afc0d1}
+</style>
 </head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -598,7 +612,7 @@ function droneModel(){const a=load('drones'),active=localStorage.getItem(key+'ac
 function showPlan(p){const box=$('di-plan-preview');box.style.display='block';box.textContent='RIEPILOGO PIANO PERSONALE\n\n📍 Coordinate: '+Number(p.lat).toFixed(5)+', '+Number(p.lng).toFixed(5)+'\n📅 Data e ora: '+p.date+'\n📏 Quota prevista: '+p.alt+' m (manuale)\n🚁 Drone: '+(p.model||'Non indicato')+'\n📝 Note: '+(p.notes||'Nessuna')+'\n\n⚠️ Piano non verificato: non costituisce autorizzazione al volo.';box.scrollIntoView({behavior:'smooth',block:'nearest'})}
 function renderPlans(){const box=$('di-plans');box.replaceChildren();const arr=load('plans');if(!arr.length){box.append(node('p','Nessun elemento salvato.'));return}arr.forEach((p,i)=>{const row=document.createElement('div');row.style.margin='12px 0';row.append(node('span',formats.plans(p)+' '));const view=node('button','Visualizza piano');view.type='button';view.onclick=()=>showPlan(p);row.append(view,' ');const edit=node('button','Modifica');edit.type='button';edit.onclick=()=>{const date=prompt('Data e ora (AAAA-MM-GGTHH:MM)',p.date);if(date===null)return;const alt=prompt('Quota prevista in metri',String(p.alt));if(alt===null)return;const notes=prompt('Note',p.notes||'');if(notes===null)return;if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(date)||!Number.isFinite(Number(alt))||Number(alt)<0||Number(alt)>10000){alert('Data o quota non valida.');return}const a=load('plans');a[i]={...a[i],date,alt:Number(alt),notes:notes.slice(0,200)};if(save('plans',a))renderPlans()};row.append(edit,' ');const del=node('button','Elimina');del.type='button';del.onclick=()=>{const a=load('plans');a.splice(i,1);save('plans',a);renderPlans()};row.append(del);box.append(row)})}
 function renderFavorites(){const box=$('di-favorites');box.replaceChildren();load('favorites').forEach((f,i)=>{const row=document.createElement('p');row.append(node('span',formats.favorites(f)+' '));const go=node('button','Mostra');go.onclick=()=>{if(!map)return;map.setView([f.lat,f.lng],15);if(window.droneItaliaMapClick)window.droneItaliaMapClick({lat:f.lat,lng:f.lng});inspect(f.lat,f.lng);document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>map.invalidateSize(),350)};const rename=node('button','Rinomina');rename.onclick=()=>{const name=prompt('Nome preferito',f.name||'');if(name===null)return;const a=load('favorites');a[i].name=name.trim().slice(0,80);if(save('favorites',a))renderFavorites()};const del=node('button','Elimina');del.onclick=()=>{const a=load('favorites');a.splice(i,1);if(save('favorites',a))renderFavorites()};row.append(go,' ',rename,' ',del);box.append(row)});if(!box.children.length)box.append(node('p','Nessun punto preferito.'))}
-function refresh(){renderFavorites();renderPlans();renderLogs();renderDrones();renderMaintenance()}
+function refresh(){renderFavorites();renderPlans();renderLogs();renderDrones();renderMaintenance();if(window.diRefreshBatteries)window.diRefreshBatteries()}
 $('di-preview-plan').onclick=()=>{if(!selected){$('di-plan-status').textContent='Seleziona prima un punto sulla mappa.';return}const date=$('di-date').value,alt=$('di-alt').value.trim();if(!date||alt===''||!Number.isFinite(Number(alt))||Number(alt)<0||Number(alt)>10000){$('di-plan-status').textContent='Inserisci data, ora e quota numerica.';return}showPlan({...selected,date,alt:Number(alt),notes:$('di-notes').value,model:droneModel()})};
 window.diClearTemporaryMapMarkers=()=>{
  if(map&&selectedMarker){map.removeLayer(selectedMarker);selectedMarker=null}
@@ -630,13 +644,13 @@ function migrateEditedFavorite(original,updated,logs){
  }}catch(e){}
 }
 function flightShareText(x){
- return ['Drone Italia — Diario di volo','Località: '+(x.place||'Non indicata'),'Data: '+(x.when||'Non indicata'),'Drone: '+(x.model||'Non indicato'),'Durata: '+(x.duration||0)+' minuti'].join('\n');
+ return ['Drone Italia — Diario di volo','Località: '+(x.place||'Non indicata'),'Data: '+(x.when||'Non indicata'),'Drone: '+(x.model||'Non indicato'),'Batteria: '+(window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'),'Durata: '+(x.duration||0)+' minuti'].join('\n');
 }
 function shareLogFlight(x){
  if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.shareFlight!=='function'){alert('Condivisione disponibile nell’app Android aggiornata.');return}
  window.DroneItaliaNative.shareFlight(flightShareText(x),typeof x.photo==='string'?x.photo:'');
 }
-function renderLogs(){const box=$('di-logs');box.replaceChildren();load('logs').forEach((x,i)=>{const row=document.createElement('div');row.style.margin='12px 0';row.append(node('p',x.when+' · '+x.duration+' min · '+(x.place||'Luogo non indicato')+' · '+x.notes+' · Batteria drone: '+(x.droneBattery===''||x.droneBattery==null?'n.d.':x.droneBattery)+'% · Radiocomando: '+(x.radioBattery===''||x.radioBattery==null?'n.d.':x.radioBattery)+'%'));if(x.photo){const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo';img.style.cssText='max-width:100%;max-height:220px;border-radius:8px';row.append(img);const removePhoto=node('button','Rimuovi foto');removePhoto.type='button';removePhoto.onclick=()=>{if(!confirm('Rimuovere la foto da questo volo?'))return;const logs=load('logs');if(!logs[i])return;logs[i].photo='';if(save('logs',logs))renderLogs()};row.append(removePhoto)}if(window.diNormalizeManualRoute&&window.diNormalizeManualRoute(x.route)){const routeText=node('p',(x.route.type==='gpx'?'Percorso importato da GPX':'Percorso inserito manualmente')+' · '+x.route.points.length+' punti');row.append(routeText);if(x.durationEstimate&&x.durationEstimate.minutes===Number(x.duration)){row.append(node('p','Durata stimata da distanza e velocità: '+x.durationEstimate.speed+' m/s'))}const routeButton=node('button','Mostra percorso');routeButton.type='button';routeButton.onclick=()=>window.diShowManualRoute(x);const exportRoute=node('button','Esporta percorso GPX');exportRoute.type='button';exportRoute.onclick=()=>window.diExportManualRoute(x);row.append(routeButton,' ',exportRoute,' ')}const editButton=node('button','✎ Modifica');editButton.type='button';editButton.onclick=()=>{if(window.diEditFlight)window.diEditFlight(x,i)};row.append(editButton,' ');const del=node('button','Elimina');del.onclick=()=>{const a=load('logs');a.splice(i,1);if(save('logs',a))renderLogs()};const report=node('button','PDF di questo volo');report.type='button';report.onclick=()=>printLogReport(x);const share=node('button','Condividi volo');share.type='button';share.onclick=()=>shareLogFlight(x);row.append(report,' ',share,' ',del);if(x.lat!=null&&x.lng!=null&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Math.abs(Number(x.lat))<=90&&Math.abs(Number(x.lng))<=180){const show=node('button','📍 Mostra sulla mappa');show.type='button';show.onclick=()=>{window.diFlightOpeningSavedLocation=true;window.droneItaliaOpenPage('map');window.diFlightOpeningSavedLocation=false;setTimeout(()=>{map.invalidateSize({pan:false});map.setView([Number(x.lat),Number(x.lng)],14,{animate:false});(window.diFlightMapMarker&&map.removeLayer(window.diFlightMapMarker),window.diFlightMapMarker=L.marker([Number(x.lat),Number(x.lng)]).addTo(map).bindPopup('Volo registrato').openPopup())},500)};row.append(' ',show)}box.append(row)});if(!box.children.length)box.append(node('p','Nessun volo registrato.'))}
+function renderLogs(){const box=$('di-logs');box.replaceChildren();load('logs').forEach((x,i)=>{const row=document.createElement('div');row.style.margin='12px 0';row.append(node('p',x.when+' · '+x.duration+' min · '+(x.place||'Luogo non indicato')+' · '+x.notes+' · Batteria drone: '+(x.droneBattery===''||x.droneBattery==null?'n.d.':x.droneBattery)+'% · Radiocomando: '+(x.radioBattery===''||x.radioBattery==null?'n.d.':x.radioBattery)+'%'));if(x.photo){const img=document.createElement('img');img.src=x.photo;img.alt='Foto del volo';img.style.cssText='max-width:100%;max-height:220px;border-radius:8px';row.append(img);const removePhoto=node('button','Rimuovi foto');removePhoto.type='button';removePhoto.onclick=()=>{if(!confirm('Rimuovere la foto da questo volo?'))return;const logs=load('logs');if(!logs[i])return;logs[i].photo='';if(save('logs',logs))renderLogs()};row.append(removePhoto)}if(window.diNormalizeManualRoute&&window.diNormalizeManualRoute(x.route)){const routeText=node('p',(x.route.type==='gpx'?'Percorso importato da GPX':'Percorso inserito manualmente')+' · '+x.route.points.length+' punti');row.append(routeText);if(x.durationEstimate&&x.durationEstimate.minutes===Number(x.duration)){row.append(node('p','Durata stimata da distanza e velocità: '+x.durationEstimate.speed+' m/s'))}const routeButton=node('button','Mostra percorso');routeButton.type='button';routeButton.onclick=()=>window.diShowManualRoute(x);const exportRoute=node('button','Esporta percorso GPX');exportRoute.type='button';exportRoute.onclick=()=>window.diExportManualRoute(x);row.append(routeButton,' ',exportRoute,' ')}const editButton=node('button','✎ Modifica');editButton.type='button';editButton.onclick=()=>{if(window.diEditFlight)window.diEditFlight(x,i)};row.append(editButton,' ');const del=node('button','Elimina');del.onclick=()=>{const a=load('logs');a.splice(i,1);if(save('logs',a))renderLogs()};const report=node('button','PDF di questo volo');report.type='button';report.onclick=()=>printLogReport(x);const share=node('button','Condividi volo');share.type='button';share.onclick=()=>shareLogFlight(x);row.append(report,' ',share,' ',del);if(x.lat!=null&&x.lng!=null&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Math.abs(Number(x.lat))<=90&&Math.abs(Number(x.lng))<=180){const show=node('button','📍 Mostra sulla mappa');show.type='button';show.onclick=()=>{window.diFlightOpeningSavedLocation=true;window.droneItaliaOpenPage('map');window.diFlightOpeningSavedLocation=false;setTimeout(()=>{map.invalidateSize({pan:false});map.setView([Number(x.lat),Number(x.lng)],14,{animate:false});(window.diFlightMapMarker&&map.removeLayer(window.diFlightMapMarker),window.diFlightMapMarker=L.marker([Number(x.lat),Number(x.lng)]).addTo(map).bindPopup('Volo registrato').openPopup())},500)};row.append(' ',show)}box.append(row)});if(!box.children.length)box.append(node('p','Nessun volo registrato.'));if(window.diRefreshBatteries)window.diRefreshBatteries()}
 window.diRefreshFlightLogs=renderLogs;
 $('di-save-log').onclick=async()=>{const edit=window.diFlightEdit||null;const duration=Number($('di-duration').value);if(!Number.isInteger(duration)||duration<1||duration>1440){alert('Inserisci una durata valida in minuti.');return}for(const id of ['di-battery-drone','di-battery-radio']){const val=$(id).value.trim();if(val!==''&&(!Number.isInteger(Number(val))||Number(val)<0||Number(val)>100)){alert('Le percentuali delle batterie devono essere da 0 a 100.');return}}let photo='';const file=$('di-log-photo').files[0];if(file){if(!file.type.startsWith('image/')||file.size>10000000){alert('Seleziona una foto valida fino a 10 MB.');return}try{photo=await new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const scale=Math.min(1,900/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(url);resolve(cv.toDataURL('image/jpeg',.65))};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error('Foto non leggibile'))};img.src=url})}catch(e){alert('Foto non leggibile');return}}const formCoords=document.getElementById('di-new-flight-form');const chosen=formCoords&&formCoords.dataset.flightLat!==undefined&&formCoords.dataset.flightLng!==undefined?{lat:Number(formCoords.dataset.flightLat),lng:Number(formCoords.dataset.flightLng)}:null;selected=chosen&&Number.isFinite(chosen.lat)&&Number.isFinite(chosen.lng)?chosen:null;const a=load('logs');let editIndex=-1;
 if(edit){
@@ -645,7 +659,8 @@ if(edit){
  if(editIndex<0){alert('Il volo è stato modificato o eliminato. Annulla e riaprilo dal diario.');return}
  if(!$('di-edit-when').value.trim()){alert('Inserisci la data del volo.');return}
 }
-const updated=buildSavedFlight(edit? a[editIndex]:null,{when:edit?$('di-edit-when').value.trim():new Date().toLocaleString('it-IT'),duration,notes:$('di-log-notes').value,place:$('di-log-place').value,droneBattery:$('di-battery-drone').value,radioBattery:$('di-battery-radio').value,photo,lat:selected?.lat,lng:selected?.lng,model:$('di-flight-drone')?$('di-flight-drone').value:droneModel(),route:window.diNormalizeManualRoute?window.diNormalizeManualRoute(window.diManualRouteDraft):null,durationEstimate:window.diManualDurationEstimate&&window.diManualDurationEstimate.minutes===duration?{...window.diManualDurationEstimate}:null},!!file);
+const battery=window.diFlightBatterySelection?window.diFlightBatterySelection():{batteryId:null,batteryName:''};if(!battery)return;
+const updated=buildSavedFlight(edit? a[editIndex]:null,{...battery,when:edit?$('di-edit-when').value.trim():new Date().toLocaleString('it-IT'),duration,notes:$('di-log-notes').value,place:$('di-log-place').value,droneBattery:$('di-battery-drone').value,radioBattery:$('di-battery-radio').value,photo,lat:selected?.lat,lng:selected?.lng,model:$('di-flight-drone')?$('di-flight-drone').value:droneModel(),route:window.diNormalizeManualRoute?window.diNormalizeManualRoute(window.diManualRouteDraft):null,durationEstimate:window.diManualDurationEstimate&&window.diManualDurationEstimate.minutes===duration?{...window.diManualDurationEstimate}:null},!!file);
 if(edit)a[editIndex]=updated;else a.push(updated);
 if(save('logs',a)){
  if(edit){migrateEditedFavorite(edit.original,updated,a);if(window.diFlightEditSaved)window.diFlightEditSaved()}
@@ -666,6 +681,8 @@ function validateDroneBackup(d){
  if(d.version>=2&&(!Array.isArray(d.galleryPhotos)||d.galleryPhotos.length>2000||!d.galleryPhotos.every(x=>x&&validPhoto(x.photo)&&typeof x.place==='string'&&typeof x.when==='string')))throw Error('Foto della galleria non valide');
  if(d.flightFavorites!==undefined&&(!d.flightFavorites||typeof d.flightFavorites!=='object'||Array.isArray(d.flightFavorites)||Object.values(d.flightFavorites).some(x=>typeof x!=='boolean')))throw Error('Preferiti dei voli non validi');
  if(d.version===3){if(!window.diMapsBackup)throw Error('Archivio mappe non disponibile');d.mapArchive=window.diMapsBackup.validate(d.mapArchive)}
+ if(d.batteries!==undefined){if(!window.diValidateBatteries)throw Error('Archivio batterie non disponibile');window.diValidateBatteries(d.batteries)}
+ if(d.logs.some(x=>(x.batteryId!==undefined&&x.batteryId!==null&&(typeof x.batteryId!=='string'||x.batteryId.length>100))||(x.batteryName!==undefined&&(typeof x.batteryName!=='string'||x.batteryName.length>80))))throw Error('Batteria del volo non valida');
  return d;
 }
 async function encodeBackupZip(data){
@@ -707,7 +724,7 @@ async function decodeBackupZip(bytes){
  return validateDroneBackup(d);
 }
 function backupSummary(d){
- return d.logs.length+' voli ('+d.logs.filter(x=>!!x.photo).length+' foto associate)\n'+(d.galleryPhotos||[]).length+' foto personali\n'+(d.drones||[]).length+' droni · '+d.plans.length+' piani · '+d.favorites.length+' luoghi preferiti'+(d.version===3?'\n'+d.mapArchive.maps.length+' mappe importate':'');
+ return d.logs.length+' voli ('+d.logs.filter(x=>!!x.photo).length+' foto associate)\n'+(d.galleryPhotos||[]).length+' foto personali\n'+(d.drones||[]).length+' droni · '+(d.batteries||[]).length+' batterie · '+d.plans.length+' piani · '+d.favorites.length+' luoghi preferiti'+(d.version===3?'\n'+d.mapArchive.maps.length+' mappe importate':'');
 }
 let backupBusy=false;
 $('di-backup').onclick=async()=>{
@@ -715,7 +732,7 @@ $('di-backup').onclick=async()=>{
  try{
   if(!window.diGalleryBackup)throw Error('Archivio della galleria non disponibile');
   const galleryPhotos=(await window.diGalleryBackup.read()).map(x=>({photo:x.photo,place:String(x.place||'Foto personale'),when:String(x.when||'')}));
-  const obj={version:3,created:new Date().toISOString(),favorites:load('favorites'),plans:load('plans'),logs:load('logs'),profile:localStorage.getItem('drone-profile'),drones:load('drones'),maintenance:load('maintenance'),activeDrone:localStorage.getItem(key+'active-drone'),dark:localStorage.getItem(key+'dark'),galleryPhotos,mapArchive:window.diMapsBackup?window.diMapsBackup.read():null,flightFavorites:JSON.parse(localStorage.getItem('drone-italia-flight-favorites-v2')||'{}')};
+  const obj={version:3,created:new Date().toISOString(),favorites:load('favorites'),plans:load('plans'),logs:load('logs'),profile:localStorage.getItem('drone-profile'),drones:load('drones'),maintenance:load('maintenance'),batteries:load('batteries'),activeDrone:localStorage.getItem(key+'active-drone'),dark:localStorage.getItem(key+'dark'),galleryPhotos,mapArchive:window.diMapsBackup?window.diMapsBackup.read():null,flightFavorites:JSON.parse(localStorage.getItem('drone-italia-flight-favorites-v2')||'{}')};
   validateDroneBackup(obj);$('di-backup-status').textContent='Preparazione del backup ZIP…';const bytes=await encodeBackupZip(obj);
   if(window.DroneItaliaNative&&window.DroneItaliaNative.saveBackupZip){
    let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
@@ -735,7 +752,7 @@ $('di-restore').onchange=async e=>{
   if(!confirm('Anteprima del backup:\n\n'+backupSummary(d)+'\n\n'+galleryNote+'\nVoli e altri dati locali saranno sostituiti. Confermi il ripristino?'))return;
   if(d.version>=2&&!window.diGalleryBackup)throw Error('Archivio della galleria non disponibile');
   if(d.version>=2)await window.diGalleryBackup.read();
-  const writes=new Map(['favorites','plans','logs','drones','maintenance'].map(k=>[key+k,JSON.stringify(d[k]||[])]));
+  const writes=new Map(['favorites','plans','logs','drones','maintenance','batteries'].map(k=>[key+k,JSON.stringify(d[k]||[])]));
   if(typeof d.activeDrone==='string')writes.set(key+'active-drone',d.activeDrone);else writes.set(key+'active-drone',null);
   if(d.dark==='1'||d.dark==='0')writes.set(key+'dark',d.dark);
   if(typeof d.profile==='string')writes.set('drone-profile',d.profile);
@@ -754,7 +771,7 @@ $('di-restore').onchange=async e=>{
  finally{e.target.value='';backupBusy=false;$('di-backup').disabled=false}
 };
 window.diPrintLogReport=printLogReport;
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
 const weatherStyle=document.createElement('style');weatherStyle.textContent='#di-weather-card[hidden]{display:none!important}#di-weather-card{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce6ef;border-radius:15px}#di-weather-card h4{margin:0 0 8px;color:#174b73}#di-weather-card .di-weather-meta{font-size:12px;line-height:1.5;color:#52718c;overflow-wrap:anywhere}#di-weather-card .di-weather-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#di-weather-card .di-weather-value{padding:12px;border-radius:11px;background:#f0f7fd}#di-weather-card .di-weather-value span{display:block;font-size:12px;color:#52718c}#di-weather-card .di-weather-value strong{display:block;font-size:20px;color:#1268a8;margin-top:4px}#di-weather-card .di-weather-hours{overflow-x:auto}#di-weather-card table{border-collapse:collapse;min-width:420px;width:100%;font-size:12px}#di-weather-card th,#di-weather-card td{padding:10px 6px;border-bottom:1px solid #e1eaf2;text-align:left;white-space:nowrap}#di-weather-card th{color:#36556e}#di-weather-center{display:block;width:100%;min-height:44px;margin:6px 0 12px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(weatherStyle);
@@ -877,10 +894,10 @@ function renderDrones(){
   const del=node('button','Elimina');del.type='button';del.onclick=()=>{
    const reminders=load('maintenance').filter(x=>x.droneId===d.id).length;
    if(!confirm('Eliminare '+d.name+' e i suoi '+reminders+' promemoria di manutenzione? I voli già salvati saranno mantenuti.'))return;
-   if(deleteDroneAndMaintenance(d.id)){if(droneEdit&&droneEdit.id===d.id)resetDroneForm();if(maintenanceEdit&&maintenanceEdit.original.droneId===d.id)resetMaintenanceForm();renderMaintenance()}
+   if(deleteDroneAndMaintenance(d.id)){renderDrones();if(droneEdit&&droneEdit.id===d.id)resetDroneForm();if(maintenanceEdit&&maintenanceEdit.original.droneId===d.id)resetMaintenanceForm();renderMaintenance()}
   };const edit=node('button','✎ Modifica');edit.type='button';edit.onclick=()=>editDrone(d);actions.append(choose,edit,del);row.append(actions);box.append(row);
  });
- if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();
+ if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();if(window.diRefreshBatteries)window.diRefreshBatteries();
 }
 $('di-add-drone').onclick=()=>{
  const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value),ident=$('di-drone-id').value.trim();
@@ -2018,6 +2035,7 @@ function decorateFlightCard(row,x){
  const metadata=disclosure.querySelector('.di-flight-fields');metadata.replaceChildren();
  const field=(label,value)=>{const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=String(value);metadata.append(dt,dd)};
  field('Drone',x.model||'Non indicato');
+ field('Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata');
  field('Durata',String(x.duration||0)+' min · '+(estimated?'Stimata da distanza e velocità':'Inserita dall’utente'));
  if(estimated)field('Velocità della stima',x.durationEstimate.speed+' m/s');
  const route=window.diNormalizeManualRoute?window.diNormalizeManualRoute(x.route):null;
@@ -2178,7 +2196,7 @@ const cancel=document.createElement('button');cancel.type='button';cancel.classN
 function toggle(show){form.hidden=!show;add.setAttribute('aria-expanded',String(show));if(show){form.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('di-log-place')?.focus(),250)}}
 function clearFlightForm(){
  if(window.diCloseManualRouteEditor)window.diCloseManualRouteEditor();if(window.diSetFlightRoute)window.diSetFlightRoute(null);
- window.diFlightEdit=null;title.textContent='Diario voli';save.textContent='Registra volo';editFields.hidden=true;populateFlightDrones(window.diFlightDefaultDrone?window.diFlightDefaultDrone():'Non indicato');
+ window.diFlightEdit=null;title.textContent='Diario voli';save.textContent='Registra volo';editFields.hidden=true;populateFlightDrones(window.diFlightDefaultDrone?window.diFlightDefaultDrone():'Non indicato');if(window.diResetFlightBattery)window.diResetFlightBattery();
  for(const id of ['di-duration','di-log-notes','di-log-place','di-battery-drone','di-battery-radio','di-log-photo']){const input=document.getElementById(id);if(input)input.value=''}
  window.diFlightPickingOnMap=false;const back=document.getElementById('di-flight-map-return');if(back)back.hidden=true;
  window.diFlightChosenPoint=null;window.diFlightPendingMapPoint=null;delete form.dataset.flightLat;delete form.dataset.flightLng;window.diFlightGpsPending=false;
@@ -2214,6 +2232,7 @@ window.diEditFlight=(x,index)=>{
   form.dataset.flightLat=String(x.lat);form.dataset.flightLng=String(x.lng);window.diFlightChosenPoint={lat:Number(x.lat),lng:Number(x.lng)};
   document.getElementById('di-flight-location-status').textContent='✓ Posizione salvata: '+Number(x.lat).toFixed(5)+', '+Number(x.lng).toFixed(5);
  }
+ if(window.diSetFlightBattery)window.diSetFlightBattery(x);
  toggle(true);
 };
 window.diFlightEditSaved=()=>{clearFlightForm();toggle(false)};
@@ -2517,5 +2536,79 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  window.diSetFlightRoute(null);
  if(window.diRefreshFlightLogs)window.diRefreshFlightLogs();
 })();
+</script>
+<script>
+/* Batterie identificate per ID: conteggi ricavati dai voli, senza stime dei cicli di carica. */
+(function(){
+ const prefix='drone-italia-beta-',get=id=>document.getElementById(id);
+ function read(kind){try{const x=JSON.parse(localStorage.getItem(prefix+kind)||'[]');return Array.isArray(x)?x:[]}catch(e){return []}}
+ function validateBatteries(items){
+  if(!Array.isArray(items)||items.length>500)throw Error('Archivio batterie non valido');
+  const ids=new Set();
+  items.forEach(x=>{if(!x||typeof x.id!=='string'||!x.id||x.id.length>100||ids.has(x.id)||typeof x.droneId!=='string'||!x.droneId||x.droneId.length>100||typeof x.name!=='string'||!x.name.trim()||x.name.length>80||typeof x.notes!=='string'||x.notes.length>500||typeof x.archived!=='boolean')throw Error('Dati della batteria non validi');ids.add(x.id)});
+  return items;
+ }
+ function batteryStats(id,logs){const flights=logs.filter(x=>x&&x.batteryId===id);return {flights:flights.length,minutes:flights.reduce((n,x)=>n+(Number.isFinite(Number(x.duration))&&Number(x.duration)>0?Number(x.duration):0),0)}}
+ window.diValidateBatteries=validateBatteries;window.diBatteryStats=batteryStats;
+ window.diBatteryDisplayName=x=>{const b=read('batteries').find(b=>b.id===x.batteryId);return b?b.name:x.batteryName||'Non indicata'};
+ const page=get('di-page-more')||get('di-page-other');
+ const dronesBox=get('di-drones'),form=get('di-new-flight-form'),flightDrone=get('di-flight-drone');if(!dronesBox||!form||!flightDrone)return;
+ const section=document.createElement('section');section.id='di-battery-manager';section.className='di-tool-group';
+ section.innerHTML='<h3>Batterie del drone</h3><p class="di-battery-help">Assegna un nome alle tue batterie e selezionale quando registri un volo.</p><label>Drone <select id="di-battery-owner"></select></label><label>Nome batteria <input id="di-battery-name" maxlength="80" placeholder="Es. Batteria 1"></label><label>Condizioni e manutenzione <textarea id="di-battery-notes" maxlength="500" rows="3" placeholder="Note personali sulla batteria"></textarea></label><div class="di-battery-actions"><button type="button" id="di-battery-save">Aggiungi batteria</button><button type="button" id="di-battery-cancel" hidden>Annulla</button></div><p id="di-battery-status" role="status"></p><div id="di-battery-list"></div>';
+ const group=dronesBox.closest('.di-tool-group');if(group)group.after(section);else dronesBox.after(section);
+ const label=document.createElement('label');label.textContent='Batteria utilizzata';const select=document.createElement('select');select.id='di-flight-battery';label.append(select);flightDrone.parentElement.after(label);
+ const hint=document.createElement('p');hint.className='di-battery-help';hint.textContent='Facoltativa. Le batterie si gestiscono in Altro → Batterie del drone.';label.after(hint);
+ let editing=null;
+ const text=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n};
+ function status(message){get('di-battery-status').textContent=message}
+ function write(items){try{validateBatteries(items);localStorage.setItem(prefix+'batteries',JSON.stringify(items));return true}catch(e){status('Salvataggio non riuscito: '+e.message);return false}}
+ function owners(){const current=editing?editing.droneId:get('di-battery-owner').value||localStorage.getItem(prefix+'active-drone');const owner=get('di-battery-owner');owner.replaceChildren();read('drones').forEach(d=>owner.add(new Option(d.name,d.id)));if(editing&&!read('drones').some(d=>d.id===editing.droneId))owner.add(new Option('Drone eliminato',editing.droneId));if([...owner.options].some(o=>o.value===current))owner.value=current;owner.disabled=!!editing;get('di-battery-save').disabled=!owner.options.length;}
+ function reset(){editing=null;get('di-battery-name').value='';get('di-battery-notes').value='';get('di-battery-save').textContent='Aggiungi batteria';get('di-battery-cancel').hidden=true;owners()}
+ function flightOptions(wanted){
+  const previous=wanted===undefined?select.value:wanted;select.replaceChildren();select.add(new Option('Non indicata',''));
+  const drones=read('drones').filter(d=>d.name===flightDrone.value),items=read('batteries');
+  if(drones.length===1)items.filter(b=>b.droneId===drones[0].id&&!b.archived).forEach(b=>select.add(new Option(b.name,b.id)));
+  const original=window.diFlightEdit&&window.diFlightEdit.original;
+  if(original&&original.batteryId&&original.model===flightDrone.value&&!Array.from(select.options).some(o=>o.value===original.batteryId))select.add(new Option((original.batteryName||'Batteria salvata')+' (archiviata)',original.batteryId));
+  select.value=Array.from(select.options).some(o=>o.value===previous)?previous:'';
+  hint.textContent=drones.length>1?'Più droni hanno questo nome: assegna nomi distinti in Altro per scegliere la batteria.':'Facoltativa. Le batterie si gestiscono in Altro → Batterie del drone.';
+ }
+ window.diFlightBatterySelection=()=>{
+  if(!select.value)return {batteryId:null,batteryName:''};
+  const b=read('batteries').find(x=>x.id===select.value),ds=read('drones').filter(d=>d.name===flightDrone.value);
+  if(b&&!b.archived&&ds.length===1&&b.droneId===ds[0].id)return {batteryId:b.id,batteryName:b.name};
+  const old=window.diFlightEdit&&window.diFlightEdit.original;
+  if(old&&old.batteryId===select.value&&old.model===flightDrone.value)return {batteryId:old.batteryId,batteryName:old.batteryName||b?.name||'Batteria salvata'};
+  alert('La batteria scelta non è più disponibile per questo drone. Selezionala nuovamente.');return null;
+ };
+ window.diResetFlightBattery=()=>flightOptions('');window.diSetFlightBattery=x=>flightOptions(x.batteryId||'');
+ flightDrone.addEventListener('change',()=>flightOptions(''));
+ function render(){
+  owners();flightOptions();const box=get('di-battery-list');box.replaceChildren();const drones=read('drones'),logs=read('logs');
+  const items=read('batteries');items.forEach(b=>{
+   const d=drones.find(d=>d.id===b.droneId),stats=batteryStats(b.id,logs),card=text('article','');card.className='di-battery-card';
+   card.append(text('h4',b.name),text('p',(d?d.name:'Drone eliminato')+(b.archived?' · Archiviata':'')),text('strong',stats.flights+' voli · '+stats.minutes+' min registrati'));
+   if(b.notes)card.append(text('p',b.notes));
+   const actions=text('div','');actions.className='di-battery-actions';const edit=text('button','Modifica');edit.type='button';edit.onclick=()=>{editing={...b};owners();get('di-battery-name').value=b.name;get('di-battery-notes').value=b.notes;get('di-battery-save').textContent='Salva modifiche';get('di-battery-cancel').hidden=false;status('Modifica batteria. Il drone associato viene mantenuto.');get('di-battery-name').focus();section.scrollIntoView({behavior:'smooth',block:'start'})};
+   const archive=text('button',b.archived?'Riattiva':'Archivia');archive.type='button';archive.disabled=b.archived&&!d;archive.onclick=()=>{const a=read('batteries');const current=a.find(x=>x.id===b.id);if(!current)return;current.archived=!current.archived;if(write(a)){render();status(current.archived?'Batteria archiviata. I voli rimangono associati.':'Batteria riattivata.')}};
+   actions.append(edit,archive);
+   if(!stats.flights){const del=text('button','Elimina');del.type='button';del.onclick=()=>{if(!confirm('Eliminare la batteria '+b.name+'?'))return;if(batteryStats(b.id,read('logs')).flights){status('La batteria ha voli associati: puoi archiviarla.');return}if(write(read('batteries').filter(x=>x.id!==b.id))){if(editing?.id===b.id)reset();render();status('Batteria eliminata.')}};actions.append(del)}
+   card.append(actions);box.append(card);
+  });
+  if(!items.length)box.append(text('p','Nessuna batteria registrata.'));
+ }
+ get('di-battery-save').onclick=()=>{
+  const name=get('di-battery-name').value.trim(),notes=get('di-battery-notes').value.trim(),droneId=get('di-battery-owner').value;
+  if(!name){status('Inserisci il nome della batteria.');get('di-battery-name').focus();return}
+  const a=read('batteries');if(!editing&&!read('drones').some(d=>d.id===droneId)){status('Aggiungi prima un drone in archivio.');return}
+  if(a.some(b=>b.droneId===droneId&&b.id!==editing?.id&&b.name.toLocaleLowerCase('it-IT')===name.toLocaleLowerCase('it-IT'))){status('Questo drone ha già una batteria con questo nome.');return}
+  if(editing){const i=a.findIndex(b=>b.id===editing.id);if(i<0||JSON.stringify(a[i])!==JSON.stringify(editing)){status('La batteria è cambiata. Annulla e riaprila.');return}a[i]={...a[i],name,notes};}
+  else a.push({id:'battery-'+Date.now()+'-'+Math.random().toString(36).slice(2),droneId,name,notes,archived:false});
+  if(write(a)){reset();render();if(window.diRefreshFlightLogs)window.diRefreshFlightLogs();status('Batteria salvata.')}
+ };
+ get('di-battery-cancel').onclick=()=>{reset();status('Modifica annullata.')};
+ window.diRefreshBatteries=render;reset();render();
+})();
+
 </script>
 </body></html>
