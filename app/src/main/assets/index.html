@@ -614,6 +614,20 @@ function droneArchiveSummary(drone,logs,maintenance,today){
   upcoming:reminders.filter(x=>x.date>=today).length,overdue:reminders.filter(x=>x.date<today).length};
 }
 const droneArchiveStyle=document.createElement('style');droneArchiveStyle.textContent='#di-drones .di-drone-card{margin:12px 0;padding:15px;border:1px solid #dce6ef;border-radius:15px;background:#fff}#di-drones .di-drone-card h4{margin:0;font-size:17px;color:#173b59;overflow-wrap:anywhere}#di-drones .di-drone-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}#di-drones .di-drone-active{font-size:11px;color:#087449;background:#e4f6ed;padding:5px 8px;border-radius:12px;white-space:nowrap}#di-drones .di-drone-meta{font-size:12px;color:#52718c;margin:8px 0;overflow-wrap:anywhere}#di-drones .di-drone-numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}#di-drones .di-drone-number{padding:10px;border-radius:10px;background:#f1f7fd}#di-drones .di-drone-number strong{display:block;color:#1268a8;font-size:17px}#di-drones .di-drone-number span{font-size:11px;color:#52718c}#di-drones .di-drone-overdue strong{color:#ad3043}#di-drones .di-drone-actions{display:flex;gap:8px;flex-wrap:wrap}#di-drones .di-drone-actions button{margin:0!important;flex:1}#di-drones .di-drone-actions button:disabled{opacity:.6}';document.head.append(droneArchiveStyle);
+function deleteDroneAndMaintenance(id){
+ const drones=load('drones');if(!drones.some(x=>x.id===id))return false;
+ const names=[key+'drones',key+'maintenance',key+'active-drone'];
+ const old=new Map(names.map(k=>[k,localStorage.getItem(k)]));
+ try{
+  localStorage.setItem(key+'drones',JSON.stringify(drones.filter(x=>x.id!==id)));
+  localStorage.setItem(key+'maintenance',JSON.stringify(load('maintenance').filter(x=>x.droneId!==id)));
+  if(localStorage.getItem(key+'active-drone')===id)localStorage.removeItem(key+'active-drone');
+  return true;
+ }catch(err){
+  for(const [k,v] of old){try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
+  alert('Eliminazione non riuscita. Verifica lo spazio disponibile e riprova.');return false;
+ }
+}
 function renderDrones(){
  const box=$('di-drones');box.replaceChildren();
  const active=localStorage.getItem(key+'active-drone'),drones=load('drones'),logs=load('logs'),maintenance=load('maintenance');
@@ -632,9 +646,9 @@ function renderDrones(){
   const actions=document.createElement('div');actions.className='di-drone-actions';
   const choose=node('button',active===d.id?'Drone attivo':'Usa');choose.type='button';choose.disabled=active===d.id;choose.onclick=()=>{localStorage.setItem(key+'active-drone',d.id);renderDrones()};
   const del=node('button','Elimina');del.type='button';del.onclick=()=>{
-   if(!confirm('Eliminare '+d.name+' dall’archivio? I voli e i promemoria già salvati saranno mantenuti.'))return;
-   const a=load('drones'),index=a.findIndex(x=>x.id===d.id);if(index<0)return;a.splice(index,1);
-   if(save('drones',a)){if(active===d.id)localStorage.removeItem(key+'active-drone');renderDrones()}
+   const reminders=load('maintenance').filter(x=>x.droneId===d.id).length;
+   if(!confirm('Eliminare '+d.name+' e i suoi '+reminders+' promemoria di manutenzione? I voli già salvati saranno mantenuti.'))return;
+   if(deleteDroneAndMaintenance(d.id)){if(maintenanceEdit&&maintenanceEdit.original.droneId===d.id)resetMaintenanceForm();renderMaintenance()}
   };actions.append(choose,del);row.append(actions);box.append(row);
  });
  if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();
@@ -683,7 +697,11 @@ function renderMaintenance(){
   if(m.date<today)date.className='di-maint-overdue';
   const done=node('button','✓ Completato');done.type='button';done.onclick=()=>{if(save('maintenance',load('maintenance').filter(x=>x.id!==m.id))){if(maintenanceEdit&&maintenanceEdit.id===m.id)resetMaintenanceForm();renderMaintenance()}};
   const edit=node('button','✎ Modifica');edit.type='button';edit.onclick=()=>editMaintenance(m);
-  row.append(title,drone,date,edit,done);box.append(row);
+  const remove=node('button','Elimina');remove.type='button';remove.onclick=()=>{
+   if(!confirm('Eliminare questo promemoria di manutenzione?'))return;
+   if(save('maintenance',load('maintenance').filter(x=>x.id!==m.id))){if(maintenanceEdit&&maintenanceEdit.id===m.id)resetMaintenanceForm();renderMaintenance()}
+  };
+  row.append(title,drone,date,edit,done,remove);box.append(row);
  });
  if(!box.children.length)box.append(node('p','Nessun promemoria. Gli avvisi sono visibili solo aprendo l’app.'));
  renderDrones();
