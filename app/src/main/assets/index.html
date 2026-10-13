@@ -471,7 +471,7 @@ const advice={signal:['Perdita del segnale','Controlla gli avvisi del radiocoman
 <h2>Strumenti Android · beta</h2><p><strong>Solo pianificazione personale.</strong> Dati aeronautici ufficiali assenti: nessun risultato autorizza un volo.</p>
 <div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" id="di-measure">Misura distanza</button><button type="button" id="di-favorite">Salva punto</button><button type="button" id="di-clear-measure">Azzera misura</button></div>
 <p id="di-measure-status" role="status">Seleziona «Misura distanza», poi due punti sulla mappa.</p>
-<div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" id="di-copy-coords">Copia coordinate</button><button type="button" id="di-center-gps">Centra GPS</button><button type="button" id="di-radius">Mostra cerchio</button><button type="button" id="di-clear-radius">Cancella cerchio</button><button type="button" id="di-satellite">Vista satellitare</button></div><label>Raggio indicativo (metri) <input id="di-radius-m" type="number" min="1" max="10000" value="100"></label><label>Centro del cerchio <select id="di-radius-center" aria-label="Centro del cerchio"><option value="selected">Punto selezionato sulla mappa</option><option value="gps">La mia posizione GPS</option></select></label><p id="di-map-tools-status" role="status"></p><h3>Archivio droni</h3><label>Nome / modello drone <input id="di-drone-name" maxlength="80" placeholder="Es. Mini 4 Pro"></label><label>Peso (g) <input id="di-drone-weight" type="number" min="1" max="100000"></label><label>Identificativo personale (facoltativo) <input id="di-drone-id" maxlength="80"></label><button type="button" id="di-add-drone">Aggiungi drone</button><div id="di-drones"></div><h3>Punti preferiti</h3><div id="di-favorites"></div>
+<div style="display:flex;gap:7px;flex-wrap:wrap"><button type="button" id="di-copy-coords">Copia coordinate</button><button type="button" id="di-center-gps">Centra GPS</button><button type="button" id="di-radius">Mostra cerchio</button><button type="button" id="di-clear-radius">Cancella cerchio</button><button type="button" id="di-satellite">Vista satellitare</button></div><label>Raggio indicativo (metri) <input id="di-radius-m" type="number" min="1" max="10000" value="100"></label><label>Centro del cerchio <select id="di-radius-center" aria-label="Centro del cerchio"><option value="selected">Punto selezionato sulla mappa</option><option value="gps">La mia posizione GPS</option></select></label><p id="di-map-tools-status" role="status"></p><h3>Archivio droni</h3><label>Nome / modello drone <input id="di-drone-name" maxlength="80" placeholder="Es. Mini 4 Pro"></label><label>Peso (g) <input id="di-drone-weight" type="number" min="1" max="100000"></label><label>Identificativo personale (facoltativo) <input id="di-drone-id" maxlength="80"></label><button type="button" id="di-add-drone">Aggiungi drone</button> <button type="button" id="di-drone-cancel" hidden>Annulla</button><p id="di-drone-status" role="status"></p><div id="di-drones"></div><h3>Punti preferiti</h3><div id="di-favorites"></div>
 <h3>Piano di volo personale</h3>
 <label>Data e ora <input id="di-date" type="datetime-local"></label><br>
 <label>Quota prevista (m, inserimento manuale) <input id="di-alt" type="number" min="0" max="10000" placeholder="es. 30"></label><br>
@@ -613,7 +613,7 @@ function droneArchiveSummary(drone,logs,maintenance,today){
  return {flights:flights.length,minutes:flights.reduce((sum,x)=>{const n=Number(x.duration);return sum+(Number.isFinite(n)&&n>0?n:0)},0),
   upcoming:reminders.filter(x=>x.date>=today).length,overdue:reminders.filter(x=>x.date<today).length};
 }
-const droneArchiveStyle=document.createElement('style');droneArchiveStyle.textContent='#di-drones .di-drone-card{margin:12px 0;padding:15px;border:1px solid #dce6ef;border-radius:15px;background:#fff}#di-drones .di-drone-card h4{margin:0;font-size:17px;color:#173b59;overflow-wrap:anywhere}#di-drones .di-drone-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}#di-drones .di-drone-active{font-size:11px;color:#087449;background:#e4f6ed;padding:5px 8px;border-radius:12px;white-space:nowrap}#di-drones .di-drone-meta{font-size:12px;color:#52718c;margin:8px 0;overflow-wrap:anywhere}#di-drones .di-drone-numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}#di-drones .di-drone-number{padding:10px;border-radius:10px;background:#f1f7fd}#di-drones .di-drone-number strong{display:block;color:#1268a8;font-size:17px}#di-drones .di-drone-number span{font-size:11px;color:#52718c}#di-drones .di-drone-overdue strong{color:#ad3043}#di-drones .di-drone-actions{display:flex;gap:8px;flex-wrap:wrap}#di-drones .di-drone-actions button{margin:0!important;flex:1}#di-drones .di-drone-actions button:disabled{opacity:.6}';document.head.append(droneArchiveStyle);
+const droneArchiveStyle=document.createElement('style');droneArchiveStyle.textContent='#di-drone-cancel[hidden]{display:none!important}#di-drone-status{font-size:13px;color:#52718c}#di-drones .di-drone-card{margin:12px 0;padding:15px;border:1px solid #dce6ef;border-radius:15px;background:#fff}#di-drones .di-drone-card h4{margin:0;font-size:17px;color:#173b59;overflow-wrap:anywhere}#di-drones .di-drone-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}#di-drones .di-drone-active{font-size:11px;color:#087449;background:#e4f6ed;padding:5px 8px;border-radius:12px;white-space:nowrap}#di-drones .di-drone-meta{font-size:12px;color:#52718c;margin:8px 0;overflow-wrap:anywhere}#di-drones .di-drone-numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}#di-drones .di-drone-number{padding:10px;border-radius:10px;background:#f1f7fd}#di-drones .di-drone-number strong{display:block;color:#1268a8;font-size:17px}#di-drones .di-drone-number span{font-size:11px;color:#52718c}#di-drones .di-drone-overdue strong{color:#ad3043}#di-drones .di-drone-actions{display:flex;gap:8px;flex-wrap:wrap}#di-drones .di-drone-actions button{margin:0!important;flex:1}#di-drones .di-drone-actions button:disabled{opacity:.6}';document.head.append(droneArchiveStyle);
 function deleteDroneAndMaintenance(id){
  const drones=load('drones');if(!drones.some(x=>x.id===id))return false;
  const names=[key+'drones',key+'maintenance',key+'active-drone'];
@@ -626,6 +626,39 @@ function deleteDroneAndMaintenance(id){
  }catch(err){
   for(const [k,v] of old){try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
   alert('Eliminazione non riuscita. Verifica lo spazio disponibile e riprova.');return false;
+ }
+}
+let droneEdit=null;
+function updatedDroneRecords(drones,logs,maintenance,edit,fields){
+ const index=drones.findIndex(d=>d.id===edit.id&&JSON.stringify(d)===edit.snapshot);
+ if(index<0)throw Error('Il drone è stato modificato o eliminato. Annulla e riaprilo.');
+ const original=drones[index],rename=fields.name!==original.name;
+ if(rename&&drones.some(d=>d.id!==original.id&&String(d.name||'').trim()===fields.name))throw Error('Esiste già un drone con questo nome. Scegli un nome distinto.');
+ const sameName=drones.filter(d=>String(d.name||'').trim()===String(original.name||'').trim()).length;
+ if(rename&&sameName>1&&logs.some(x=>!x.droneId&&String(x.model||'').trim()===String(original.name||'').trim()))throw Error('Più droni hanno lo stesso nome: i voli precedenti non permettono di distinguerli. Mantieni il nome e modifica gli altri dati.');
+ const nextDrones=drones.map((d,i)=>i===index?{...d,...fields}:d);
+ const nextLogs=logs.map(x=>x.droneId===original.id||(!x.droneId&&sameName===1&&String(x.model||'').trim()===String(original.name||'').trim())?{...x,model:fields.name,droneId:original.id}:x);
+ const nextMaintenance=maintenance.map(m=>m.droneId===original.id?{...m,droneName:fields.name}:m);
+ return {drones:nextDrones,logs:nextLogs,maintenance:nextMaintenance,original,rename,sameName};
+}
+function resetDroneForm(){
+ droneEdit=null;for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
+ $('di-add-drone').textContent='Aggiungi drone';$('di-drone-cancel').hidden=true;
+}
+function editDrone(d){
+ droneEdit={id:d.id,snapshot:JSON.stringify(d)};
+ $('di-drone-name').value=d.name||'';$('di-drone-weight').value=d.weight||'';$('di-drone-id').value=d.ident||'';
+ $('di-add-drone').textContent='Salva modifiche';$('di-drone-cancel').hidden=false;$('di-drone-status').textContent='Stai modificando '+d.name+'.';
+ $('di-drone-name').scrollIntoView({behavior:'smooth',block:'center'});$('di-drone-name').focus({preventScroll:true});
+}
+$('di-drone-cancel').onclick=()=>{resetDroneForm();$('di-drone-status').textContent='Modifica annullata.'};
+function persistDroneEdit(result){
+ const writes=new Map([[key+'drones',JSON.stringify(result.drones)],[key+'logs',JSON.stringify(result.logs)],[key+'maintenance',JSON.stringify(result.maintenance)]]);
+ try{const profile=JSON.parse(localStorage.getItem('drone-profile')||'null');if(profile&&result.rename&&result.sameName===1&&profile.model===result.original.name)writes.set('drone-profile',JSON.stringify({...profile,model:result.drones.find(d=>d.id===result.original.id).name}))}catch(e){}
+ const old=new Map(Array.from(writes.keys()).map(k=>[k,localStorage.getItem(k)]));
+ try{for(const [k,v] of writes)localStorage.setItem(k,v)}catch(err){
+  for(const [k,v] of old){try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
+  throw Error('Salvataggio non riuscito. Verifica lo spazio disponibile e riprova.');
  }
 }
 function renderDrones(){
@@ -648,12 +681,24 @@ function renderDrones(){
   const del=node('button','Elimina');del.type='button';del.onclick=()=>{
    const reminders=load('maintenance').filter(x=>x.droneId===d.id).length;
    if(!confirm('Eliminare '+d.name+' e i suoi '+reminders+' promemoria di manutenzione? I voli già salvati saranno mantenuti.'))return;
-   if(deleteDroneAndMaintenance(d.id)){if(maintenanceEdit&&maintenanceEdit.original.droneId===d.id)resetMaintenanceForm();renderMaintenance()}
-  };actions.append(choose,del);row.append(actions);box.append(row);
+   if(deleteDroneAndMaintenance(d.id)){if(droneEdit&&droneEdit.id===d.id)resetDroneForm();if(maintenanceEdit&&maintenanceEdit.original.droneId===d.id)resetMaintenanceForm();renderMaintenance()}
+  };const edit=node('button','✎ Modifica');edit.type='button';edit.onclick=()=>editDrone(d);actions.append(choose,edit,del);row.append(actions);box.append(row);
  });
  if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();
 }
-$('di-add-drone').onclick=()=>{const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value);if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}const a=load('drones');const id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident:$('di-drone-id').value.trim()});if(save('drones',a)){localStorage.setItem(key+'active-drone',id);renderDrones()}};
+$('di-add-drone').onclick=()=>{
+ const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value),ident=$('di-drone-id').value.trim();
+ if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}
+ try{
+  if(droneEdit){
+   const result=updatedDroneRecords(load('drones'),load('logs'),load('maintenance'),droneEdit,{name,weight,ident});
+   persistDroneEdit(result);resetDroneForm();refresh();$('di-drone-status').textContent='Drone aggiornato. Voli e manutenzioni collegati sono stati aggiornati.';
+  }else{
+   const a=load('drones'),id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident});
+   if(save('drones',a)){localStorage.setItem(key+'active-drone',id);resetDroneForm();renderDrones();$('di-drone-status').textContent='Drone aggiunto.'}
+  }
+ }catch(err){alert(err.message)}
+};
 const maintenanceStyle=document.createElement('style');maintenanceStyle.textContent='#di-maint-list .di-maint-card{margin:10px 0;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:14px}#di-maint-list .di-maint-card strong{display:block;overflow-wrap:anywhere}#di-maint-list .di-maint-card p{margin:8px 0;font-size:13px;color:#52718c}#di-maint-list .di-maint-overdue{color:#ad3043!important;font-weight:700}#di-maint-cancel[hidden]{display:none!important}#di-maint-status{font-size:13px;color:#52718c}#di-maint-list .di-maint-card button{margin-right:8px}#di-maint-drone{display:block;width:100%;min-height:44px;margin-top:5px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(maintenanceStyle);
 let maintenanceEdit=null;
 function populateMaintenanceDrones(preferred){
