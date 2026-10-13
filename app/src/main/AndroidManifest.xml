@@ -4,4 +4,5 @@
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 <application android:label="Drone Italia • Demo" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:allowBackup="false" android:usesCleartextTraffic="false">
 <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+<provider android:name=".FlightShareProvider" android:authorities="${applicationId}.sharedflight" android:exported="false" android:grantUriPermissions="true"/>
 </application></manifest>
