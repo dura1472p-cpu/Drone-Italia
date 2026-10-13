@@ -2607,7 +2607,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   if(write(a)){reset();render();if(window.diRefreshFlightLogs)window.diRefreshFlightLogs();status('Batteria salvata.')}
  };
  get('di-battery-cancel').onclick=()=>{reset();status('Modifica annullata.')};
- window.diRefreshBatteries=render;reset();render();
+ window.diRefreshBatteries=render;reset();render();if(window.diRefreshFlightLogs)window.diRefreshFlightLogs();
 })();
 
 </script>
