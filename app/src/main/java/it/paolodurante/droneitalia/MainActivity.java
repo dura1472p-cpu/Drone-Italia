@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
  private WebView web; private LocationManager manager; private LocationListener listener;
  private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303;
  private byte[] pendingBackup;
+ private volatile boolean darkTheme=false;
 
  private int noticeDp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
  private GradientDrawable noticeBackground(int color,int border,float radius){
@@ -36,25 +37,25 @@ public class MainActivity extends Activity {
  }
  private Button noticeButton(String text,boolean primary){
  Button button=new Button(this);button.setText(text);button.setAllCaps(false);button.setTextSize(15);button.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
- button.setTextColor(primary?Color.WHITE:Color.rgb(19,78,123));button.setMinHeight(noticeDp(48));button.setMinimumHeight(noticeDp(48));
+ button.setTextColor(primary?Color.WHITE:darkTheme?Color.rgb(185,220,255):Color.rgb(19,78,123));button.setMinHeight(noticeDp(48));button.setMinimumHeight(noticeDp(48));
  button.setPadding(noticeDp(14),noticeDp(10),noticeDp(14),noticeDp(10));
- button.setBackground(noticeBackground(primary?Color.rgb(18,112,211):Color.rgb(237,245,253),primary?0:Color.rgb(214,229,243),12));
+ button.setBackground(noticeBackground(primary?Color.rgb(18,112,211):darkTheme?Color.rgb(34,58,80):Color.rgb(237,245,253),primary?0:Color.rgb(214,229,243),12));
  return button;
  }
  private void showAppNotice(String message,boolean confirmation,JsResult result){
  if(isFinishing()||isDestroyed()){result.cancel();return;}
  LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(noticeDp(24),noticeDp(24),noticeDp(24),noticeDp(22));
- panel.setBackground(noticeBackground(Color.WHITE,0,22));
+ panel.setBackground(noticeBackground(darkTheme?Color.rgb(25,42,59):Color.WHITE,0,22));
  LinearLayout header=new LinearLayout(this);header.setGravity(Gravity.CENTER_VERTICAL);
  TextView icon=new TextView(this);icon.setText("!");icon.setTextSize(24);icon.setTypeface(Typeface.DEFAULT,Typeface.BOLD);icon.setGravity(Gravity.CENTER);
  icon.setTextColor(Color.rgb(160,100,9));icon.setBackground(noticeBackground(Color.rgb(255,243,215),0,20));icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
  header.addView(icon,new LinearLayout.LayoutParams(noticeDp(40),noticeDp(40)));
- TextView title=new TextView(this);title.setText("ATTENZIONE!");title.setTextColor(Color.rgb(23,48,68));title.setTextSize(20);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+ TextView title=new TextView(this);title.setText("ATTENZIONE!");title.setTextColor(darkTheme?Color.rgb(228,237,246):Color.rgb(23,48,68));title.setTextSize(20);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
  LinearLayout.LayoutParams titleParams=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);titleParams.setMargins(noticeDp(12),0,0,0);header.addView(title,titleParams);panel.addView(header);
  final int maxMessageHeight=Math.round(getResources().getDisplayMetrics().heightPixels*.40f);
  ScrollView scroll=new ScrollView(this){@Override protected void onMeasure(int widthSpec,int heightSpec){super.onMeasure(widthSpec,View.MeasureSpec.makeMeasureSpec(maxMessageHeight,View.MeasureSpec.AT_MOST));}};
  final boolean maintenanceNotice=confirmation&&message.startsWith("PROMEMORIA MANUTENZIONE\n");
- TextView body=new TextView(this);body.setText(maintenanceNotice?message.substring("PROMEMORIA MANUTENZIONE\n".length()):message);body.setTextColor(Color.rgb(65,88,106));body.setTextSize(16);body.setLineSpacing(noticeDp(4),1);body.setPadding(0,0,0,noticeDp(2));scroll.addView(body);
+ TextView body=new TextView(this);body.setText(maintenanceNotice?message.substring("PROMEMORIA MANUTENZIONE\n".length()):message);body.setTextColor(darkTheme?Color.rgb(175,192,209):Color.rgb(65,88,106));body.setTextSize(16);body.setLineSpacing(noticeDp(4),1);body.setPadding(0,0,0,noticeDp(2));scroll.addView(body);
  LinearLayout.LayoutParams bodyParams=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);bodyParams.setMargins(0,noticeDp(18),0,noticeDp(22));panel.addView(scroll,bodyParams);
  LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
  final AlertDialog dialog=new AlertDialog.Builder(this).setView(panel).create();
@@ -103,6 +104,7 @@ public class MainActivity extends Activity {
  try{DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);request.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"drone-italia-download");((DownloadManager)getSystemService(DOWNLOAD_SERVICE)).enqueue(request);}catch(Exception e){Toast.makeText(this,"Download non disponibile",Toast.LENGTH_LONG).show();}
  });
  web.addJavascriptInterface(new Object(){
+ @JavascriptInterface public void setDarkTheme(boolean enabled){darkTheme=enabled;}
  @JavascriptInterface public void locate(){runOnUiThread(()->MainActivity.this.locate());}
  @JavascriptInterface public void saveBackup(String encoded){
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>12000000)throw new IllegalArgumentException("Backup troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.json");startActivityForResult(intent,BACKUP_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup non disponibile",Toast.LENGTH_LONG).show());}
