@@ -1,5 +1,6 @@
 package it.paolodurante.droneitalia;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -27,6 +28,17 @@ public class MainActivity extends Activity {
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
  web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(true);
  web.setWebChromeClient(new WebChromeClient(){
+ @Override public boolean onJsAlert(WebView view,String url,String message,JsResult result){
+ new AlertDialog.Builder(MainActivity.this).setTitle("ATTENZIONE!").setMessage(message)
+ .setPositiveButton("OK",(dialog,which)->result.confirm())
+ .setOnCancelListener(dialog->result.cancel()).show();return true;
+ }
+ @Override public boolean onJsConfirm(WebView view,String url,String message,JsResult result){
+ new AlertDialog.Builder(MainActivity.this).setTitle("ATTENZIONE!").setMessage(message)
+ .setPositiveButton("Conferma",(dialog,which)->result.confirm())
+ .setNegativeButton("Annulla",(dialog,which)->result.cancel())
+ .setOnCancelListener(dialog->result.cancel()).show();return true;
+ }
  @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
  if(fileCallback!=null)fileCallback.onReceiveValue(null);
  fileCallback=callback;
