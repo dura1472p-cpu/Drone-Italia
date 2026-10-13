@@ -385,9 +385,9 @@ html.di-dark #di-flight-map-filters input,html.di-dark #di-flight-map-filters se
 #di-home-overview span{display:block;color:#647a8e;font-size:10px;line-height:1.4;margin-top:5px}
 #di-home-sections-title{font-size:16px!important;margin:0 16px 11px!important;color:#173b59;font-weight:750;letter-spacing:-.2px}
 #di-page-home #di-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0 14px;gap:10px}
-#di-page-home #di-home-grid button{display:grid;grid-template-columns:32px minmax(0,1fr);grid-template-areas:"icon title" "desc desc";grid-template-rows:auto 1fr;position:relative;align-items:center;justify-content:normal;text-align:left;min-width:0;min-height:110px;padding:14px!important;column-gap:9px;row-gap:10px;background:linear-gradient(145deg,#f5faff,#eaf3fd);color:#173b59;border:1px solid #d5e4f4;border-radius:16px!important;box-shadow:0 2px 6px #19375206;transition:background .15s,border-color .15s}
-#di-page-home #di-home-grid .di-home-icon{grid-area:icon;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#d9eaff;color:#146bb4;margin:0;box-shadow:none}
-#di-page-home #di-home-grid .di-home-icon svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:1}
+#di-page-home #di-home-grid button{display:grid;grid-template-columns:40px minmax(0,1fr);grid-template-areas:"icon title" "desc desc";grid-template-rows:auto 1fr;position:relative;align-items:center;justify-content:normal;text-align:left;min-width:0;min-height:110px;padding:14px!important;column-gap:9px;row-gap:10px;background:linear-gradient(145deg,#f5faff,#eaf3fd);color:#173b59;border:1px solid #d5e4f4;border-radius:16px!important;box-shadow:0 2px 6px #19375206;transition:background .15s,border-color .15s}
+#di-page-home #di-home-grid .di-home-icon{grid-area:icon;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:transparent;color:#fff;margin:0;box-shadow:none}
+#di-page-home #di-home-grid .di-home-icon svg{width:29px;height:29px;stroke:none;fill:none;opacity:1}
 #di-page-home #di-home-grid .di-home-label{grid-area:title;font-size:13px;line-height:1.3;letter-spacing:-.2px;font-weight:750;min-width:0;overflow-wrap:anywhere}
 #di-page-home #di-home-grid .di-home-desc{grid-area:desc;align-self:start;font-size:11px;line-height:1.45;max-width:none;color:#526f89;font-weight:400;margin:0}
 #di-page-home #di-home-grid button:active{background:#dcecff;border-color:#8ebdea}
@@ -397,10 +397,15 @@ html.di-dark #di-page-home #di-home-grid button{background:linear-gradient(145de
 html.di-dark #di-home-overview>div+div{border-color:#33475b}
 html.di-dark #di-home-overview strong,html.di-dark #di-home-sections-title,html.di-dark #di-page-home #di-home-grid .di-home-label{color:#e4edf6}
 html.di-dark #di-home-overview span,html.di-dark #di-page-home #di-home-grid .di-home-desc{color:#afc0d1}
-html.di-dark #di-page-home #di-home-grid .di-home-icon{background:#24405a;color:#b7dcff}
+html.di-dark #di-page-home #di-home-grid .di-home-icon{background:transparent;color:#fff}
 html.di-dark #di-page-home #di-home-grid button:active{background:#294761;border-color:#6797c2}
 @media(max-width:340px){#di-page-home #di-home-grid button{padding:12px!important;column-gap:7px}#di-page-home #di-home-grid .di-home-label{font-size:12px}}
 @media(min-width:700px){#di-page-home #di-home-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#di-page-home{max-width:900px;margin:0 auto}#di-page-home #di-home-hero{aspect-ratio:2.6}}
+
+#di-page-home #di-home-grid button:nth-child(1) .di-home-icon{background:linear-gradient(145deg,#11c2c6,#079bac);box-shadow:0 3px 7px #09a9b822}
+#di-page-home #di-home-grid button:nth-child(3) .di-home-icon{background:linear-gradient(145deg,#ff6570,#e94759);box-shadow:0 3px 7px #e9475922}
+#di-page-home #di-home-grid button:nth-child(4) .di-home-icon{background:linear-gradient(145deg,#6185ff,#3975f0);box-shadow:0 3px 7px #3975f022}
+#di-page-home #di-home-grid button:nth-child(2) .di-home-icon svg,#di-page-home #di-home-grid button:nth-child(5) .di-home-icon svg,#di-page-home #di-home-grid button:nth-child(6) .di-home-icon svg{width:38px;height:38px}
 </style>
 
 <style id="di-compact-navigation">
@@ -2156,6 +2161,14 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  }
  new MutationObserver(()=>{if(page.classList.contains('di-active'))updateHomeSummary()}).observe(page,{attributes:true,attributeFilter:['class']});
  updateHomeSummary();
+})();
+</script>
+
+<script>
+(function(){
+ const drawings=["<path fill=\"#fff\" d=\"m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Z\"/><path d=\"M9 3v16m6-14v16\" stroke=\"#09a9b8\" stroke-width=\"1.7\"/>","<path fill=\"#0878e9\" d=\"M6 20a5 5 0 0 1-.7-10A7 7 0 0 1 19 9a5.5 5.5 0 0 1-.5 11H6Z\"/><path fill=\"#fff\" d=\"m12 7-4 4h2.5v6h3v-6H16l-4-4Z\"/>","<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"3\" fill=\"#fff\"/><path d=\"M3 9h18\" stroke=\"#e94759\" stroke-width=\"2\"/><path d=\"M7 2v5m10-5v5\" stroke=\"#fff\" stroke-width=\"2.3\" stroke-linecap=\"round\"/><path fill=\"#e94759\" d=\"M6 12h3v3H6zm5 0h3v3h-3zm5 0h3v3h-3zM6 17h3v3H6zm5 0h3v3h-3zm5 0h3v3h-3z\"/>","<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2.5\" fill=\"#fff\"/><rect x=\"5\" y=\"6\" width=\"14\" height=\"12\" rx=\"1\" fill=\"#3975f0\"/><circle cx=\"8.5\" cy=\"9\" r=\"1.5\" fill=\"#fff\"/><path fill=\"#fff\" d=\"m5 17 5-5 3 3 2-2 4 4H5Z\"/>","<path fill=\"#08ae80\" d=\"M6 20a5 5 0 0 1-.7-10A7 7 0 0 1 19 9a5.5 5.5 0 0 1-.5 11H6Z\"/><path fill=\"#fff\" d=\"m12 7-4 4h2.5v6h3v-6H16l-4-4Z\"/>","<path fill=\"#147bbd\" d=\"m10 1 4 0 .7 3 2 .9 2.7-1.5 2.7 3.7-2.1 2.2.3 2.2 2.8 1.2-1.4 4.2-3-.3-1.6 1.6.3 3-4.2 1.4-1.2-2.8-2.2-.3-2.2 2.1-3.7-2.7 1.5-2.7-.9-2L1 14v-4l3-.7.9-2-1.5-2.7 3.7-2.7 2.2 2.1.7-3Z\"/><circle cx=\"12\" cy=\"12\" r=\"4\" fill=\"#fff\"/>"];
+ const cards=document.querySelectorAll('#di-home-grid button');
+ cards.forEach((card,i)=>{const icon=card.querySelector('.di-home-icon');if(icon&&drawings[i])icon.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+drawings[i]+'</svg>'});
 })();
 </script>
 </body></html>
