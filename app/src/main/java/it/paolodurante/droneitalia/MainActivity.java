@@ -144,6 +144,13 @@ public class MainActivity extends Activity {
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>12000000)throw new IllegalArgumentException("Backup troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.json");startActivityForResult(intent,BACKUP_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup non disponibile",Toast.LENGTH_LONG).show());}
  }
 
+ @JavascriptInterface public void saveBackupZip(String encoded){
+ try{
+  if(encoded==null||encoded.length()>67000000)throw new IllegalArgumentException("Backup ZIP troppo grande");
+  byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>50000000)throw new IllegalArgumentException("Backup ZIP troppo grande");
+  runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/zip");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.zip");startActivityForResult(intent,BACKUP_SAVE);});
+ }catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup ZIP non disponibile",Toast.LENGTH_LONG).show());}
+ }
  @JavascriptInterface public void saveMaps(String encoded){
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>5000000)throw new IllegalArgumentException("Archivio mappe troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-mappe.json");startActivityForResult(intent,MAPS_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Esportazione mappe non disponibile",Toast.LENGTH_LONG).show());}
  }
@@ -156,6 +163,7 @@ public class MainActivity extends Activity {
  web.setWebViewClient(new WebViewClient(){
  @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
  String url=req.getUrl().toString();
+ if(url.equals("https://app.local/jszip.min.js")){try{return new WebResourceResponse("application/javascript","UTF-8",getAssets().open("jszip.min.js"));}catch(Exception e){return null;}}
  if(url.equals("https://app.local/index.html")) {try{return new WebResourceResponse("text/html","UTF-8",getAssets().open("index.html"));}catch(Exception e){return null;}}
  if(req.getUrl().getHost()!=null && req.getUrl().getHost().equals("app.local") && req.getUrl().getPath().equals("/drone-home-hero.jpg")) {try{return new WebResourceResponse("image/jpeg",null,getAssets().open("drone-home-hero.jpg"));}catch(Exception e){return null;}}
  if(url.equals("https://app.local/home-reference.svg")) {try{return new WebResourceResponse("image/svg+xml","UTF-8",getAssets().open("home-reference.svg"));}catch(Exception e){return null;}}
