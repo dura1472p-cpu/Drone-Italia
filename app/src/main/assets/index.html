@@ -603,43 +603,7 @@ $('di-restore').onchange=async e=>{
  finally{e.target.value='';backupBusy=false;$('di-backup').disabled=false}
 };
 window.diPrintLogReport=printLogReport;
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p>
-<script>
-/* Avviso delle manutenzioni all'apertura, una volta per giorno locale. */
-(function(){
- const shownKey='drone-italia-maintenance-notice-day-v1';
- function localDay(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0')}
- function upcomingMaintenance(items,now){
-  const today=localDay(now),limit=localDay(new Date(now.getFullYear(),now.getMonth(),now.getDate()+7));
-  return items.filter(m=>m&&m.completed!==true&&typeof m.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(m.date)&&Number.isFinite(Date.parse(m.date))&&new Date(m.date).toISOString().slice(0,10)===m.date&&m.date<=limit)
-   .map(m=>({...m,dueState:m.date<today?'Scaduto':m.date===today?'Oggi':'In scadenza'}))
-   .sort((a,b)=>a.date.localeCompare(b.date)||String(a.task||'').localeCompare(String(b.task||''),'it'));
- }
- function maintenanceNoticeText(items,drones){
-  return items.map(m=>{
-   const drone=drones.find(d=>d&&d.id===m.droneId),name=drone?drone.name:m.droneName||'Generale';
-   const date=m.date.split('-').reverse().join('/');
-   return m.dueState+' · '+date+'\n'+String(m.task||'Manutenzione')+' — '+String(name);
-  }).join('\n\n');
- }
- window.diCheckMaintenanceAtStartup=function(){
-  if(!window.DroneItaliaNative||typeof window.confirm!=='function')return;
-  let items,drones;const today=localDay(new Date());
-  try{
-   if(localStorage.getItem(shownKey)===today)return;
-   items=JSON.parse(localStorage.getItem('drone-italia-beta-maintenance')||'[]');
-   drones=JSON.parse(localStorage.getItem('drone-italia-beta-drones')||'[]');
-  }catch(e){return}
-  if(!Array.isArray(items))return;if(!Array.isArray(drones))drones=[];
-  const due=upcomingMaintenance(items,new Date());if(!due.length)return;
-  const open=confirm('PROMEMORIA MANUTENZIONE\n'+maintenanceNoticeText(due,drones));
-  try{localStorage.setItem(shownKey,today)}catch(e){}
-  if(open&&typeof window.droneItaliaOpenPage==='function')window.droneItaliaOpenPage('settings','di-maint-list');
- };
- window.setTimeout(()=>window.diCheckMaintenanceAtStartup(),1200);
-})();
-</script>
-</body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 $('di-weather').onclick=async()=>{const out=$('di-weather-status');if(!selected){out.textContent='Seleziona prima un punto sulla mappa.';return}out.textContent='Caricamento meteo...';try{const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;try{response=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(selected.lat)+'&longitude='+encodeURIComponent(selected.lng)+'&current=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation&timezone=auto',{signal:controller.signal})}finally{clearTimeout(timeout)}if(!response.ok)throw Error('HTTP '+response.status);const d=await response.json(),w=d.current;if(!w)throw Error('Dati non disponibili');out.textContent='Fonte: Open-Meteo · '+w.time+' · Temperatura '+w.temperature_2m+' °C · Vento a 10 m '+w.wind_speed_10m+' km/h · Raffiche '+w.wind_gusts_10m+' km/h · Precipitazioni '+w.precipitation+' mm. Dati indicativi: verifica sul posto e nel manuale del drone.'}catch(e){out.textContent='Meteo non disponibile: controlla la connessione. Nessuna valutazione automatica di sicurezza.'}};
 
@@ -1959,6 +1923,42 @@ window.diFlightGpsReceived=p=>{update(p);const b=document.getElementById('di-fli
 window.diFlightGpsError=message=>{window.diFlightGpsPending=false;const b=document.getElementById('di-flight-gps');if(b)b.disabled=false;status.textContent='⚠ '+(message||'Posizione non disponibile. Verifica i permessi GPS e riprova.');};
 document.getElementById('di-flight-gps').onclick=()=>{const b=document.getElementById('di-flight-gps');if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.locate!=='function'){status.textContent='GPS non disponibile in questa versione. Usa «Scegli sulla mappa».';return}window.diFlightGpsPending=true;status.textContent='⏳ Rilevamento GPS in corso… Consenti la posizione quando Android lo richiede. Attendi fino a 25 secondi.';b.disabled=true;window.DroneItaliaNative.locate();setTimeout(()=>{if(window.diFlightGpsPending){window.diFlightGpsPending=false;status.textContent='GPS non rilevato. Attiva Posizione sul telefono, autorizza Drone Italia nelle impostazioni Android e riprova all’aperto.'}b.disabled=false},27000)};
 document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMapPoint=null;window.diFlightPickingOnMap=true;status.textContent='Tocca un punto sulla mappa, poi premi «Torna al volo».';if(typeof window.droneItaliaOpenPage==='function')window.droneItaliaOpenPage('map');let back=document.getElementById('di-flight-map-return');if(!back){back=document.createElement('button');back.id='di-flight-map-return';back.type='button';back.textContent='↩ Torna al volo';back.style.cssText='position:fixed;bottom:92px;left:50%;transform:translateX(-50%);z-index:10000;background:#0877ed;color:white;border:0;border-radius:24px;padding:13px 22px;font-weight:bold;box-shadow:0 3px 12px #0004';document.body.append(back)}back.hidden=false;back.textContent='Tocca un punto sulla mappa';back.onclick=()=>{if(!window.diFlightPendingMapPoint){alert('Tocca prima un punto sulla mappa per scegliere le coordinate.');return}const point=window.diFlightPendingMapPoint;update(point);window.diFlightPickingOnMap=false;back.hidden=true;window.droneItaliaOpenPage('flights');form.hidden=false;form.scrollIntoView({block:'center'});window.diFlightPendingMapPoint=null}};
+})();
+</script>
+
+<script>
+/* Avviso delle manutenzioni all'apertura, una volta per giorno locale. */
+(function(){
+ const shownKey='drone-italia-maintenance-notice-day-v1';
+ function localDay(date){return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0')}
+ function upcomingMaintenance(items,now){
+  const today=localDay(now),limit=localDay(new Date(now.getFullYear(),now.getMonth(),now.getDate()+7));
+  return items.filter(m=>m&&m.completed!==true&&typeof m.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(m.date)&&Number.isFinite(Date.parse(m.date))&&new Date(m.date).toISOString().slice(0,10)===m.date&&m.date<=limit)
+   .map(m=>({...m,dueState:m.date<today?'Scaduto':m.date===today?'Oggi':'In scadenza'}))
+   .sort((a,b)=>a.date.localeCompare(b.date)||String(a.task||'').localeCompare(String(b.task||''),'it'));
+ }
+ function maintenanceNoticeText(items,drones){
+  return items.map(m=>{
+   const drone=drones.find(d=>d&&d.id===m.droneId),name=drone?drone.name:m.droneName||'Generale';
+   const date=m.date.split('-').reverse().join('/');
+   return m.dueState+' · '+date+'\n'+String(m.task||'Manutenzione')+' — '+String(name);
+  }).join('\n\n');
+ }
+ window.diCheckMaintenanceAtStartup=function(){
+  if(!window.DroneItaliaNative||typeof window.confirm!=='function')return;
+  let items,drones;const today=localDay(new Date());
+  try{
+   if(localStorage.getItem(shownKey)===today)return;
+   items=JSON.parse(localStorage.getItem('drone-italia-beta-maintenance')||'[]');
+   drones=JSON.parse(localStorage.getItem('drone-italia-beta-drones')||'[]');
+  }catch(e){return}
+  if(!Array.isArray(items))return;if(!Array.isArray(drones))drones=[];
+  const due=upcomingMaintenance(items,new Date());if(!due.length)return;
+  const open=confirm('PROMEMORIA MANUTENZIONE\n'+maintenanceNoticeText(due,drones));
+  try{localStorage.setItem(shownKey,today)}catch(e){}
+  if(open&&typeof window.droneItaliaOpenPage==='function')window.droneItaliaOpenPage('settings','di-maint-list');
+ };
+ window.setTimeout(()=>window.diCheckMaintenanceAtStartup(),1200);
 })();
 </script>
 </body></html>
