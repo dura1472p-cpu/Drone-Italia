@@ -456,6 +456,37 @@ html.di-dark #di-page-flights .di-flight-fields dd{color:#e4edf6}
 html.di-dark #di-page-flights .di-flight-head::after{color:#b9dcff}
 html.di-dark #di-page-flights .di-flight-detail-actions .di-flight-delete-action{background:#492c35!important;color:#ffb5be!important}
 </style>
+<style id="di-preflight-checklist-style">
+#flight-tools #ft-check .ft-check-intro,#flight-tools #ft-check .ft-check-footnote{color:#587186;font-size:13px;line-height:1.5}
+#flight-tools .ft-check-progress{background:#edf6ff;border-radius:12px;padding:13px 15px;margin:15px 0}
+#flight-tools #ft-count{margin:0 0 9px;font-size:15px;font-weight:700;color:#1268a8}
+#flight-tools #ft-progress{display:block;width:100%;height:8px;border:0;border-radius:8px;overflow:hidden;accent-color:#1179ed}
+#flight-tools #ft-progress::-webkit-progress-bar{background:#d4e4f3;border-radius:8px}
+#flight-tools #ft-progress::-webkit-progress-value{background:#1179ed;border-radius:8px}
+#flight-tools .ft-check-list{display:grid;gap:10px}
+#flight-tools #ft-check .ft-check-item{display:flex;align-items:flex-start;gap:12px;margin:0;padding:14px;border:1px solid #d9e5ef;border-radius:12px;background:#f8fbfe;cursor:pointer;min-height:64px;box-sizing:border-box}
+#flight-tools #ft-check .ft-check-item input{flex:0 0 22px;width:22px;height:22px;min-height:22px;padding:0;margin:2px 0 0;accent-color:#1179ed}
+#flight-tools .ft-check-item span{min-width:0}
+#flight-tools .ft-check-item strong{display:block;font-size:14px;color:#173a60;line-height:1.4}
+#flight-tools .ft-check-item small{display:block;font-size:12px;font-weight:400;color:#587186;line-height:1.5;margin-top:4px}
+#flight-tools #ft-check .ft-check-done{background:#eef9f3;border-color:#9ad5b7}
+#flight-tools #ft-check .ft-check-done strong{color:#176843}
+#flight-tools #ft-complete-warning{padding:12px;border-radius:10px;background:#eef9f3;color:#176843;font-size:13px;line-height:1.5;margin-top:12px}
+#flight-tools #ft-complete-warning[hidden]{display:none!important}
+#flight-tools .ft-check-actions{display:grid;gap:8px;margin-top:16px}
+#flight-tools .ft-check-actions button{width:100%;margin:0;min-height:44px;border-radius:11px}
+#flight-tools #ft-proceed{background:#1179ed;color:white}
+#flight-tools #ft-proceed:disabled{opacity:.5;cursor:default}
+#flight-tools #ft-clear{background:#edf4fb;color:#19527e}
+html.di-dark #flight-tools #ft-check .ft-check-item{background:#21354a;border-color:#40566d}
+html.di-dark #flight-tools .ft-check-item strong{color:#e4edf6}
+html.di-dark #flight-tools .ft-check-item small,html.di-dark #flight-tools #ft-check .ft-check-intro,html.di-dark #flight-tools #ft-check .ft-check-footnote{color:#afc0d1}
+html.di-dark #flight-tools .ft-check-progress{background:#21354a}
+html.di-dark #flight-tools #ft-count{color:#b9dcff}
+html.di-dark #flight-tools #ft-check .ft-check-done,html.di-dark #flight-tools #ft-complete-warning{background:#173c32;border-color:#37755c;color:#c3efdb}
+html.di-dark #flight-tools #ft-check .ft-check-done strong{color:#c3efdb}
+html.di-dark #flight-tools #ft-clear{background:#2c435a;color:#e4edf6}
+</style>
 </head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -486,15 +517,7 @@ document.getElementById('search').addEventListener('submit',e=>{e.preventDefault
 <h3>Strumenti per il volo</h3><div class="flight-tabs" role="tablist" aria-label="Strumenti">
 <button role="tab" data-pane="profile" aria-controls="ft-profile" aria-selected="true">Drone</button><button role="tab" data-pane="check" aria-controls="ft-check" aria-selected="false">Prima del volo</button><button role="tab" data-pane="timer" aria-controls="ft-timer" aria-selected="false">Timer</button><button role="tab" data-pane="help" aria-controls="ft-help" aria-selected="false">Assistenza</button></div>
 <div id="ft-profile" class="box" role="tabpanel"><label>Modello drone <input id="ft-model" maxlength="80" placeholder="Es. DJI Mini"></label><label>Categoria dichiarata <select id="ft-category"><option>Da verificare</option><option>Open A1</option><option>Open A2</option><option>Open A3</option><option>Specific</option></select></label><label>Avviso dopo minuti <input id="ft-minutes" type="number" min="1" max="180" value="15"></label><button id="ft-save">Salva profilo</button><p id="ft-saved" aria-live="polite"></p><p>Questo profilo non verifica classe, abilitazioni o autorizzazioni. L’avviso è una soglia scelta da te, non una stima della batteria.</p></div>
-<div id="ft-check" class="box" role="tabpanel" hidden><h3>Controlli manuali</h3>
-<label class="check"><input type="checkbox"><span>Zone ufficiali, restrizioni temporanee e condizioni di accesso verificate per luogo, ora e quota</span></label>
-<label class="check"><input type="checkbox"><span>Requisiti operatore, pilota e assicurazione verificati</span></label>
-<label class="check"><input type="checkbox"><span>Meteo e vento verificati rispetto ai limiti del manuale</span></label>
-<label class="check"><input type="checkbox"><span>Persone, ostacoli e luogo sicuro di decollo e atterraggio valutati</span></label>
-<label class="check"><input type="checkbox"><span>Eliche, batterie e collegamenti controllati</span></label>
-<label class="check"><input type="checkbox"><span>Punto home, stato GNSS e comportamento di perdita segnale verificati sul drone</span></label>
-<label class="check"><input type="checkbox"><span>Limiti operativi e procedura di emergenza predisposti</span></label>
-<p id="ft-count" aria-live="polite">0 di 7 controlli confermati</p><button type="button" id="ft-proceed" disabled aria-describedby="ft-count">Prosegui al piano di volo</button><div id="ft-complete-warning" role="alert" hidden>⚠️ Ricorda che completare la checklist non costituisce un’autorizzazione al volo.</div><button id="ft-clear">Nuova checklist</button><p>Le spunte non costituiscono autorizzazione al volo. Si azzerano quando riapri l’app.</p></div>
+<div id="ft-check" class="box" role="tabpanel" hidden><h3>Prima del volo</h3><p class="ft-check-intro">Conferma i controlli effettuati sul tuo drone e sul luogo di volo.</p><div class="ft-check-progress"><p id="ft-count" role="status" aria-live="polite">0 di 8 controlli completati</p><progress id="ft-progress" max="8" value="0" aria-label="Controlli completati"></progress></div><div class="ft-check-list"><label class="check ft-check-item"><input type="checkbox" id="ft-check-0"><span><strong>Batterie e collegamenti</strong><small>Batterie di drone e radiocomando cariche, fissate e collegamenti controllati.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-1"><span><strong>Eliche e struttura</strong><small>Eliche, motori e struttura controllati prima del decollo.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-2"><span><strong>GPS e ritorno a casa</strong><small>Stato GNSS, punto home e comportamento in caso di perdita del segnale verificati nell’app del drone.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-3"><span><strong>Meteo e vento</strong><small>Condizioni verificate rispetto ai limiti indicati nel manuale del drone.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-4"><span><strong>Zona di volo</strong><small>Zone ufficiali, restrizioni temporanee e accesso verificati per luogo, ora e quota.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-5"><span><strong>Area di decollo</strong><small>Persone, ostacoli e punti sicuri di decollo e atterraggio valutati.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-6"><span><strong>Documenti e requisiti</strong><small>Requisiti di operatore, pilota e assicurazione verificati.</small></span></label><label class="check ft-check-item"><input type="checkbox" id="ft-check-7"><span><strong>Limiti ed emergenze</strong><small>Limiti operativi e procedura di emergenza predisposti.</small></span></label></div><div id="ft-complete-warning" role="status" hidden>Tutti i controlli sono confermati. La checklist non costituisce un’autorizzazione al volo.</div><div class="ft-check-actions"><button type="button" id="ft-proceed" disabled aria-describedby="ft-count">Prosegui al piano di volo</button><button type="button" id="ft-clear">Nuova checklist</button></div><p class="ft-check-footnote">Le spunte si azzerano quando inizi una nuova registrazione di volo o riapri l’app.</p></div>
 <div id="ft-timer" class="box" role="tabpanel" hidden><h3>Tempo trascorso</h3><div id="ft-clock" class="timer" aria-live="off">00:00</div><div class="actions"><button id="ft-start">Avvia</button><button id="ft-pause">Pausa</button><button id="ft-reset">Azzera</button></div><p id="ft-alert" role="status">Timer fermo. Nessuna telemetria collegata.</p><p>Controlla sempre batteria e avvisi nell’app del produttore. L’avviso visivo può non arrivare in tempo se l’app è in background o il telefono sospende la pagina.</p></div>
 <div id="ft-help" class="box" role="tabpanel" hidden><label>Situazione <select id="ft-situation"><option value="signal">Perdita del segnale</option><option value="battery">Batteria bassa</option><option value="wind">Vento o difficoltà di controllo</option><option value="gps">Problema GNSS / punto home</option><option value="incident">Incidente</option></select></label><div id="ft-advice" aria-live="polite"></div><p>Questa app non invia comandi e non sostituisce il manuale del drone. In caso di pericolo immediato per persone contatta il 112.</p></div>
 </section>
@@ -505,7 +528,24 @@ try{const p=JSON.parse(localStorage.getItem('drone-profile')||'null');if(p){mode
 root.querySelectorAll('[data-pane]').forEach(b=>b.addEventListener('click',()=>{root.querySelectorAll('[data-pane]').forEach(t=>t.setAttribute('aria-selected',String(t===b)));root.querySelectorAll('[role=tabpanel]').forEach(p=>p.hidden=p.id!=='ft-'+b.dataset.pane);}));
 function validMinutes(){const n=Number(minutes.value);return Number.isFinite(n)&&n>=1&&n<=180?n:null;}
 q('#ft-save').onclick=()=>{const n=validMinutes();if(n===null){q('#ft-saved').textContent='Inserisci una soglia da 1 a 180 minuti.';return;}try{localStorage.setItem('drone-profile',JSON.stringify({model:model.value,minutes:n,category:category.value}));q('#ft-saved').textContent='Profilo salvato su questo dispositivo.';}catch(e){q('#ft-saved').textContent='Salvataggio non disponibile in questa anteprima. Il profilo resta valido finché la pagina è aperta.';}};
-const checks=[...root.querySelectorAll('#ft-check input')];function count(){const completed=checks.filter(c=>c.checked).length;q('#ft-count').textContent=completed+' di '+checks.length+' controlli confermati';q('#ft-complete-warning').hidden=completed!==checks.length;q('#ft-proceed').disabled=completed!==checks.length;}checks.forEach(c=>c.onchange=count);q('#ft-clear').onclick=()=>{checks.forEach(c=>c.checked=false);count();};q('#ft-proceed').onclick=()=>{if(checks.some(c=>!c.checked))return;alert('⚠️ Ricorda che completare la checklist non costituisce un’autorizzazione al volo. Verifica sempre restrizioni e requisiti ufficiali.');document.getElementById('di-date').scrollIntoView({behavior:'smooth',block:'start'});};
+const checks=[...root.querySelectorAll('#ft-check input')];
+function count(){
+ const completed=checks.filter(c=>c.checked).length;
+ q('#ft-count').textContent=completed+' di '+checks.length+' controlli completati';
+ q('#ft-progress').max=checks.length;q('#ft-progress').value=completed;
+ checks.forEach(c=>c.closest('label').classList.toggle('ft-check-done',c.checked));
+ q('#ft-complete-warning').hidden=completed!==checks.length;
+ q('#ft-proceed').disabled=completed!==checks.length;
+}
+window.diResetPreflightChecklist=()=>{checks.forEach(c=>c.checked=false);count()};
+checks.forEach(c=>c.onchange=count);
+q('#ft-clear').onclick=window.diResetPreflightChecklist;
+q('#ft-proceed').onclick=()=>{
+ if(checks.some(c=>!c.checked))return;
+ const target=document.getElementById('di-date');if(!target)return;
+ target.scrollIntoView({behavior:'smooth',block:'center'});target.focus({preventScroll:true});
+};
+window.diResetPreflightChecklist();
 let elapsed=0,start=null;function time(){return elapsed+(start===null?0:Date.now()-start);}function update(){const total=Math.floor(time()/1000);q('#ft-clock').textContent=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');const n=validMinutes();q('#ft-alert').textContent=n!==null&&total>=n*60?'Soglia raggiunta: controlla la batteria sul drone.':start===null?'Timer fermo. Nessuna telemetria collegata.':'Timer attivo · soglia manuale '+(n===null?'non valida':n+' minuti');}
 q('#ft-start').onclick=()=>{if(validMinutes()===null){q('#ft-alert').textContent='Imposta una soglia valida nel profilo.';return;}if(start===null)start=Date.now();update();};q('#ft-pause').onclick=()=>{elapsed=time();start=null;update();};q('#ft-reset').onclick=()=>{elapsed=0;start=null;update();};setInterval(update,1000);
 const advice={signal:['Perdita del segnale','Controlla gli avvisi del radiocomando e il comportamento di failsafe previsto dal manuale. Non presumere che il ritorno automatico sia attivo o sicuro. Mantieni il contatto visivo se possibile e applica la procedura del produttore.'],battery:['Batteria bassa','Interrompi l’attività e valuta subito un atterraggio sicuro secondo gli avvisi e il manuale. Il ritorno al punto home potrebbe richiedere più energia di quella disponibile.'],wind:['Vento o controllo difficoltoso','Interrompi l’attività e segui le procedure del manuale per recupero e atterraggio. Non inseguire il drone entrando in aree pericolose.'],gps:['GNSS / punto home','Non fare affidamento sul ritorno automatico senza verificare punto home e stato di navigazione. Segui le istruzioni del produttore e mantieni il contatto visivo.'],incident:['Incidente','Metti al primo posto la sicurezza delle persone. Non toccare eliche in movimento o una batteria danneggiata, calda o fumante. Segui le procedure del produttore e valuta gli obblighi di segnalazione alle autorità.']};function help(){const d=advice[q('#ft-situation').value];q('#ft-advice').replaceChildren();const h=document.createElement('h3'),p=document.createElement('p');h.textContent=d[0];p.textContent=d[1];q('#ft-advice').append(h,p);}q('#ft-situation').onchange=help;help();})();
@@ -2144,7 +2184,7 @@ function clearFlightForm(){
  window.diFlightChosenPoint=null;window.diFlightPendingMapPoint=null;delete form.dataset.flightLat;delete form.dataset.flightLng;window.diFlightGpsPending=false;
  const status=document.getElementById('di-flight-location-status');if(status)status.textContent='Posizione non impostata: puoi registrare il volo anche senza GPS.';
 }
-add.onclick=()=>{if(form.hidden)clearFlightForm();toggle(form.hidden)};
+add.onclick=()=>{if(form.hidden){clearFlightForm();if(window.diResetPreflightChecklist)window.diResetPreflightChecklist()}toggle(form.hidden)};
 cancel.onclick=()=>{clearFlightForm();toggle(false)};
 const editFields=document.createElement('div');editFields.hidden=true;
 editFields.innerHTML='<label>Data e ora del volo <input id="di-edit-when" type="text" maxlength="80" placeholder="Es. 12/10/2026, 15:30"></label><p>La foto esistente viene mantenuta se non ne scegli una nuova.</p>';
