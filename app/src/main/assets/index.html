@@ -607,7 +607,38 @@ function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 $('di-weather').onclick=async()=>{const out=$('di-weather-status');if(!selected){out.textContent='Seleziona prima un punto sulla mappa.';return}out.textContent='Caricamento meteo...';try{const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;try{response=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(selected.lat)+'&longitude='+encodeURIComponent(selected.lng)+'&current=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation&timezone=auto',{signal:controller.signal})}finally{clearTimeout(timeout)}if(!response.ok)throw Error('HTTP '+response.status);const d=await response.json(),w=d.current;if(!w)throw Error('Dati non disponibili');out.textContent='Fonte: Open-Meteo · '+w.time+' · Temperatura '+w.temperature_2m+' °C · Vento a 10 m '+w.wind_speed_10m+' km/h · Raffiche '+w.wind_gusts_10m+' km/h · Precipitazioni '+w.precipitation+' mm. Dati indicativi: verifica sul posto e nel manuale del drone.'}catch(e){out.textContent='Meteo non disponibile: controlla la connessione. Nessuna valutazione automatica di sicurezza.'}};
 
-function renderDrones(){const box=$('di-drones');box.replaceChildren();const active=localStorage.getItem(key+'active-drone');load('drones').forEach((d,i)=>{const row=document.createElement('p');row.append(node('span',d.name+' · '+d.weight+' g'+(d.ident?' · ID '+d.ident:'')+(active===d.id?' · ATTIVO':'')+' '));const choose=node('button','Usa');choose.onclick=()=>{localStorage.setItem(key+'active-drone',d.id);renderDrones()};const del=node('button','Elimina');del.onclick=()=>{const a=load('drones');a.splice(i,1);if(save('drones',a)){if(active===d.id)localStorage.removeItem(key+'active-drone');renderDrones()}};row.append(choose,' ',del);box.append(row)});if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones()}
+function droneArchiveSummary(drone,logs,maintenance,today){
+ const flights=logs.filter(x=>x&&(x.droneId?x.droneId===drone.id:String(x.model||'').trim()===String(drone.name||'').trim()));
+ const reminders=maintenance.filter(x=>x&&x.droneId===drone.id);
+ return {flights:flights.length,minutes:flights.reduce((sum,x)=>{const n=Number(x.duration);return sum+(Number.isFinite(n)&&n>0?n:0)},0),
+  upcoming:reminders.filter(x=>x.date>=today).length,overdue:reminders.filter(x=>x.date<today).length};
+}
+const droneArchiveStyle=document.createElement('style');droneArchiveStyle.textContent='#di-drones .di-drone-card{margin:12px 0;padding:15px;border:1px solid #dce6ef;border-radius:15px;background:#fff}#di-drones .di-drone-card h4{margin:0;font-size:17px;color:#173b59;overflow-wrap:anywhere}#di-drones .di-drone-heading{display:flex;gap:10px;align-items:center;justify-content:space-between}#di-drones .di-drone-active{font-size:11px;color:#087449;background:#e4f6ed;padding:5px 8px;border-radius:12px;white-space:nowrap}#di-drones .di-drone-meta{font-size:12px;color:#52718c;margin:8px 0;overflow-wrap:anywhere}#di-drones .di-drone-numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}#di-drones .di-drone-number{padding:10px;border-radius:10px;background:#f1f7fd}#di-drones .di-drone-number strong{display:block;color:#1268a8;font-size:17px}#di-drones .di-drone-number span{font-size:11px;color:#52718c}#di-drones .di-drone-overdue strong{color:#ad3043}#di-drones .di-drone-actions{display:flex;gap:8px;flex-wrap:wrap}#di-drones .di-drone-actions button{margin:0!important;flex:1}#di-drones .di-drone-actions button:disabled{opacity:.6}';document.head.append(droneArchiveStyle);
+function renderDrones(){
+ const box=$('di-drones');box.replaceChildren();
+ const active=localStorage.getItem(key+'active-drone'),drones=load('drones'),logs=load('logs'),maintenance=load('maintenance');
+ const now=new Date(),today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+ drones.forEach(d=>{
+  const row=document.createElement('article');row.className='di-drone-card';
+  const heading=document.createElement('div');heading.className='di-drone-heading';heading.append(node('h4',d.name||'Drone'));
+  if(active===d.id){const badge=node('span','Attivo');badge.className='di-drone-active';heading.append(badge)}
+  const meta=node('p',String(d.weight||'—')+' g'+(d.ident?' · ID '+d.ident:''));meta.className='di-drone-meta';row.append(heading,meta);
+  const summary=droneArchiveSummary(d,logs,maintenance,today);
+  const numbers=document.createElement('div');numbers.className='di-drone-numbers';
+  [[summary.flights,'Voli effettuati'],[Math.round(summary.minutes)>=60?Math.floor(Math.round(summary.minutes)/60)+' h'+(Math.round(summary.minutes)%60?' '+Math.round(summary.minutes)%60+' min':''):Math.round(summary.minutes)+' min','Tempo totale'],[summary.upcoming,'Manutenzioni in programma'],[summary.overdue,'Manutenzioni scadute']].forEach(([value,label],i)=>{
+   const item=document.createElement('div');item.className='di-drone-number'+(i===3&&summary.overdue?' di-drone-overdue':'');item.append(node('strong',String(value)),node('span',label));numbers.append(item);
+  });row.append(numbers);
+  if(drones.filter(x=>String(x.name||'').trim()===String(d.name||'').trim()).length>1){const note=node('p','I voli salvati senza identificativo del drone sono conteggiati per nome del modello.');note.className='di-drone-meta';row.append(note)}
+  const actions=document.createElement('div');actions.className='di-drone-actions';
+  const choose=node('button',active===d.id?'Drone attivo':'Usa');choose.type='button';choose.disabled=active===d.id;choose.onclick=()=>{localStorage.setItem(key+'active-drone',d.id);renderDrones()};
+  const del=node('button','Elimina');del.type='button';del.onclick=()=>{
+   if(!confirm('Eliminare '+d.name+' dall’archivio? I voli e i promemoria già salvati saranno mantenuti.'))return;
+   const a=load('drones'),index=a.findIndex(x=>x.id===d.id);if(index<0)return;a.splice(index,1);
+   if(save('drones',a)){if(active===d.id)localStorage.removeItem(key+'active-drone');renderDrones()}
+  };actions.append(choose,del);row.append(actions);box.append(row);
+ });
+ if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();
+}
 $('di-add-drone').onclick=()=>{const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value);if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}const a=load('drones');const id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident:$('di-drone-id').value.trim()});if(save('drones',a)){localStorage.setItem(key+'active-drone',id);renderDrones()}};
 const maintenanceStyle=document.createElement('style');maintenanceStyle.textContent='#di-maint-list .di-maint-card{margin:10px 0;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:14px}#di-maint-list .di-maint-card strong{display:block;overflow-wrap:anywhere}#di-maint-list .di-maint-card p{margin:8px 0;font-size:13px;color:#52718c}#di-maint-list .di-maint-overdue{color:#ad3043!important;font-weight:700}#di-maint-cancel[hidden]{display:none!important}#di-maint-status{font-size:13px;color:#52718c}#di-maint-list .di-maint-card button{margin-right:8px}#di-maint-drone{display:block;width:100%;min-height:44px;margin-top:5px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(maintenanceStyle);
 let maintenanceEdit=null;
@@ -655,6 +686,7 @@ function renderMaintenance(){
   row.append(title,drone,date,edit,done);box.append(row);
  });
  if(!box.children.length)box.append(node('p','Nessun promemoria. Gli avvisi sono visibili solo aprendo l’app.'));
+ renderDrones();
 }
 $('di-maint-add').onclick=()=>{
  const task=$('di-maint-task').value.trim(),date=$('di-maint-date').value;
