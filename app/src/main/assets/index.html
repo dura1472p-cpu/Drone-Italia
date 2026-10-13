@@ -1093,7 +1093,7 @@ const planner=document.getElementById('planner');
 if(planner){
 const nodes=Array.from(planner.childNodes);
 let group=null,destination='map';
-const routes={'Archivio droni':'settings','Punti preferiti':'map','Piano di volo personale':'flights','Promemoria manutenzione':'settings','Diario voli':'flights','Backup e ripristino':'settings','Meteo indicativo (fonte Open-Meteo)':'map','Aspetto':'settings','Rapporto personale':'flights'};
+const routes={'Archivio droni':'settings','Punti preferiti':'map','Piano di volo personale':'flights','Promemoria manutenzione':'settings','Diario voli':'flights','Backup e ripristino':'settings','Meteo indicativo (fonte Open-Meteo)':'settings','Aspetto':'settings','Rapporto personale':'flights'};
 for(const node of nodes){
 if(node.nodeType===1&&node.tagName==='H3'){
 destination=routes[node.textContent.trim()]||'map';
