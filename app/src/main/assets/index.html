@@ -477,7 +477,7 @@ const advice={signal:['Perdita del segnale','Controlla gli avvisi del radiocoman
 <label>Quota prevista (m, inserimento manuale) <input id="di-alt" type="number" min="0" max="10000" placeholder="es. 30"></label><br>
 <label>Note <input id="di-notes" maxlength="200" placeholder="Scopo del volo"></label><br>
 <button type="button" id="di-save-plan">Salva piano sul dispositivo</button> <button type="button" id="di-preview-plan">Visualizza piano</button><p id="di-plan-status" role="status"></p><div id="di-plan-preview" role="status" style="display:none;padding:12px;margin:10px 0;background:#fff8dc;border:1px solid #cfaa52;border-radius:10px;white-space:pre-line"></div><div id="di-plans"></div>
-<h3>Promemoria manutenzione</h3><label>Attività <input id="di-maint-task" maxlength="100" placeholder="Controllo eliche"></label><label>Data prevista <input id="di-maint-date" type="date"></label><label>Drone del promemoria <select id="di-maint-drone" aria-label="Drone associato alla manutenzione"></select></label><button type="button" id="di-maint-add">Salva promemoria</button><div id="di-maint-list"></div><h3>Diario voli</h3><label>Batteria drone al decollo (%) <input id="di-battery-drone" type="number" min="0" max="100" placeholder="es. 95"></label><label>Batteria radiocomando al decollo (%) <input id="di-battery-radio" type="number" min="0" max="100" placeholder="es. 80"></label><label>Luogo del volo <input id="di-log-place" maxlength="100" placeholder="Località"></label><br><label>Foto del volo <input id="di-log-photo" type="file" accept="image/*"></label><p>Le foto vengono ridotte per il salvataggio locale. Non includere dati sensibili.</p>
+<h3>Promemoria manutenzione</h3><label>Attività <input id="di-maint-task" maxlength="100" placeholder="Controllo eliche"></label><label>Data prevista <input id="di-maint-date" type="date"></label><label>Drone del promemoria <select id="di-maint-drone" aria-label="Drone associato alla manutenzione"></select></label><button type="button" id="di-maint-add">Salva promemoria</button> <button type="button" id="di-maint-cancel" hidden>Annulla</button><p id="di-maint-status" role="status"></p><div id="di-maint-list"></div><h3>Diario voli</h3><label>Batteria drone al decollo (%) <input id="di-battery-drone" type="number" min="0" max="100" placeholder="es. 95"></label><label>Batteria radiocomando al decollo (%) <input id="di-battery-radio" type="number" min="0" max="100" placeholder="es. 80"></label><label>Luogo del volo <input id="di-log-place" maxlength="100" placeholder="Località"></label><br><label>Foto del volo <input id="di-log-photo" type="file" accept="image/*"></label><p>Le foto vengono ridotte per il salvataggio locale. Non includere dati sensibili.</p>
 <label>Durata effettiva (min) <input id="di-duration" type="number" min="1" max="1440"></label><br>
 <label>Note volo <input id="di-log-notes" maxlength="200"></label><br>
 <button type="button" id="di-save-log">Registra volo</button><div id="di-logs"></div><h3>Backup e ripristino</h3><button type="button" id="di-backup">Esporta backup JSON</button><label>Ripristina backup <input type="file" id="di-restore" accept="application/json,.json"></label><p id="di-backup-status" role="status"></p><h3>Meteo indicativo (fonte Open-Meteo)</h3><button type="button" id="di-weather">Consulta meteo del punto</button><p id="di-weather-status" role="status">Richiede Internet. Non sostituisce una valutazione meteo aeronautica.</p><h3>Aspetto</h3><button type="button" id="di-dark-mode">Attiva / disattiva modalità scura</button><h3>Rapporto personale</h3><button type="button" id="di-report">Stampa / Salva rapporto in PDF</button><p>Il PDF si salva usando la funzione di stampa del dispositivo, se disponibile.</p>
@@ -609,12 +609,16 @@ $('di-weather').onclick=async()=>{const out=$('di-weather-status');if(!selected)
 
 function renderDrones(){const box=$('di-drones');box.replaceChildren();const active=localStorage.getItem(key+'active-drone');load('drones').forEach((d,i)=>{const row=document.createElement('p');row.append(node('span',d.name+' · '+d.weight+' g'+(d.ident?' · ID '+d.ident:'')+(active===d.id?' · ATTIVO':'')+' '));const choose=node('button','Usa');choose.onclick=()=>{localStorage.setItem(key+'active-drone',d.id);renderDrones()};const del=node('button','Elimina');del.onclick=()=>{const a=load('drones');a.splice(i,1);if(save('drones',a)){if(active===d.id)localStorage.removeItem(key+'active-drone');renderDrones()}};row.append(choose,' ',del);box.append(row)});if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones()}
 $('di-add-drone').onclick=()=>{const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value);if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}const a=load('drones');const id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident:$('di-drone-id').value.trim()});if(save('drones',a)){localStorage.setItem(key+'active-drone',id);renderDrones()}};
-const maintenanceStyle=document.createElement('style');maintenanceStyle.textContent='#di-maint-list .di-maint-card{margin:10px 0;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:14px}#di-maint-list .di-maint-card strong{display:block;overflow-wrap:anywhere}#di-maint-list .di-maint-card p{margin:8px 0;font-size:13px;color:#52718c}#di-maint-list .di-maint-overdue{color:#ad3043!important;font-weight:700}#di-maint-drone{display:block;width:100%;min-height:44px;margin-top:5px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(maintenanceStyle);
-function populateMaintenanceDrones(){
+const maintenanceStyle=document.createElement('style');maintenanceStyle.textContent='#di-maint-list .di-maint-card{margin:10px 0;padding:14px;background:#fff;border:1px solid #dce6ef;border-radius:14px}#di-maint-list .di-maint-card strong{display:block;overflow-wrap:anywhere}#di-maint-list .di-maint-card p{margin:8px 0;font-size:13px;color:#52718c}#di-maint-list .di-maint-overdue{color:#ad3043!important;font-weight:700}#di-maint-cancel[hidden]{display:none!important}#di-maint-status{font-size:13px;color:#52718c}#di-maint-list .di-maint-card button{margin-right:8px}#di-maint-drone{display:block;width:100%;min-height:44px;margin-top:5px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(maintenanceStyle);
+let maintenanceEdit=null;
+function populateMaintenanceDrones(preferred){
  const select=$('di-maint-drone');if(!select)return;
- const previous=select.dataset.initialized==='1'?select.value:localStorage.getItem(key+'active-drone');
+ const previous=preferred!==undefined?preferred:select.dataset.initialized==='1'?select.value:localStorage.getItem(key+'active-drone');
  select.replaceChildren();const general=node('option','Generale / nessun drone');general.value='';select.append(general);
  load('drones').forEach(d=>{const option=node('option',d.name);option.value=d.id;select.append(option)});
+ if(maintenanceEdit&&maintenanceEdit.original.droneId&&!Array.from(select.options).some(o=>o.value===maintenanceEdit.original.droneId)){
+  const option=node('option',(maintenanceEdit.original.droneName||'Drone precedente')+' (non più in archivio)');option.value=maintenanceEdit.original.droneId;select.append(option);
+ }
  select.value=Array.from(select.options).some(o=>o.value===previous)?previous:'';
  select.dataset.initialized='1';
 }
@@ -622,6 +626,20 @@ function maintenanceDroneLabel(m,drones){
  const drone=drones.find(d=>d.id===m.droneId);
  return drone?drone.name:m.droneName||'Generale';
 }
+function resetMaintenanceForm(){
+ maintenanceEdit=null;$('di-maint-task').value='';$('di-maint-date').value='';
+ $('di-maint-add').textContent='Salva promemoria';$('di-maint-cancel').hidden=true;
+ $('di-maint-drone').dataset.initialized='0';populateMaintenanceDrones();
+}
+function editMaintenance(m){
+ maintenanceEdit={id:m.id,snapshot:JSON.stringify(m),original:{...m}};
+ $('di-maint-task').value=m.task||'';$('di-maint-date').value=m.date||'';
+ populateMaintenanceDrones(m.droneId||'');
+ $('di-maint-add').textContent='Salva modifiche';$('di-maint-cancel').hidden=false;
+ $('di-maint-status').textContent='Stai modificando un promemoria.';
+ $('di-maint-task').scrollIntoView({behavior:'smooth',block:'center'});$('di-maint-task').focus({preventScroll:true});
+}
+$('di-maint-cancel').onclick=()=>{resetMaintenanceForm();$('di-maint-status').textContent='Modifica annullata.'};
 function renderMaintenance(){
  populateMaintenanceDrones();
  const box=$('di-maint-list'),drones=load('drones');box.replaceChildren();
@@ -632,18 +650,27 @@ function renderMaintenance(){
   const drone=node('p','🚁 '+maintenanceDroneLabel(m,drones));
   const date=node('p',(m.date<today?'⚠ Scaduto':m.date===today?'Oggi':'In programma')+' · '+String(m.date||''));
   if(m.date<today)date.className='di-maint-overdue';
-  const done=node('button','✓ Completato');done.type='button';done.onclick=()=>{if(save('maintenance',load('maintenance').filter(x=>x.id!==m.id)))renderMaintenance()};
-  row.append(title,drone,date,done);box.append(row);
+  const done=node('button','✓ Completato');done.type='button';done.onclick=()=>{if(save('maintenance',load('maintenance').filter(x=>x.id!==m.id))){if(maintenanceEdit&&maintenanceEdit.id===m.id)resetMaintenanceForm();renderMaintenance()}};
+  const edit=node('button','✎ Modifica');edit.type='button';edit.onclick=()=>editMaintenance(m);
+  row.append(title,drone,date,edit,done);box.append(row);
  });
  if(!box.children.length)box.append(node('p','Nessun promemoria. Gli avvisi sono visibili solo aprendo l’app.'));
 }
 $('di-maint-add').onclick=()=>{
  const task=$('di-maint-task').value.trim(),date=$('di-maint-date').value;
- if(!task||!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert('Inserisci attività e data.');return}
+ if(!task||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date){alert('Inserisci attività e data valida.');return}
  const droneId=$('di-maint-drone').value,drone=load('drones').find(x=>x.id===droneId);
- if(droneId&&!drone){populateMaintenanceDrones();alert('Drone non più disponibile. Seleziona il drone e riprova.');return}
- const a=load('maintenance');a.push({id:String(Date.now())+Math.random(),task,date,droneId:drone?drone.id:'',droneName:drone?drone.name:''});
- if(save('maintenance',a)){$('di-maint-task').value='';$('di-maint-date').value='';renderMaintenance()}
+ const historical=maintenanceEdit&&maintenanceEdit.original.droneId===droneId;
+ if(droneId&&!drone&&!historical){populateMaintenanceDrones();alert('Drone non più disponibile. Seleziona il drone e riprova.');return}
+ const a=load('maintenance');let index=-1;
+ if(maintenanceEdit){
+  index=a.findIndex(x=>x.id===maintenanceEdit.id&&JSON.stringify(x)===maintenanceEdit.snapshot);
+  if(index<0){alert('Il promemoria è stato modificato o completato. Annulla e riaprilo.');return}
+ }
+ const updated={...(index>=0?a[index]:{}),id:index>=0?a[index].id:String(Date.now())+Math.random(),task,date,droneId:droneId||'',droneName:drone?drone.name:historical?maintenanceEdit.original.droneName||'':''};
+ if(index>=0)a[index]=updated;else a.push(updated);
+ const editing=index>=0;
+ if(save('maintenance',a)){resetMaintenanceForm();renderMaintenance();$('di-maint-status').textContent=editing?'Modifiche salvate.':'Promemoria salvato.'}
 };
 function applyDark(){
  const dark=localStorage.getItem(key+'dark')==='1';
