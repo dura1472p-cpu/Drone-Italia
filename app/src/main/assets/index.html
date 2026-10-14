@@ -3332,4 +3332,24 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  refreshRegisteredDrones();
 })();
 </script>
+
+<style>
+#di-about-identity{display:flex;align-items:center;gap:15px;padding:16px 8px;border-bottom:1px solid #dce7f0;margin-bottom:14px}
+#di-about-identity .di-about-icon{width:70px;height:70px;flex-shrink:0;border-radius:17px;box-shadow:0 3px 9px #17446725;overflow:hidden;background:#049fe7}
+#di-about-identity .di-about-icon svg{width:100%;height:100%;display:block}
+#di-about-identity strong{font-size:19px;color:#143c64}
+#di-about-identity p{margin:6px 0 0;font-size:14px;color:#426582}
+html.di-dark #di-about-identity strong{color:#e4f1ff}
+</style>
+<script>
+(function(){
+ const page=document.getElementById('di-page-settings');if(!page)return;
+ const heading=Array.from(page.querySelectorAll('h3')).find(el=>el.textContent.trim().includes('Informazioni sull'));
+ const group=heading&&heading.closest('.di-tool-group');if(!group)return;
+ const footer=group.querySelector('footer');if(!footer)return;
+ const info=document.createElement('div');info.id='di-about-identity';
+ info.innerHTML='<div class="di-about-icon" aria-hidden="true"><svg viewBox="0 0 108 108"><path fill="#049fe7" d="M0 0h108v108H0z"/><path fill="#009246" d="M0 75h36v33H0z"/><path fill="#fff" d="M36 75h36v33H36z"/><path fill="#ce2b37" d="M72 75h36v33H72z"/><g fill="#fff"><path d="M47 45h14v8H47zM51 38h6v16h-6zM29 43h50v5H29zM25 39h14v4H25zM69 39h14v4H69zM23 35h18v3H23zM67 35h18v3H67zM33 53l15-4 3 5-15 6zM75 53l-15-4-3 5 15 6zM47 54l5 1-3 14-5 2zM61 54l-5 1 3 14 5 2z"/><circle cx="29" cy="34" r="5"/><circle cx="79" cy="34" r="5"/><circle cx="29" cy="61" r="5"/><circle cx="79" cy="61" r="5"/></g></svg></div><div><strong>Drone Italia</strong><p>Versione 0.3</p><p>Creatore: dura1472p-cpu</p></div>';
+ footer.before(info);
+})();
+</script>
 </body></html>
