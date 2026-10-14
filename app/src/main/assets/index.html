@@ -3465,4 +3465,34 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
  }
 })();
 </script>
+
+<style>
+#di-page-map #di-map-dflight-link,#di-page-map #di-dflight-download{display:none!important}
+#di-map-quick>button.di-dflight-round{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:48px!important;padding:0!important;border-radius:50%!important;background:#fff!important;color:#145b91!important;font-size:22px!important;border:1px solid #e1eaf2!important;box-shadow:0 2px 9px #123a5a30!important}
+#di-map-quick>button.di-dflight-round svg{width:23px!important;height:23px!important}
+#di-map-quick>button.di-dflight-round.di-compact-selected{background:#147df0!important;color:#fff!important}
+#di-map-quick>button.di-dflight-round.di-compact-selected::after{content:attr(data-map-label);position:absolute;right:calc(100% + 9px);top:50%;transform:translateY(-50%);background:#1269b4;color:#fff;border-radius:17px;padding:8px 12px;white-space:nowrap;font-size:12px;font-weight:700;box-shadow:0 2px 8px #123a5a30;pointer-events:none}
+</style>
+<script>
+(function(){
+ const quick=document.getElementById('di-map-quick');if(!quick||document.getElementById('di-dflight-map-verify-round'))return;
+ const url='https://www.d-flight.it/portal/';
+ const buttons=[
+  ['di-dflight-map-verify-round','Controlla zona d-flight','<path d="M12 22s8-7 8-13a8 8 0 0 0-16 0c0 6 8 13 8 13Z"/><circle cx="12" cy="9" r="3"/>'],
+  ['di-dflight-map-download-round','Scarica JSON d-flight (abbonati)','<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>']
+ ];
+ buttons.forEach(([id,label,path])=>{
+  const b=document.createElement('button');b.type='button';b.id=id;b.className='di-dflight-round';b.dataset.mapLabel=label;b.setAttribute('aria-label',label);b.title=label;
+  b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';
+  b.addEventListener('click',()=>{
+   if(b.classList.contains('di-compact-selected')){window.open(url,'_blank');b.classList.remove('di-compact-selected');return}
+   quick.querySelectorAll('button').forEach(x=>x.classList.remove('di-compact-selected'));
+   b.classList.add('di-compact-selected');
+   window.clearTimeout(b._diTimer);b._diTimer=window.setTimeout(()=>b.classList.remove('di-compact-selected'),3500);
+  });
+  quick.append(b);
+ });
+ document.addEventListener('pointerdown',e=>{if(!e.target.closest('#di-map-quick'))quick.querySelectorAll('.di-dflight-round').forEach(b=>b.classList.remove('di-compact-selected'))});
+})();
+</script>
 </body></html>
