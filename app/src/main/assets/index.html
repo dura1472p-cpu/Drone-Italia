@@ -3272,10 +3272,29 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
    svg.innerHTML=paths[i];btn.replaceChildren(svg);
   }
   btn.addEventListener('click',()=>{
-   buttons.forEach(other=>{other.classList.remove('di-compact-selected');other.setAttribute('aria-pressed','false')});
-   btn.classList.add('di-compact-selected');btn.setAttribute('aria-pressed','true');
+   buttons.forEach(other=>other.classList.remove('di-compact-selected'));
+   btn.classList.add('di-compact-selected');
+   if(i===2)window.setTimeout(()=>btn.classList.remove('di-compact-selected'),1800);
+   window.setTimeout(syncLabels,0);
   });
  });
+ function syncLabels(){
+  buttons.forEach((btn,i)=>{
+   let open=false;
+   if(i===0)open=!document.getElementById('di-layers-panel')?.hidden;
+   else if(i===1)open=!!document.getElementById('search')?.classList.contains('di-search-visible');
+   else if(i===3)open=!document.getElementById('di-flight-map-filters')?.hidden;
+   else if(i===4)open=!document.getElementById('di-rid-panel')?.hidden;
+   if(i!==2)btn.classList.toggle('di-compact-selected',open);
+  });
+ }
+ const observer=new MutationObserver(syncLabels);
+ ['di-layers-panel','di-flight-map-filters','di-rid-panel','search'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)observer.observe(el,{attributes:true,attributeFilter:['hidden','class','style']});
+ });
+ quick.addEventListener('click',()=>window.setTimeout(syncLabels,30));
+ syncLabels();
 })();
 </script>
 </body></html>
