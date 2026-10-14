@@ -3533,4 +3533,26 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
  wrapped._diCloseFix=true;window.droneItaliaMapClick=wrapped;
 })();
 </script>
+
+<style>
+/* Chiusura del punto selezionato, separata dal popup e dai pulsanti laterali. */
+#di-page-map #di-selected-point-close-floating{position:absolute!important;z-index:850!important;left:12px!important;right:auto!important;bottom:calc(100px + env(safe-area-inset-bottom))!important;top:auto!important;display:flex!important;align-items:center!important;gap:8px!important;width:auto!important;max-width:calc(100% - 24px)!important;padding:11px 14px!important;background:#126ce0!important;color:#fff!important;border:2px solid #fff!important;border-radius:24px!important;font-size:14px!important;font-weight:750!important;box-shadow:0 3px 14px #14334e66!important}
+#di-page-map #di-selected-point-close-floating[hidden]{display:none!important}
+#di-page-map .leaflet-popup-content .di-close-selected-point{display:none!important}
+</style>
+<script>
+(function(){
+ const page=document.getElementById('di-page-map');if(!page||document.getElementById('di-selected-point-close-floating'))return;
+ const btn=document.createElement('button');btn.type='button';btn.id='di-selected-point-close-floating';btn.textContent='× Chiudi punto';btn.setAttribute('aria-label','Rimuovi il punto selezionato');btn.hidden=true;
+ page.append(btn);
+ const original=window.droneItaliaMapClick;
+ if(typeof original==='function'){
+  const wrapped=function(point){const result=original.apply(this,arguments);if(!window.diManualRouteDrawing)btn.hidden=false;return result};
+  window.droneItaliaMapClick=wrapped;
+ }
+ btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();if(typeof window.diClearTemporaryMapMarkers==='function')window.diClearTemporaryMapMarkers();btn.hidden=true});
+ const clear=window.diClearTemporaryMapMarkers;
+ if(typeof clear==='function')window.diClearTemporaryMapMarkers=function(){const result=clear.apply(this,arguments);btn.hidden=true;return result};
+})();
+</script>
 </body></html>
