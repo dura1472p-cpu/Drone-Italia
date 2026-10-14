@@ -964,7 +964,7 @@ function updatedDroneRecords(drones,logs,maintenance,edit,fields){
  return {drones:nextDrones,logs:nextLogs,maintenance:nextMaintenance,original,rename,sameName};
 }
 function resetDroneForm(){
- droneEdit=null;if(window.diLoadDroneTechnical)window.diLoadDroneTechnical(null,{preserveSearch:true});for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
+ droneEdit=null;if(window.diLoadDroneTechnical)window.diLoadDroneTechnical(null);for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
  $('di-add-drone').textContent='Aggiungi drone';$('di-drone-cancel').hidden=true;
 }
 function editDrone(d){
@@ -2926,20 +2926,14 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   get('di-catalog-status').textContent=!key(query)?'Scrivi il modello per cercarlo nel catalogo.':found.length?found.length+' modelli trovati'+(found.length>30?' (primi 30: precisa la ricerca)':'')+'. Tocca il tuo modello per compilare i dati.':'Modello non presente: puoi compilare i campi manualmente.';
  }
  
- // Keep handlers on the catalog container: Android can release and recreate
- // the input editor after a successful save without losing search events.
+ // Delegated search handlers keep the same input editor across saves.
  const searchEvents=['input','change','keyup','search','compositionend'];
  searchEvents.forEach(type=>box.addEventListener(type,event=>{
   if(event.target&&event.target.id==='di-catalog-search'&&!event.isComposing)render();
  }));
- function renewCatalogSearch(){
-  const previous=get('di-catalog-search');if(!previous)return null;
-  const fresh=previous.cloneNode(true);fresh.type='text';fresh.value=previous.value;fresh.disabled=false;fresh.readOnly=false;
-  previous.replaceWith(fresh);return fresh;
- }
 
  name.addEventListener('input',()=>{selected=null;source(null);if(window.diSetDroneImage)window.diSetDroneImage({name:name.value})});
- name.addEventListener('change',()=>{const exact=key(name.value).replace(/^dji/,'');const item=catalog.find(d=>key(d.name).replace(/^dji/,'')===exact);if(item)choose(item)});
+
  function numeric(id,min,max){const value=get(id).value.trim();if(!value)return null;const n=Number(value);if(!Number.isFinite(n)||n<min||n>max)throw Error('Valore non valido: '+(id==='di-drone-wind'?'resistenza al vento':'autonomia massima'));return n}
  window.diDroneTechnicalFields=()=>{
   const minutes=numeric('di-drone-max-minutes',.1,1440);
@@ -2952,10 +2946,10 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  };
 
  window.diDroneCatalogSaved=()=>{
-  const search=renewCatalogSearch();if(!search)return;render();
-  if(window.diExpandSettingsFor)window.diExpandSettingsFor(search);
-  get('di-catalog-status').textContent='Drone salvato. Il catalogo è pronto: scegli un altro risultato oppure cambia la ricerca.';
-  search.scrollIntoView({behavior:'smooth',block:'center'});search.focus({preventScroll:true});
+  const search=get('di-catalog-search');if(!search)return;
+  search.value='';render();
+  if(document.activeElement===search)search.blur();
+  get('di-catalog-status').textContent='Drone salvato. Scrivi un modello per iniziare una nuova ricerca.';
  };
  const style=document.createElement('style');style.textContent='#di-drone-catalog{padding:14px;border:1px solid #cfe2f2;border-radius:14px;background:#eff7ff;margin-bottom:16px}#di-drone-catalog h4{margin:0 0 10px}#di-drone-catalog p,#di-drone-technical p,#di-drone-spec-source{font-size:12px;line-height:1.5;color:#52718b}#di-catalog-results{display:grid;gap:7px}#di-catalog-results button{text-align:left;margin:0!important;min-height:44px;border-radius:10px}#di-drone-spec-source[hidden]{display:none!important}html.di-dark #di-drone-catalog{background:#21354a;border-color:#40566d}html.di-dark #di-drone-catalog p,html.di-dark #di-drone-technical p,html.di-dark #di-drone-spec-source{color:#afc0d1}';document.head.append(style);
 
