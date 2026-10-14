@@ -2840,18 +2840,24 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   if(!link.hidden)link.href=d.catalogSource;else link.removeAttribute('href');
  }
  function choose(d){
-  name.value=d.name;weight.value=d.weight;get('di-drone-brand').value='DJI';get('di-drone-max-minutes').value=d.minutes;get('di-drone-wind').value=d.wind;
-  selected={catalogId:d.id,catalogSource:d.url,catalogWeightText:d.weightText,catalogVerified:'2026-10-14'};source(selected);if(window.diSetDroneImage)window.diSetDroneImage({name:d.name,catalogId:d.id});
-  get('di-catalog-status').textContent='Dati compilati per '+d.name+'. Controlla i valori e premi Aggiungi drone oppure Salva modifiche.';
-  name.focus({preventScroll:true});
+  const values={'di-drone-name':d.name,'di-drone-weight':d.weight,'di-drone-brand':'DJI','di-drone-max-minutes':d.minutes,'di-drone-wind':d.wind};
+  for(const [id,value] of Object.entries(values)){const input=get(id);if(!input){get('di-catalog-status').textContent='Campi del drone non disponibili. Riapri l’app.';return}input.value=String(value)}
+  selected={catalogId:d.id,catalogSource:d.url,catalogWeightText:d.weightText,catalogVerified:'2026-10-14'};source(selected);
+  const technical=get('di-drone-technical');technical.hidden=false;
+  if(window.diExpandSettingsFor)window.diExpandSettingsFor(get('di-drone-weight'));
+  get('di-catalog-status').textContent='✓ '+d.name+': peso '+d.weight+' g, autonomia '+d.minutes+' min, vento '+d.wind+' m/s. Controlla i dati e salva il drone.';
+  if(window.diSetDroneImage){try{window.diSetDroneImage({name:d.name,catalogId:d.id})}catch(e){}}
+  get('di-drone-weight').scrollIntoView({behavior:'smooth',block:'center'});
  }
+ window.diApplyCatalogModel=id=>{const item=catalog.find(d=>d.id===id);if(!item)return false;choose(item);return true};
  function render(){
   const list=get('di-catalog-results');list.replaceChildren();const query=get('di-catalog-search').value,found=matches(query);
-  found.forEach(d=>{const b=document.createElement('button');b.type='button';b.textContent=d.name;b.onclick=()=>choose(d);list.append(b)});
+  found.forEach(d=>{const b=document.createElement('button');b.type='button';b.textContent=d.name;b.onclick=e=>{e.preventDefault();choose(d)};list.append(b)});
   get('di-catalog-status').textContent=!key(query)?'Scrivi il modello per cercarlo nel catalogo.':found.length?found.length+' modelli trovati. Tocca il tuo modello per compilare i dati.':'Modello non presente: puoi compilare i campi manualmente.';
  }
  get('di-catalog-search').addEventListener('input',render);
  name.addEventListener('input',()=>{selected=null;source(null);if(window.diSetDroneImage)window.diSetDroneImage({name:name.value})});
+ name.addEventListener('change',()=>{const exact=key(name.value).replace(/^dji/,'');const item=catalog.find(d=>key(d.name).replace(/^dji/,'')===exact);if(item)choose(item)});
  function numeric(id,min,max){const value=get(id).value.trim();if(!value)return null;const n=Number(value);if(!Number.isFinite(n)||n<min||n>max)throw Error('Valore non valido: '+(id==='di-drone-wind'?'resistenza al vento':'autonomia massima'));return n}
  window.diDroneTechnicalFields=()=>{
   const minutes=numeric('di-drone-max-minutes',1,300);if(minutes!==null&&!Number.isInteger(minutes))throw Error('Inserisci minuti interi per l’autonomia dichiarata.');
