@@ -3401,4 +3401,23 @@ html.di-dark #di-dflight-preflight p{color:#c6dff4}
  if(check){check.insertAdjacentElement('afterbegin',section)}else{root.insertAdjacentElement('afterbegin',section)}
 })();
 </script>
+
+<style>
+#di-map-dflight-link{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 14px;padding:12px 14px;background:#126ce0;color:#fff!important;text-decoration:none;border-radius:13px;font-size:14px;font-weight:750;box-shadow:0 3px 12px #126ce030}
+#di-map-dflight-note{margin:0 16px 12px;color:#55718a;font-size:12px;line-height:1.45}
+html.di-dark #di-map-dflight-note{color:#c1d8ed}
+</style>
+<script>
+(function(){
+ const page=document.getElementById('di-page-map');if(!page||document.getElementById('di-map-dflight-link'))return;
+ const link=document.createElement('a');link.id='di-map-dflight-link';
+ link.href='https://www.d-flight.it/portal/';link.target='_blank';link.rel='noopener noreferrer';
+ link.textContent='↗ Controlla zona su d-flight';
+ const note=document.createElement('p');note.id='di-map-dflight-note';
+ note.textContent='Apri la mappa ufficiale d-flight per verificare le limitazioni prima del volo. La posizione selezionata non viene trasferita automaticamente.';
+ const map=page.querySelector('#map');
+ if(map){map.insertAdjacentElement('beforebegin',link);link.insertAdjacentElement('afterend',note)}
+ else{page.insertAdjacentElement('afterbegin',note);page.insertAdjacentElement('afterbegin',link)}
+})();
+</script>
 </body></html>
