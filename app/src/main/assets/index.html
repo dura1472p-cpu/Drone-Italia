@@ -990,6 +990,7 @@ function renderDrones(){
  drones.forEach(d=>{
   const row=document.createElement('article');row.className='di-drone-card';
   const heading=document.createElement('div');heading.className='di-drone-heading';heading.append(node('h4',d.name||'Drone'));
+  if(window.diCreateDroneThumbnail){const photo=window.diCreateDroneThumbnail(d);if(photo)heading.prepend(photo)}
   if(active===d.id){const badge=node('span','Attivo');badge.className='di-drone-active';heading.append(badge)}
   const meta=node('p',String(d.weight||'—')+' g'+(d.ident?' · ID '+d.ident:''));meta.className='di-drone-meta';row.append(heading,meta);if(d.brand||d.maxFlightMinutes||d.windResistance!=null){const spec=node('p',[d.brand,d.maxFlightMinutes?d.maxFlightMinutes+' min dichiarati':'',d.windResistance!=null?d.windResistance+' m/s vento dichiarato':''].filter(Boolean).join(' · '));spec.className='di-drone-meta';row.append(spec)}
   const summary=droneArchiveSummary(d,logs,maintenance,today);
@@ -1008,6 +1009,7 @@ function renderDrones(){
  });
  if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();if(window.diRefreshBatteries)window.diRefreshBatteries();if(window.diRefreshDroneImage)window.diRefreshDroneImage();
 }
+window.diRefreshDroneArchive=renderDrones;
 $('di-add-drone').onclick=()=>{
  const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value),ident=$('di-drone-id').value.trim();
  if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}
@@ -2898,11 +2900,21 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  };
  const normalize=x=>String(x||'').toLowerCase().replace(/^dji\s*/,'').replace(/[^a-z0-9]/g,'');
  function modelId(d){if(!d)return null;if(images[d.catalogId])return d.catalogId;return Object.keys(images).find(id=>normalize(images[id][0])===normalize(d.name))||null}
+
+ window.diCreateDroneThumbnail=d=>{
+  const id=modelId(d);if(!id)return null;
+  const holder=document.createElement('a');holder.className='di-drone-thumbnail';holder.href='https://store.dji.com/product/'+id;holder.target='_blank';holder.rel='noopener noreferrer';holder.setAttribute('aria-label','Foto ufficiale di '+images[id][0]);
+  const img=document.createElement('img');img.alt=images[id][0];img.loading='lazy';img.referrerPolicy='no-referrer';
+  img.onerror=()=>{img.remove();const label=document.createElement('span');label.textContent='Foto non disponibile';holder.append(label)};
+  img.src='https://se-cdn.djiits.com/tpc/uploads/in_the_box/cover/'+images[id][1]+'%40retina_small.png';
+  holder.append(img);return holder;
+ };
  const preview=document.createElement('figure');preview.id='di-drone-image-panel';preview.innerHTML='<div id="di-drone-image-area"></div><figcaption id="di-drone-image-caption"></figcaption><p id="di-drone-image-status" role="status"></p><a id="di-drone-image-source" target="_blank" rel="noopener noreferrer" hidden>Foto del produttore DJI ↗</a><button type="button" id="di-drone-image-retry" hidden>Ricarica foto</button>';
- const catalog=get('di-drone-catalog');if(catalog)catalog.before(preview);
+ const technical=get('di-drone-technical');if(technical)technical.prepend(preview);
  let override=null,currentImage=null;
  function activeDrone(){try{const ds=JSON.parse(localStorage.getItem('drone-italia-beta-drones')||'[]'),active=localStorage.getItem('drone-italia-beta-active-drone');return Array.isArray(ds)?ds.find(d=>d&&d.id===active)||null:null}catch(e){return null}}
  function show(d){
+  preview.hidden=!override;
   const area=get('di-drone-image-area'),caption=get('di-drone-image-caption'),status=get('di-drone-image-status'),link=get('di-drone-image-source'),retry=get('di-drone-image-retry');
   area.replaceChildren();currentImage=null;link.hidden=true;retry.hidden=true;
   caption.textContent=d?d.name||'Drone selezionato':'Immagine del drone';const id=modelId(d);
@@ -2918,5 +2930,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  window.diRefreshDroneImage=()=>show(override||activeDrone());
  const style=document.createElement('style');style.textContent='#di-page-settings .di-tool-group{padding:0!important;overflow:hidden}#di-page-settings .di-settings-disclosure{background:transparent;border:0;margin:0;padding:0}#di-page-settings .di-settings-disclosure>summary{display:flex;align-items:center;justify-content:space-between;list-style:none;padding:16px;cursor:pointer;min-height:56px;box-sizing:border-box}#di-page-settings .di-settings-disclosure>summary::-webkit-details-marker{display:none}#di-page-settings .di-settings-disclosure>summary::after{content:"＋";font-size:22px;color:#1268a8;margin-left:12px}#di-page-settings .di-settings-disclosure[open]>summary::after{content:"−"}#di-page-settings .di-settings-disclosure>summary h3{margin:0!important;font-size:16px}#di-page-settings .di-settings-content{padding:0 16px 16px;border-top:1px solid #e4edf5}#di-page-settings .di-settings-content>button{background:#126bc4;color:white}#di-page-settings .di-settings-content>label:first-child{margin-top:14px}#di-drone-image-panel{margin:14px 0;padding:14px;border:1px solid #dce8f2;border-radius:14px;background:#f6faff;text-align:center}#di-drone-image-area{min-height:80px;display:flex;align-items:center;justify-content:center}#di-drone-image-area:empty{min-height:0}#di-drone-image-area img{width:100%;max-width:280px;height:180px;object-fit:contain}#di-drone-image-panel figcaption{font-weight:700;color:#173a60;margin-top:8px}#di-drone-image-panel p,#di-drone-image-panel a{font-size:12px;line-height:1.5}#di-drone-image-panel [hidden]{display:none!important}html.di-dark #di-page-settings .di-settings-content{border-color:#33475b}html.di-dark #di-drone-image-panel{background:#21354a;border-color:#40566d}html.di-dark #di-drone-image-panel figcaption,html.di-dark #di-page-settings .di-settings-disclosure>summary::after{color:#b9dcff}';document.head.append(style);
  show(activeDrone());
+ if(window.diRefreshDroneArchive)window.diRefreshDroneArchive();
+ const compactStyle=document.createElement('style');compactStyle.textContent='#di-drones .di-drone-heading{align-items:center;gap:10px}#di-drones .di-drone-heading h4{flex:1;min-width:0}#di-drones .di-drone-thumbnail{display:flex;align-items:center;justify-content:center;flex:0 0 76px;width:76px;height:68px;border:1px solid #dce8f2;border-radius:10px;background:#f6faff;overflow:hidden;text-decoration:none}#di-drones .di-drone-thumbnail img{width:100%;height:100%;object-fit:contain}#di-drones .di-drone-thumbnail span{font-size:9px;line-height:1.3;text-align:center;color:#587186}#di-drone-image-panel{padding:8px;margin:10px 0;display:grid;grid-template-columns:88px minmax(0,1fr);column-gap:10px;text-align:left}#di-drone-image-panel[hidden]{display:none!important}#di-drone-image-area{grid-row:1/5;min-height:0}#di-drone-image-area img{width:88px;height:76px;max-width:88px}#di-drone-image-panel figcaption{margin:0;font-size:13px}#di-drone-image-panel p{margin:3px 0;font-size:11px}#di-drone-image-panel a{font-size:11px}html.di-dark #di-drones .di-drone-thumbnail{background:#21354a;border-color:#40566d}';document.head.append(compactStyle);
 })();
 </script></body></html>
