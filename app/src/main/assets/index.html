@@ -3555,4 +3555,24 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
  if(typeof clear==='function')window.diClearTemporaryMapMarkers=function(){const result=clear.apply(this,arguments);btn.hidden=true;return result};
 })();
 </script>
+
+<style>
+#di-page-map #di-selected-point-close-floating{display:none!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content-wrapper{cursor:pointer!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content{display:block!important;width:auto!important;max-width:220px!important;margin:11px 14px!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content::after{content:'Tocca per chiudere';display:block;font-size:11px;color:#57758b;margin-top:4px}
+#di-page-map .leaflet-popup-content .di-close-selected-point{display:none!important}
+</style>
+<script>
+(function(){
+ const page=document.getElementById('di-page-map');if(!page)return;
+ const floating=document.getElementById('di-selected-point-close-floating');if(floating)floating.remove();
+ page.addEventListener('click',function(e){
+  const popup=e.target.closest('.leaflet-popup');
+  if(!popup||!popup.querySelector('.di-close-selected-point'))return;
+  e.preventDefault();e.stopPropagation();
+  if(typeof window.diClearTemporaryMapMarkers==='function')window.diClearTemporaryMapMarkers();
+ },true);
+})();
+</script>
 </body></html>
