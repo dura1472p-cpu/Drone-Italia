@@ -3511,4 +3511,26 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
  };
 })();
 </script>
+
+<style>
+/* Il popup del punto selezionato non deve finire sotto i comandi a destra. */
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content-wrapper{max-width:240px!important}
+#di-page-map .leaflet-popup-content:has(.di-close-selected-point){display:grid!important;grid-template-columns:minmax(0,1fr) 38px!important;gap:8px!important;align-items:center!important;width:210px!important;max-width:210px!important;margin:8px!important;white-space:normal!important}
+#di-page-map .leaflet-popup-content .di-close-selected-point{display:flex!important;align-items:center!important;justify-content:center!important;position:relative!important;z-index:1000!important;visibility:visible!important;opacity:1!important;width:38px!important;height:38px!important;min-width:38px!important;padding:0!important;background:#176de0!important;color:white!important;border:0!important;border-radius:50%!important;font-size:26px!important;font-weight:800!important;line-height:1!important}
+</style>
+<script>
+(function(){
+ const original=window.droneItaliaMapClick;
+ if(typeof original!=='function'||original._diCloseFix)return;
+ function wrapped(point){
+  original(point);
+  const popup=document.querySelector('#di-page-map .leaflet-popup:has(.di-close-selected-point)');
+  if(popup){
+   const close=popup.querySelector('.di-close-selected-point');
+   if(close){close.textContent='×';close.setAttribute('aria-label','Chiudi punto');}
+  }
+ }
+ wrapped._diCloseFix=true;window.droneItaliaMapClick=wrapped;
+})();
+</script>
 </body></html>
