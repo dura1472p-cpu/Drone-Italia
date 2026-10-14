@@ -964,12 +964,12 @@ function updatedDroneRecords(drones,logs,maintenance,edit,fields){
  return {drones:nextDrones,logs:nextLogs,maintenance:nextMaintenance,original,rename,sameName};
 }
 function resetDroneForm(){
- droneEdit=null;for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
+ droneEdit=null;if(window.diLoadDroneTechnical)window.diLoadDroneTechnical(null);for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
  $('di-add-drone').textContent='Aggiungi drone';$('di-drone-cancel').hidden=true;
 }
 function editDrone(d){
  droneEdit={id:d.id,snapshot:JSON.stringify(d)};
- $('di-drone-name').value=d.name||'';$('di-drone-weight').value=d.weight||'';$('di-drone-id').value=d.ident||'';
+ $('di-drone-name').value=d.name||'';$('di-drone-weight').value=d.weight||'';$('di-drone-id').value=d.ident||'';if(window.diLoadDroneTechnical)window.diLoadDroneTechnical(d);
  $('di-add-drone').textContent='Salva modifiche';$('di-drone-cancel').hidden=false;$('di-drone-status').textContent='Stai modificando '+d.name+'.';
  $('di-drone-name').scrollIntoView({behavior:'smooth',block:'center'});$('di-drone-name').focus({preventScroll:true});
 }
@@ -991,7 +991,7 @@ function renderDrones(){
   const row=document.createElement('article');row.className='di-drone-card';
   const heading=document.createElement('div');heading.className='di-drone-heading';heading.append(node('h4',d.name||'Drone'));
   if(active===d.id){const badge=node('span','Attivo');badge.className='di-drone-active';heading.append(badge)}
-  const meta=node('p',String(d.weight||'—')+' g'+(d.ident?' · ID '+d.ident:''));meta.className='di-drone-meta';row.append(heading,meta);
+  const meta=node('p',String(d.weight||'—')+' g'+(d.ident?' · ID '+d.ident:''));meta.className='di-drone-meta';row.append(heading,meta);if(d.brand||d.maxFlightMinutes||d.windResistance!=null){const spec=node('p',[d.brand,d.maxFlightMinutes?d.maxFlightMinutes+' min dichiarati':'',d.windResistance!=null?d.windResistance+' m/s vento dichiarato':''].filter(Boolean).join(' · '));spec.className='di-drone-meta';row.append(spec)}
   const summary=droneArchiveSummary(d,logs,maintenance,today);
   const numbers=document.createElement('div');numbers.className='di-drone-numbers';
   [[summary.flights,'Voli effettuati'],[Math.round(summary.minutes)>=60?Math.floor(Math.round(summary.minutes)/60)+' h'+(Math.round(summary.minutes)%60?' '+Math.round(summary.minutes)%60+' min':''):Math.round(summary.minutes)+' min','Tempo totale'],[summary.upcoming,'Manutenzioni in programma'],[summary.overdue,'Manutenzioni scadute']].forEach(([value,label],i)=>{
@@ -1013,10 +1013,10 @@ $('di-add-drone').onclick=()=>{
  if(!name||!Number.isFinite(weight)||weight<1||weight>100000){alert('Inserisci modello e peso valido.');return}
  try{
   if(droneEdit){
-   const result=updatedDroneRecords(load('drones'),load('logs'),load('maintenance'),droneEdit,{name,weight,ident});
+   const result=updatedDroneRecords(load('drones'),load('logs'),load('maintenance'),droneEdit,{name,weight,ident,...(window.diDroneTechnicalFields?window.diDroneTechnicalFields():{})});
    persistDroneEdit(result);resetDroneForm();refresh();$('di-drone-status').textContent='Drone aggiornato. Voli e manutenzioni collegati sono stati aggiornati.';
   }else{
-   const a=load('drones'),id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident});
+   const a=load('drones'),id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident,...(window.diDroneTechnicalFields?window.diDroneTechnicalFields():{})});
    if(save('drones',a)){localStorage.setItem(key+'active-drone',id);resetDroneForm();renderDrones();$('di-drone-status').textContent='Drone aggiunto.'}
   }
  }catch(err){alert(err.message)}
@@ -2814,4 +2814,55 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  new MutationObserver(fit).observe(home,{attributes:true,attributeFilter:['class']});window.addEventListener('resize',fit);if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);requestAnimationFrame(fit);
 })();
 </script>
-</body></html>
+<script>
+(function(){
+ const get=id=>document.getElementById(id),name=get('di-drone-name'),weight=get('di-drone-weight');if(!name||!weight)return;
+ const catalog=[
+ {id:'dji-mini-4-pro',name:'DJI Mini 4 Pro',weight:249,weightText:'Inferiore a 249 g; nel campo numerico viene proposto 249 g come riferimento da correggere con il peso effettivo.',minutes:34,wind:10.7,url:'https://www.dji.com/mini-4-pro/specs'},
+ {id:'dji-mini-3',name:'DJI Mini 3',weight:248,weightText:'248 g con batteria standard.',minutes:38,wind:10.7,url:'https://www.dji.com/mini-3/specs'},
+ {id:'dji-air-3',name:'DJI Air 3',weight:720,weightText:'720 g.',minutes:46,wind:12,url:'https://www.dji.com/air-3/specs'},
+ {id:'dji-air-3s',name:'DJI Air 3S',weight:724,weightText:'724 g.',minutes:45,wind:12,url:'https://www.dji.com/air-3s/specs'},
+ {id:'dji-neo',name:'DJI Neo',weight:135,weightText:'Circa 135 g; autonomia 18 min senza paraeliche, circa 17 min con paraeliche.',minutes:18,wind:8,url:'https://www.dji.com/neo/specs'},
+ {id:'dji-flip',name:'DJI Flip',weight:249,weightText:'Inferiore a 249 g; nel campo numerico viene proposto 249 g come riferimento da correggere con il peso effettivo.',minutes:31,wind:10.7,url:'https://www.dji.com/flip/specs'},
+ {id:'dji-mavic-3-classic',name:'DJI Mavic 3 Classic',weight:895,weightText:'895 g.',minutes:46,wind:12,url:'https://www.dji.com/mavic-3-classic/specs'}
+ ];
+ const box=document.createElement('section');box.id='di-drone-catalog';box.innerHTML='<h4>Cerca nel catalogo droni</h4><label>Marca o modello <input type="search" id="di-catalog-search" placeholder="Es. Mini 4 Pro" autocomplete="off"></label><p>7 modelli DJI · dati verificati il 14/10/2026 · disponibile offline</p><div id="di-catalog-results"></div><p id="di-catalog-status" role="status"></p>';
+ name.closest('label').before(box);
+ const fields=document.createElement('div');fields.id='di-drone-technical';fields.innerHTML='<label>Marca <input id="di-drone-brand" maxlength="60"></label><label>Autonomia massima dichiarata (min) <input id="di-drone-max-minutes" type="number" min="1" max="300" step="1"></label><label>Resistenza al vento dichiarata (m/s) <input id="di-drone-wind" type="number" min="0" max="50" step="0.1"></label><label>Numero di serie (facoltativo) <input id="di-drone-serial" maxlength="100"></label><p id="di-drone-spec-note"></p><a id="di-drone-spec-source" target="_blank" rel="noopener noreferrer" hidden>Scheda ufficiale del produttore ↗</a><p class="di-catalog-help">Autonomia e vento sono dati del produttore, non una durata consigliata o una verifica delle condizioni di volo. Batterie e accessori possono cambiare il peso. Tutti i campi sono modificabili.</p>';
+ get('di-drone-id').closest('label').after(fields);
+ let selected=null;
+ const key=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ function matches(query){const term=key(query);return term?catalog.filter(d=>key(d.name).includes(term)):[]}
+ function source(d){
+  const link=get('di-drone-spec-source'),note=get('di-drone-spec-note');
+  note.textContent=d&&d.catalogWeightText?d.catalogWeightText:'';
+  link.hidden=!d||!catalog.some(x=>x.url===d.catalogSource);
+  if(!link.hidden)link.href=d.catalogSource;else link.removeAttribute('href');
+ }
+ function choose(d){
+  name.value=d.name;weight.value=d.weight;get('di-drone-brand').value='DJI';get('di-drone-max-minutes').value=d.minutes;get('di-drone-wind').value=d.wind;
+  selected={catalogId:d.id,catalogSource:d.url,catalogWeightText:d.weightText,catalogVerified:'2026-10-14'};source(selected);
+  get('di-catalog-status').textContent='Dati compilati per '+d.name+'. Controlla i valori e premi Aggiungi drone oppure Salva modifiche.';
+  name.focus({preventScroll:true});
+ }
+ function render(){
+  const list=get('di-catalog-results');list.replaceChildren();const query=get('di-catalog-search').value,found=matches(query);
+  found.forEach(d=>{const b=document.createElement('button');b.type='button';b.textContent=d.name;b.onclick=()=>choose(d);list.append(b)});
+  get('di-catalog-status').textContent=!key(query)?'Scrivi il modello per cercarlo nel catalogo.':found.length?found.length+' modelli trovati. Tocca il tuo modello per compilare i dati.':'Modello non presente: puoi compilare i campi manualmente.';
+ }
+ get('di-catalog-search').addEventListener('input',render);
+ name.addEventListener('input',()=>{selected=null;source(null)});
+ function numeric(id,min,max){const value=get(id).value.trim();if(!value)return null;const n=Number(value);if(!Number.isFinite(n)||n<min||n>max)throw Error('Valore non valido: '+(id==='di-drone-wind'?'resistenza al vento':'autonomia massima'));return n}
+ window.diDroneTechnicalFields=()=>{
+  const minutes=numeric('di-drone-max-minutes',1,300);if(minutes!==null&&!Number.isInteger(minutes))throw Error('Inserisci minuti interi per l’autonomia dichiarata.');
+  return {brand:get('di-drone-brand').value.trim().slice(0,60),maxFlightMinutes:minutes,windResistance:numeric('di-drone-wind',0,50),serial:get('di-drone-serial').value.trim().slice(0,100),catalogId:selected?.catalogId||null,catalogSource:selected?.catalogSource||'',catalogWeightText:selected?.catalogWeightText||'',catalogVerified:selected?.catalogVerified||''};
+ };
+ window.diLoadDroneTechnical=d=>{
+  selected=d&&d.catalogId?{catalogId:d.catalogId,catalogSource:d.catalogSource||'',catalogWeightText:d.catalogWeightText||'',catalogVerified:d.catalogVerified||''}:null;
+  for(const [id,k] of [['di-drone-brand','brand'],['di-drone-max-minutes','maxFlightMinutes'],['di-drone-wind','windResistance'],['di-drone-serial','serial']])get(id).value=d&&d[k]!=null?String(d[k]):'';
+  get('di-catalog-search').value='';render();source(d);
+ };
+ const style=document.createElement('style');style.textContent='#di-drone-catalog{padding:14px;border:1px solid #cfe2f2;border-radius:14px;background:#eff7ff;margin-bottom:16px}#di-drone-catalog h4{margin:0 0 10px}#di-drone-catalog p,#di-drone-technical p,#di-drone-spec-source{font-size:12px;line-height:1.5;color:#52718b}#di-catalog-results{display:grid;gap:7px}#di-catalog-results button{text-align:left;margin:0!important;min-height:44px;border-radius:10px}#di-drone-spec-source[hidden]{display:none!important}html.di-dark #di-drone-catalog{background:#21354a;border-color:#40566d}html.di-dark #di-drone-catalog p,html.di-dark #di-drone-technical p,html.di-dark #di-drone-spec-source{color:#afc0d1}';document.head.append(style);
+ window.diLoadDroneTechnical(null);
+})();
+</script></body></html>
