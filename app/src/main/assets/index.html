@@ -2803,8 +2803,14 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  html body #di-app-nav svg{width:21px!important;height:21px!important}
  html body #di-app-nav button:nth-child(3) svg g{fill:currentColor}
  @media(max-height:580px){html body #di-page-home #di-home-hero{padding-top:10px!important;gap:4px!important}html body #di-page-home #di-home-hero .di-reference-drone{width:40px;height:30px}html body #di-page-home #di-home-hero h2{font-size:24px!important}html body #di-page-home #di-home-grid button{padding:7px!important;gap:4px!important}html body #di-page-home #di-home-grid .di-home-icon{width:34px!important;height:34px!important;min-width:34px!important}html body #di-page-home #di-home-grid .di-home-icon svg{width:29px!important;height:29px!important}}
- `;document.head.append(style);
- function fit(){if(!home.classList.contains('di-active'))return;const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const bottom=nav?Math.min(h,nav.getBoundingClientRect().top):h-54;home.style.setProperty('--di-reference-home-height',Math.max(380,Math.floor(bottom-home.getBoundingClientRect().top))+'px')}
+ 
+ html body #di-page-home{width:calc(100% - 24px)!important;max-width:480px!important;margin:8px auto 0!important;padding:6px!important;border:2px solid #cbddea!important;border-radius:22px!important;box-sizing:border-box!important;box-shadow:0 4px 18px #163d5815!important}
+ html body #di-page-home.di-active{grid-template-rows:minmax(0,32fr) minmax(0,68fr)!important;gap:8px!important}
+ html body #di-page-home #di-home-hero{border-radius:15px!important}
+ html body #di-page-home #di-home-grid{height:100%!important;margin:0!important;padding:0 4px 4px!important}
+ html.di-dark body #di-page-home{border-color:#45637a!important}
+`;document.head.append(style);
+ function fit(){if(!home.classList.contains('di-active'))return;const h=window.visualViewport?window.visualViewport.height:window.innerHeight;const bottom=nav?Math.min(h,nav.getBoundingClientRect().top):h-54;home.style.setProperty('--di-reference-home-height',Math.max(380,Math.floor(bottom-home.getBoundingClientRect().top-8))+'px')}
  new MutationObserver(fit).observe(home,{attributes:true,attributeFilter:['class']});window.addEventListener('resize',fit);if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);requestAnimationFrame(fit);
 })();
 </script>
