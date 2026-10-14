@@ -3440,4 +3440,29 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
  else page.insertAdjacentElement('afterbegin',section);
 })();
 </script>
+
+<style>
+/* Mappa a schermo intero: pulsanti d-flight sovrapposti, non fuori viewport. */
+#di-page-map #di-map-dflight-link{position:absolute!important;z-index:670!important;left:12px!important;top:122px!important;right:auto!important;width:max-content!important;max-width:calc(100% - 90px)!important;margin:0!important;padding:9px 12px!important;font-size:12px!important;box-sizing:border-box}
+#di-page-map #di-map-dflight-note{display:none!important}
+#di-page-map #di-dflight-download{position:absolute!important;z-index:670!important;left:12px!important;top:169px!important;right:auto!important;max-width:calc(100% - 90px)!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+#di-page-map #di-dflight-download a{display:block!important;padding:10px 12px!important;background:#fff!important;color:#155c9c!important;box-shadow:0 3px 12px #092b4c44!important;border-radius:12px!important;font-size:12px!important}
+#di-page-map #di-dflight-download p{display:none!important}
+#di-page-zones #di-dflight-download-zones{margin:12px;padding:15px;border:1px solid #c6ddeb;border-radius:14px;background:#f1f8ff}
+#di-dflight-download-zones a{display:block;text-align:center;background:#126ce0;color:#fff!important;text-decoration:none;padding:12px;border-radius:11px;font-weight:700}
+#di-dflight-download-zones p{font-size:12px;line-height:1.5;color:#42627d;margin:10px 0 0}
+</style>
+<script>
+(function(){
+ const map=document.getElementById('di-page-map'),zones=document.getElementById('di-page-zones');
+ const box=document.getElementById('di-dflight-download');
+ if(map&&box&&box.parentElement!==map)map.append(box);
+ if(zones&&!document.getElementById('di-dflight-download-zones')){
+  const section=document.createElement('section');section.id='di-dflight-download-zones';
+  const link=document.createElement('a');link.href='https://www.d-flight.it/portal/';link.target='_blank';link.rel='noopener noreferrer';link.textContent='↓ Scarica file JSON da d-flight (abbonati)';
+  const note=document.createElement('p');note.textContent='Accedi al portale con il tuo abbonamento per scaricare i dati, se disponibili nel tuo piano. L’importazione del formato ED-269 non è ancora supportata in Drone Italia.';
+  section.append(link,note);zones.prepend(section);
+ }
+})();
+</script>
 </body></html>
