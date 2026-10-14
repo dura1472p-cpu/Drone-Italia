@@ -630,7 +630,7 @@ html.di-home-backdrop body{padding-bottom:0!important}
 const zones=[];
 let map,marker,accuracy;
 function inspect(lat,lng){const hits=zones.filter(z=>lat>=z.bounds[0][0]&&lat<=z.bounds[1][0]&&lng>=z.bounds[0][1]&&lng<=z.bounds[1][1]);const el=document.getElementById('detail');el.replaceChildren();const h=document.createElement('h2');h.textContent=hits.length?'Zone di prova al punto selezionato':'Dati aeronautici non disponibili';el.append(h);const p=document.createElement('p');p.textContent=lat.toFixed(5)+', '+lng.toFixed(5);el.append(p);for(const z of hits){const v=document.createElement('p');v.textContent=z.name+' — '+z.status+' · Quota: '+z.limit+'. '+z.rule+' Fonte: dati sintetici. Validità: nessuna.';el.append(v);}const note=document.createElement('p');note.textContent='L’assenza di zone non indica che il volo sia consentito. Verifica sempre le fonti ufficiali.';el.append(note);}
-function showPosition(lat,lng,meters,weatherGps=false){if(weatherGps){window.droneItaliaLastGps={lat,lng,meters};if(typeof window.diWeatherGpsReceived==='function')window.diWeatherGpsReceived({lat,lng,meters});return}const flightGps=window.diFlightGpsPending===true;window.diFlightGpsPending=false;if(!flightGps&&window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');window.droneItaliaLastGps={lat,lng,meters};if(flightGps&&typeof window.diFlightGpsReceived==='function')window.diFlightGpsReceived({lat,lng,meters});if(flightGps)return;if(!map)return;if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);if(!window.diManualRouteDrawing||!window.diRouteDrawingPointCount)map.setView([lat,lng],window.diManualRouteDrawing?15:13);inspect(lat,lng);}
+function showPosition(lat,lng,meters,weatherGps=false){if(weatherGps){window.droneItaliaLastGps={lat,lng,meters,updatedAt:Date.now()};window.dispatchEvent(new Event("di-gps-updated"));if(typeof window.diWeatherGpsReceived==='function')window.diWeatherGpsReceived({lat,lng,meters});return}const flightGps=window.diFlightGpsPending===true;window.diFlightGpsPending=false;if(!flightGps&&window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');window.droneItaliaLastGps={lat,lng,meters,updatedAt:Date.now()};window.dispatchEvent(new Event("di-gps-updated"));if(flightGps&&typeof window.diFlightGpsReceived==='function')window.diFlightGpsReceived({lat,lng,meters});if(flightGps)return;if(!map)return;if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);if(!window.diManualRouteDrawing||!window.diRouteDrawingPointCount)map.setView([lat,lng],window.diManualRouteDrawing?15:13);inspect(lat,lng);}
 if(typeof L==='undefined'){document.getElementById('map').textContent='Leaflet non caricato: controlla la connessione e le richieste CDN (verifica la connessione).';document.getElementById('map-status').textContent='ERRORE: libreria Leaflet non disponibile. Nessuna valutazione di volo possibile.';}else{map=L.map('map').setView([42.5,12.5],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map).on('tileerror',e=>{const st=document.getElementById('map-status');st.dataset.failed='1';st.textContent='ERRORE TESSERE OSM: possibile HTTP 403 o problema di rete. Controlla Logcat (DroneItaliaMap). Nessuna valutazione di volo possibile.';console.warn('Errore tile OSM',e);}).on('tileload',()=>{const st=document.getElementById('map-status');if(!st.dataset.failed)st.textContent='Cartografia stradale caricata. Nessuna zona aeronautica ufficiale integrata.';});for(const z of zones){L.rectangle(z.bounds,{color:z.color,fillOpacity:.22}).addTo(map).on('click',e=>inspect(e.latlng.lat,e.latlng.lng));}L.control.scale({imperial:false}).addTo(map);map.on('click',e=>{inspect(e.latlng.lat,e.latlng.lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick(e.latlng);});}
 document.getElementById('search').addEventListener('submit',e=>{e.preventDefault();const raw=document.getElementById('coords').value.trim().split(',');const lat=Number(raw[0]),lng=Number(raw[1]);if(raw.length!==2||raw.some(s=>!s.trim())||!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>48||lng<6||lng>19){document.getElementById('detail').textContent='Inserisci coordinate valide nell’area italiana, separate da una virgola.';return;}if(map){map.setView([lat,lng],15);inspect(lat,lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick({lat,lng});}else document.getElementById('detail').textContent='Mappa non disponibile: controlla la connessione.';});
 </script><section id="flight-tools">
@@ -919,7 +919,7 @@ function acquireWeatherGps(){
  return new Promise((resolve,reject)=>{
   let finished=false;
   const cleanup=()=>{clearTimeout(timer);window.diWeatherGpsReceived=null;window.diWeatherGpsFailed=null};
-  const success=p=>{if(finished)return;const point=weatherPoint(p);if(!point){failure('Posizione GPS non valida. Riprova.');return}finished=true;cleanup();window.droneItaliaLastGps={...p};resolve(point)};
+  const success=p=>{if(finished)return;const point=weatherPoint(p);if(!point){failure('Posizione GPS non valida. Riprova.');return}finished=true;cleanup();window.droneItaliaLastGps={...p,updatedAt:Date.now()};window.dispatchEvent(new Event("di-gps-updated"));resolve(point)};
   const failure=message=>{if(finished)return;finished=true;cleanup();reject(Error(message||'Posizione GPS non disponibile.'))};
   const timer=setTimeout(()=>failure('Posizione GPS non disponibile. Attiva la posizione e riprova.'),35000);
   window.diWeatherGpsReceived=success;window.diWeatherGpsFailed=failure;
@@ -930,6 +930,7 @@ function acquireWeatherGps(){
   }catch(e){failure('Impossibile avviare il GPS. Controlla il permesso posizione.')}
  });
 }
+let sharedGpsRequest=null;window.diAcquireSharedGps=()=>{if(!sharedGpsRequest)sharedGpsRequest=acquireWeatherGps().finally(()=>{sharedGpsRequest=null});return sharedGpsRequest;};
 $('di-weather').onclick=async()=>{
  const out=$('di-weather-status'),button=$('di-weather'),selector=$('di-weather-center');if(button.disabled)return;
  const gps=selector.value==='gps';let point=weatherPoint(gps?window.droneItaliaLastGps:selected);
@@ -939,7 +940,7 @@ $('di-weather').onclick=async()=>{
  try{
   if(gps&&!point){
    out.textContent='Acquisizione posizione GPS… Se richiesto, consenti l’accesso alla posizione.';
-   try{point=await acquireWeatherGps()}catch(e){out.textContent=e.message;return}
+   try{point=await window.diAcquireSharedGps()}catch(e){out.textContent=e.message;return}
   }
   out.textContent='Caricamento meteo…';
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;
@@ -3080,4 +3081,123 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  };
  const style=document.createElement('style');style.textContent='#di-drone-data-form[hidden]{display:none!important}#di-drone-data-form{margin-top:14px;padding-top:12px;border-top:1px solid #dce8f2}#di-drone-manual-entry{width:100%;min-height:44px;border-radius:10px;margin:8px 0!important;background:#eaf3fd!important;color:#145b96!important;font-size:13px}html.di-dark #di-drone-data-form{border-color:#40566d}html.di-dark #di-drone-manual-entry{background:#2c435a!important;color:#e4edf6!important}';document.head.append(style);
 })();
-</script></body></html>
+</script><script>
+(function(){
+ const get=id=>document.getElementById(id),read=name=>{try{const a=JSON.parse(localStorage.getItem('drone-italia-beta-'+name)||'[]');return Array.isArray(a)?a:[]}catch(e){return []}};
+ const panel=get('ft-check');if(!panel)return;
+ const box=document.createElement('section');box.id='di-preflight-summary';
+ box.innerHTML='<h4>Il tuo prossimo volo</h4><div class="di-preflight-grid"><label>Drone<select id="di-preflight-drone"></select></label><label>Batteria<select id="di-preflight-battery"></select></label></div><p class="di-preflight-note">Batteria scelta per la registrazione; carica e stato vanno controllati sul drone.</p><div class="di-preflight-grid"><article><h5>Posizione del telefono</h5><p id="di-preflight-gps"></p></article><article><h5>Manutenzioni</h5><p id="di-preflight-maint"></p><button type="button" id="di-preflight-open-maint">Apri promemoria</button></article></div><article><h5>Meteo del punto GPS</h5><p id="di-preflight-weather" role="status">Aggiorna GPS e meteo prima del volo.</p></article><button type="button" id="di-preflight-refresh">Aggiorna GPS e meteo</button><p id="di-preflight-status" role="status" aria-live="polite"></p>';
+ panel.querySelector('.ft-check-intro').after(box);
+ let forecast=null,busy=false;
+ const drone= get('di-preflight-drone'),battery=get('di-preflight-battery');
+ function options(){
+  const ds=read('drones'),current=drone.value||localStorage.getItem('drone-italia-beta-active-drone');drone.replaceChildren();
+  drone.add(new Option(ds.length?'Scegli il drone':'Aggiungi un drone in Altro',''));
+  ds.forEach(d=>drone.add(new Option(d.name,d.id)));if(ds.some(d=>d.id===current))drone.value=current;
+  batteries();render();
+ }
+ function batteries(){const selected=battery.value;battery.replaceChildren();battery.add(new Option('Non selezionata',''));read('batteries').filter(b=>b.droneId===drone.value&&!b.archived).forEach(b=>battery.add(new Option(b.name,b.id)));if([...battery.options].some(o=>o.value===selected))battery.value=selected;}
+ function render(){
+  const gps=window.droneItaliaLastGps,valid=gps&&Number.isFinite(gps.lat)&&Number.isFinite(gps.lng);
+  get('di-preflight-gps').textContent=valid?gps.lat.toFixed(5)+', '+gps.lng.toFixed(5)+(Number.isFinite(gps.meters)?' · precisione ±'+Math.round(gps.meters)+' m':'')+' · '+(gps.updatedAt?new Date(gps.updatedAt).toLocaleTimeString('it-IT'):'ora non disponibile'):'Posizione non acquisita.';
+  const now=new Date(),day=new Date(now.getFullYear(),now.getMonth(),now.getDate()),end=new Date(day);end.setDate(end.getDate()+7);
+  let expired=0,today=0,soon=0;
+  read('maintenance').filter(m=>!m.completed&&(!m.droneId||m.droneId===drone.value)).forEach(m=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(m.date||''))return;const date=new Date(m.date+'T00:00:00');if(!Number.isFinite(+date))return;if(date<day)expired++;else if(+date===+day)today++;else if(date<=end)soon++});
+  get('di-preflight-maint').textContent=(drone.value?'Drone selezionato e promemoria generali':'Promemoria generali')+': '+expired+' scaduti · '+today+' oggi · '+soon+' entro 7 giorni';
+  get('di-preflight-maint').classList.toggle('di-preflight-warning',expired+today>0);
+  if(forecast){const c=forecast.data.current,ds=read('drones').find(d=>d.id===drone.value),n=(v,u)=>typeof v==='number'&&Number.isFinite(v)?v+' '+u:'non disponibile';
+   let message=n(c.temperature_2m,'°C')+' · Vento '+n(c.wind_speed_10m,'km/h')+' · Raffiche '+n(c.wind_gusts_10m,'km/h')+' · Pioggia '+n(c.precipitation,'mm')+'\nDati: '+c.time.replace('T',' ')+' · '+(forecast.data.timezone||'ora locale')+'\nPunto: '+forecast.point.lat.toFixed(5)+', '+forecast.point.lng.toFixed(5)+' · consultato '+new Date(forecast.at).toLocaleTimeString('it-IT');
+   const limit=ds&&ds.windResistance!==null&&ds.windResistance!==''?Number(ds.windResistance):NaN;
+   if(Number.isFinite(limit)&&limit>0){message+='\nResistenza al vento dichiarata: '+limit+' m/s';if([c.wind_speed_10m,c.wind_gusts_10m].some(v=>typeof v==='number'&&v/3.6>=limit))message+=' · ATTENZIONE: vento o raffiche raggiungono il valore dichiarato.';}
+   if(valid&&(Math.abs(gps.lat-forecast.point.lat)>.001||Math.abs(gps.lng-forecast.point.lng)>.001))message+='\nPosizione cambiata: aggiorna il meteo.';
+   if(Date.now()-forecast.at>15*60*1000)message+='\nMeteo consultato oltre 15 minuti fa: aggiorna.';
+   get('di-preflight-weather').textContent=message+'\nFonte Open-Meteo · vento a 10 m. Verifica le condizioni sul posto.';
+  }
+ }
+ drone.onchange=()=>{batteries();render();};
+ get('di-preflight-open-maint').onclick=()=>window.droneItaliaOpenPage('settings','di-maint-list');
+ get('di-preflight-refresh').onclick=async()=>{
+  if(busy)return;busy=true;const btn=get('di-preflight-refresh');btn.disabled=true;get('di-preflight-status').textContent='Acquisizione GPS…';forecast=null;get('di-preflight-weather').textContent='In attesa della nuova posizione GPS…';
+  try{const point=await window.diAcquireSharedGps();render();get('di-preflight-status').textContent='Caricamento meteo…';
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);let response;
+   try{response=await fetch('https://api.open-meteo.com/v1/forecast?'+new URLSearchParams({latitude:point.lat,longitude:point.lng,current:'temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation',wind_speed_unit:'kmh',timezone:'auto'}),{signal:controller.signal})}finally{clearTimeout(timer)}
+   if(!response.ok)throw Error('Meteo non disponibile. Controlla la connessione e riprova.');const data=await response.json();if(!data.current||typeof data.current.time!=='string')throw Error('Risposta meteo incompleta. Riprova.');forecast={point,data,at:Date.now()};render();get('di-preflight-status').textContent='GPS e meteo aggiornati.';
+  }catch(e){get('di-preflight-status').textContent=e.message==='Failed to fetch'?'Meteo non disponibile. Controlla la connessione.':e.message;get('di-preflight-weather').textContent='Meteo non aggiornato.';render()}
+  finally{busy=false;btn.disabled=false}
+ };
+ get('ft-proceed').addEventListener('click',()=>{const d=read('drones').find(d=>d.id===drone.value);if(!d)return;const select=get('di-flight-drone');if(select){select.value=d.name;select.dispatchEvent(new Event('change',{bubbles:true}));}const b=read('batteries').find(b=>b.id===battery.value&&b.droneId===d.id&&!b.archived);if(b&&window.diSetFlightBattery)window.diSetFlightBattery({batteryId:b.id});});
+ get('ft-clear').addEventListener('click',()=>{battery.value='';forecast=null;get('di-preflight-weather').textContent='Aggiorna GPS e meteo prima del volo.';get('di-preflight-status').textContent='';render()});
+ ['di-drones','di-battery-list','di-maint-list'].forEach(id=>{const el=get(id);if(el)new MutationObserver(options).observe(el,{childList:true})});
+ new MutationObserver(()=>{if(!panel.hidden)options()}).observe(panel,{attributes:true,attributeFilter:['hidden']});
+ window.addEventListener('di-gps-updated',render);setInterval(()=>{if(!panel.hidden)render()},30000);options();
+ const style=document.createElement('style');style.textContent='#di-preflight-summary{padding:14px;background:#eef6fd;border:1px solid #d1e4f3;border-radius:16px;margin:14px 0}#di-preflight-summary h4{margin:0 0 12px;font-size:18px}#di-preflight-summary h5{margin:0 0 8px;font-size:14px}#di-preflight-summary p{white-space:pre-line;overflow-wrap:anywhere;line-height:1.5}#di-preflight-summary article{padding:12px;background:#fff;border-radius:12px;margin-bottom:10px}.di-preflight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#di-preflight-summary select{width:100%;box-sizing:border-box;min-height:44px}.di-preflight-note{font-size:12px!important}.di-preflight-warning{color:#a34012!important;font-weight:700}html.di-dark #di-preflight-summary{background:#21354a;border-color:#40566d}html.di-dark #di-preflight-summary article{background:#192a3b}@media(max-width:360px){.di-preflight-grid{grid-template-columns:1fr}}';document.head.append(style);
+})();
+
+</script>
+<script>
+(function(){
+ const page=document.getElementById('di-page-map'),quick=document.getElementById('di-map-quick');if(!page||!quick)return;
+ const open=document.createElement('button');open.type='button';open.textContent='◉ Droni vicini';open.setAttribute('aria-expanded','false');open.setAttribute('aria-controls','di-rid-panel');quick.append(open);
+ const panel=document.createElement('section');panel.id='di-rid-panel';panel.hidden=true;
+ panel.innerHTML='<div class="di-rid-heading"><h3>Droni nelle vicinanze</h3><button type="button" id="di-rid-close" aria-label="Chiudi pannello">✕</button></div><p>Ricezione locale Remote ID. Sono visibili solo i segnali compatibili ricevuti dal telefono; nessun rilevamento non significa area libera.</p><div class="di-rid-actions"><button type="button" id="di-rid-start">Cerca droni</button><button type="button" id="di-rid-stop" disabled>Ferma</button><button type="button" id="di-rid-gps">Aggiorna la mia posizione</button></div><p id="di-rid-status" role="status" aria-live="polite">Scansione non avviata.</p><p id="di-rid-count"></p><div id="di-rid-list"></div>';
+ page.append(panel);let active=false,starting=false;const entries=new Map(),markers=new Map();
+ const get=id=>document.getElementById(id),node=(tag,text)=>{const e=document.createElement(tag);e.textContent=text;return e};
+ function clear(){entries.clear();for(const marker of markers.values())if(map)map.removeLayer(marker);markers.clear();render();}
+ function buttons(){get('di-rid-start').disabled=active||starting;get('di-rid-stop').disabled=!active&&!starting;}
+ function stop(){starting=false;active=false;clear();buttons();try{window.DroneItaliaNative?.stopRemoteId?.()}catch(e){get('di-rid-status').textContent='Scansione fermata.'}}
+ open.onclick=()=>{panel.hidden=!panel.hidden;open.setAttribute('aria-expanded',String(!panel.hidden));};
+ get('di-rid-close').onclick=()=>{panel.hidden=true;open.setAttribute('aria-expanded','false')};
+ get('di-rid-start').onclick=()=>{if(active||starting)return;clear();if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.startRemoteId!=='function'){get('di-rid-status').textContent='Installa l’APK aggiornato per usare la ricezione Remote ID.';return;}starting=true;buttons();get('di-rid-status').textContent='Verifica telefono e permessi…';try{window.DroneItaliaNative.startRemoteId()}catch(e){starting=false;buttons();get('di-rid-status').textContent='Impossibile avviare la scansione.'}};
+ get('di-rid-stop').onclick=stop;
+ get('di-rid-gps').onclick=async()=>{const b=get('di-rid-gps');b.disabled=true;try{await window.diAcquireSharedGps();const p=window.droneItaliaLastGps;if(map&&p){showPosition(p.lat,p.lng,p.meters||0);map.setView([p.lat,p.lng],14);}render()}catch(e){get('di-rid-status').textContent=e.message}finally{b.disabled=false}};
+ window.diRemoteIdStatus=(message,running)=>{starting=false;active=!!running;get('di-rid-status').textContent=String(message);if(!active)clear();buttons();render()};
+ // Independent decoding of the public ASTM/OpenDroneID 25-byte Basic ID and Location layouts.
+ function decode(bytes){
+  if(!(bytes instanceof Uint8Array)||bytes.length<25)return [];
+  const version=bytes[0]&15,type=bytes[0]>>4;if(version!==1&&version!==2)return [];
+  if(type===15){const size=bytes[1],count=bytes[2];if(size!==25||count<1||count>9||bytes.length<3+size*count)return [];const out=[];for(let i=0;i<count;i++)out.push(...decode(bytes.slice(3+i*25,3+(i+1)*25)));return out;}
+  if(type===0){const idType=bytes[1]>>4;if(idType!==1&&idType!==2)return [];let id='';for(const b of bytes.slice(2,22)){if(b===0)break;if(b<32||b>126)return [];id+=String.fromCharCode(b);}return id?[{id}]:[];}
+  if(type!==1)return [];const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),lat=view.getInt32(5,true)/1e7,lng=view.getInt32(9,true)/1e7;
+  if(Math.abs(lat)>90||Math.abs(lng)>180||(lat===0&&lng===0))return [];
+  const altitude=view.getUint16(15,true)*.5-1000,status=bytes[1]>>4,stamp=view.getUint16(21,true)*.1;
+  if(status>4)return [];
+  return [{lat,lng,altitude:altitude===-1000?null:altitude,status,stamp:stamp<3600?stamp:null}];
+ }
+ window.diDecodeRemoteId=decode;
+ window.diRemoteIdPacket=data=>{
+  if(!active||!data||typeof data.key!=='string'||typeof data.payload!=='string'||data.payload.length>340)return;
+  const received=Number(data.received);if(!Number.isFinite(received)||received>Date.now()+5000||Date.now()-received>60000)return;
+  let messages;try{messages=decode(Uint8Array.from(atob(data.payload),c=>c.charCodeAt(0)))}catch(e){return}if(!messages.length)return;
+  const previous=entries.get(data.key)||{key:data.key},entry={...previous,transport:String(data.transport||'Remote ID'),received};
+  for(const message of messages){if(message.id)entry.id=message.id;else{
+   if(message.stamp!==null){const nowSeconds=Math.floor(received/1000)%3600;let age=nowSeconds-message.stamp;if(age< -1800)age+=3600;if(age>1800)age-=3600;if(age>60||age< -10)continue;}
+   Object.assign(entry,message);entry.locationAt=received;
+  }}
+  if(entries.size>=100&&!entries.has(data.key))return;entries.set(data.key,entry);render();
+ };
+ function distance(p,e){if(!p||!Number.isFinite(p.lat)||!Number.isFinite(p.lng))return null;const rad=x=>x*Math.PI/180;const a=Math.sin(rad(e.lat-p.lat)/2)**2+Math.cos(rad(p.lat))*Math.cos(rad(e.lat))*Math.sin(rad(e.lng-p.lng)/2)**2;return Math.round(6371000*2*Math.atan2(Math.sqrt(a),Math.sqrt(Math.max(0,1-a))));}
+ function render(){
+  const now=Date.now(),list=get('di-rid-list');list.replaceChildren();let located=0;
+  for(const [key,e] of entries){
+   if(now-e.received>60000){entries.delete(key);if(markers.has(key)&&map)map.removeLayer(markers.get(key));markers.delete(key);continue;}
+   const location=Number.isFinite(e.lat)&&Number.isFinite(e.lng)&&now-e.locationAt<=60000;
+   if(!location&&markers.has(key)){if(map)map.removeLayer(markers.get(key));markers.delete(key);}
+   const label=e.id||'Identificativo in attesa',card=node('article',''),title=node('h4',label),status=['Stato non dichiarato','A terra','In volo','Emergenza','Problema Remote ID'][e.status]||'Stato in attesa';
+   card.append(title,node('p',e.transport+' · '+status+' · ricevuto '+Math.max(0,Math.floor((now-e.received)/1000))+' s fa'));
+   if(location){located++;const d=distance(window.droneItaliaLastGps,e),description=(d===null?'Aggiorna il GPS per la distanza':d+' m dalla tua posizione')+' · Quota geodetica '+(e.altitude===null?'non disponibile':e.altitude+' m')+' · posizione ricevuta '+Math.max(0,Math.floor((now-e.locationAt)/1000))+' s fa';card.append(node('p',description));
+    const popup=node('div','');popup.append(node('strong',label),node('p',status),node('p',description));
+    if(map&&typeof L!=='undefined'){let marker=markers.get(key);if(!marker){marker=L.circleMarker([e.lat,e.lng],{radius:10,color:'#fff',weight:3,fillColor:'#e34b32',fillOpacity:1}).addTo(map);markers.set(key,marker);}else marker.setLatLng([e.lat,e.lng]);marker.bindPopup(popup);}
+    const focus=node('button','Mostra sulla mappa');focus.type='button';focus.onclick=()=>{if(map)map.setView([e.lat,e.lng],16);panel.hidden=true;open.setAttribute('aria-expanded','false');markers.get(key)?.openPopup()};card.append(focus);
+   }else card.append(node('p','Posizione assente o non aggiornata: segnale non mostrato sulla mappa.'));
+   list.append(card);
+  }
+  get('di-rid-count').textContent=active?entries.size+' segnali recenti · '+located+' posizioni disponibili':'I segnali saranno mostrati durante la scansione.';
+ }
+ new MutationObserver(()=>{if(!page.classList.contains('di-active')&&(active||starting)){stop();get('di-rid-status').textContent='Scansione fermata all’uscita dalla mappa.'}}).observe(page,{attributes:true,attributeFilter:['class']});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&(active||starting))stop()});setInterval(render,5000);
+ const style=document.createElement('style');style.textContent='#di-page-map #di-rid-panel{position:absolute;z-index:700;left:12px;right:12px;bottom:calc(66px + env(safe-area-inset-bottom));max-height:55vh;overflow:auto;padding:16px;background:#fff;border:1px solid #d1e4f3;border-radius:18px;box-shadow:0 6px 25px #16375133;color:#173044}#di-rid-panel[hidden]{display:none!important}.di-rid-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}#di-rid-panel h3{margin:0;font-size:18px}#di-rid-panel p{font-size:12px;line-height:1.5;overflow-wrap:anywhere}.di-rid-actions{display:flex;gap:8px;flex-wrap:wrap}#di-rid-panel button{min-height:44px;padding:10px;border-radius:10px;background:#e8f3ff;color:#075da8;font-size:13px}#di-rid-panel button:disabled{opacity:.5}#di-rid-panel article{border-top:1px solid #d1e4f3;padding:12px 0}#di-rid-panel h4{margin:0;overflow-wrap:anywhere}html.di-dark #di-page-map #di-rid-panel{background:#192a3b;color:#e4edf6;border-color:#33475b}html.di-dark #di-rid-panel button{background:#294560;color:#d9eafb}';document.head.append(style);buttons();render();
+})();
+
+</script>
+</body></html>
+
