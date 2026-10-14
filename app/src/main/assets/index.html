@@ -3575,4 +3575,13 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
  },true);
 })();
 </script>
+
+<style>
+/* Ripristina dimensioni normali del popup Leaflet anche su schermi stretti. */
+#di-page-map .leaflet-popup:has(.di-close-selected-point){width:260px!important;max-width:calc(100vw - 100px)!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content-wrapper{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content{display:block!important;width:auto!important;min-width:0!important;max-width:none!important;margin:12px 14px!important;overflow-wrap:normal!important;word-break:normal!important;white-space:normal!important;line-height:1.45!important;font-size:13px!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content span{display:inline!important;white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important}
+#di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content::after{content:'Tocca per chiudere';display:block!important;white-space:nowrap!important;font-size:11px!important;color:#55718a!important;margin-top:5px!important}
+</style>
 </body></html>
