@@ -3420,4 +3420,24 @@ html.di-dark #di-map-dflight-note{color:#c1d8ed}
  else{page.insertAdjacentElement('afterbegin',note);page.insertAdjacentElement('afterbegin',link)}
 })();
 </script>
+
+<style>
+#di-dflight-download{margin:10px 14px 14px;padding:13px;border:1px solid #c8dff1;border-radius:14px;background:#f2f9ff}
+#di-dflight-download a{display:block;padding:11px;border-radius:10px;background:#e0efff;color:#155c9c;font-weight:750;text-align:center;text-decoration:none}
+#di-dflight-download p{margin:9px 0 0;color:#42627d;font-size:12px;line-height:1.5}
+html.di-dark #di-dflight-download{background:#1a3448;border-color:#41617c}
+html.di-dark #di-dflight-download p{color:#c2d7e8}
+</style>
+<script>
+(function(){
+ const page=document.getElementById('di-page-map');if(!page||document.getElementById('di-dflight-download'))return;
+ const section=document.createElement('section');section.id='di-dflight-download';
+ const link=document.createElement('a');link.href='https://www.d-flight.it/portal/';link.target='_blank';link.rel='noopener noreferrer';link.textContent='↓ Scarica file da d-flight (abbonati)';
+ const note=document.createElement('p');note.textContent='Accedi sul portale con il tuo account e scarica il JSON ufficiale, se incluso nel tuo abbonamento. Il download avviene sul sito d-flight; Drone Italia non riceve le credenziali. L’importazione dei JSON ED-269 richiede un adattamento specifico e non è ancora disponibile.';
+ section.append(link,note);
+ const verify=document.getElementById('di-map-dflight-link');
+ if(verify){const n=document.getElementById('di-map-dflight-note');(n||verify).insertAdjacentElement('afterend',section)}
+ else page.insertAdjacentElement('afterbegin',section);
+})();
+</script>
 </body></html>
