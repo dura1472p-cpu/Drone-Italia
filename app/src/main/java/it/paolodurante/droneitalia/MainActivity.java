@@ -34,6 +34,7 @@ public class MainActivity extends Activity {
  private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303, ROUTE_SAVE=304;
  private byte[] pendingBackup;
  private volatile boolean darkTheme=false;
+ private boolean weatherLocationRequest=false;
 
  private int noticeDp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
  private GradientDrawable noticeBackground(int color,int border,float radius){
@@ -139,7 +140,8 @@ public class MainActivity extends Activity {
  }catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Foto non condivisibile. Riprova senza foto.",Toast.LENGTH_LONG).show());}
  }
  @JavascriptInterface public void setDarkTheme(boolean enabled){darkTheme=enabled;}
- @JavascriptInterface public void locate(){runOnUiThread(()->MainActivity.this.locate());}
+ @JavascriptInterface public void locate(){runOnUiThread(()->{weatherLocationRequest=false;MainActivity.this.locate();});}
+ @JavascriptInterface public void locateWeather(){runOnUiThread(()->{weatherLocationRequest=true;MainActivity.this.locate();});}
  @JavascriptInterface public void saveBackup(String encoded){
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>12000000)throw new IllegalArgumentException("Backup troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.json");startActivityForResult(intent,BACKUP_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup non disponibile",Toast.LENGTH_LONG).show());}
  }
@@ -224,7 +226,7 @@ public class MainActivity extends Activity {
  manager=(LocationManager)getSystemService(LOCATION_SERVICE);
  boolean gps=fine&&manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
  boolean network=manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
- if(!gps&&!network){Toast.makeText(this,"Attiva la posizione nelle impostazioni",Toast.LENGTH_LONG).show();return;}
+ if(!gps&&!network){reportWeatherLocationError("Attiva la posizione nelle impostazioni e riprova.");Toast.makeText(this,"Attiva la posizione nelle impostazioni",Toast.LENGTH_LONG).show();return;}
  final Location[] best={null};
  listener=new LocationListener(){
  public void onLocationChanged(Location l){
@@ -252,16 +254,21 @@ public class MainActivity extends Activity {
  }
  stopLocation();
  if(chosen!=null)showLocation(chosen);
- else Toast.makeText(this,"Posizione non disponibile. Attiva la posizione precisa e riprova all'aperto.",Toast.LENGTH_LONG).show();
+ else {reportWeatherLocationError("Posizione non disponibile. Attiva la posizione precisa e riprova all’aperto.");Toast.makeText(this,"Posizione non disponibile. Attiva la posizione precisa e riprova all'aperto.",Toast.LENGTH_LONG).show();}
  },25000);
- }catch(SecurityException e){stopLocation();Toast.makeText(this,"Permesso posizione non disponibile",Toast.LENGTH_LONG).show();}
+ }catch(SecurityException e){stopLocation();reportWeatherLocationError("Permesso posizione non disponibile. Consenti il GPS e riprova.");Toast.makeText(this,"Permesso posizione non disponibile",Toast.LENGTH_LONG).show();}
  }
  private void showLocation(Location l){
  final double lat=l.getLatitude(),lng=l.getLongitude(),acc=l.hasAccuracy()?l.getAccuracy():1000;
- web.evaluateJavascript("showPosition("+lat+","+lng+","+acc+")",null);
+ final boolean weather=weatherLocationRequest;weatherLocationRequest=false;
+ web.evaluateJavascript("showPosition("+lat+","+lng+","+acc+","+weather+")",null);
+ }
+ private void reportWeatherLocationError(String message){
+  if(!weatherLocationRequest)return;weatherLocationRequest=false;
+  web.evaluateJavascript("if(window.diWeatherGpsFailed)window.diWeatherGpsFailed("+org.json.JSONObject.quote(message)+");",null);
  }
  private void stopLocation(){if(manager!=null&&listener!=null){manager.removeUpdates(listener);listener=null;}}
- @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==10){if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED)locate();else Toast.makeText(this,"Puoi usare la mappa senza GPS",Toast.LENGTH_LONG).show();}}
+ @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==10){if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED)locate();else {reportWeatherLocationError("Permesso GPS negato. Consenti la posizione per aggiornare il meteo.");Toast.makeText(this,"Puoi usare la mappa senza GPS",Toast.LENGTH_LONG).show();}}}
  @Override protected void onStop(){stopLocation();super.onStop();}
  @Override protected void onResume(){
  super.onResume();
