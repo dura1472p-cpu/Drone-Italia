@@ -895,7 +895,48 @@ $('di-restore').onchange=async e=>{
  finally{e.target.value='';backupBusy=false;$('di-backup').disabled=false}
 };
 window.diPrintLogReport=printLogReport;
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p>
+<style>
+/* Mappa: comandi compatti, etichetta visibile solo dopo il tocco. */
+#di-map-quick{align-items:flex-end!important;gap:10px!important}
+#di-map-quick>button:not([hidden]){position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;width:48px!important;min-width:48px!important;max-width:48px!important;height:48px!important;padding:0!important;border-radius:50%!important;background:#fff!important;color:#145b91!important;font-size:23px!important;box-shadow:0 2px 9px #123a5a30!important;border:1px solid #e1eaf2!important}
+#di-map-quick>button svg{width:23px!important;height:23px!important}
+#di-map-quick>button span{display:none!important}
+#di-map-quick>button.di-compact-selected{background:#147df0!important;color:#fff!important}
+#di-map-quick>button.di-compact-selected::after{content:attr(data-map-label);position:absolute;right:calc(100% + 9px);top:50%;transform:translateY(-50%);background:#1269b4;color:#fff;border-radius:17px;padding:8px 12px;white-space:nowrap;font-size:13px;font-weight:700;box-shadow:0 2px 8px #123a5a30;pointer-events:none}
+#di-map-quick>button:focus-visible{outline:3px solid #ffbf47!important;outline-offset:3px}
+</style>
+<script>
+(function(){
+ const quick=document.getElementById('di-map-quick');if(!quick)return;
+ const names=['Livelli','Cerca','La mia posizione','Filtra voli','Droni vicini'];
+ const paths=[
+ '<path d="m3 8 9-5 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+ '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+ '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>',
+ '<path d="M4 7h16M4 12h16M4 17h16"/><path d="M8 5v4M16 10v4M11 15v4"/>',
+ '<path d="M8 9h8l3 4-3 2-2-2v5l-2 2-2-2v-5l-2 2-3-2 3-4Z"/><path d="M5 6h4M15 6h4M5 18h3M16 18h3"/>'
+ ];
+ const buttons=Array.from(quick.querySelectorAll(':scope > button'));
+ buttons.forEach((btn,i)=>{
+  if(btn.textContent.includes('Nascondi voli')){btn.remove();return}
+  const label=names[i]||btn.getAttribute('aria-label')||btn.title||'Strumento mappa';
+  btn.dataset.mapLabel=label;btn.setAttribute('aria-label',label);btn.title=label;
+  if(paths[i]){
+   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+   svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');
+   svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');
+   svg.setAttribute('stroke-width','2');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');
+   svg.innerHTML=paths[i];btn.replaceChildren(svg);
+  }
+  btn.addEventListener('click',()=>{
+   buttons.forEach(other=>{other.classList.remove('di-compact-selected');other.setAttribute('aria-pressed','false')});
+   btn.classList.add('di-compact-selected');btn.setAttribute('aria-pressed','true');
+  });
+ });
+})();
+</script>
+</body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
 const weatherStyle=document.createElement('style');weatherStyle.textContent='#di-weather-card[hidden]{display:none!important}#di-weather-card{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce6ef;border-radius:15px}#di-weather-card h4{margin:0 0 8px;color:#174b73}#di-weather-card .di-weather-meta{font-size:12px;line-height:1.5;color:#52718c;overflow-wrap:anywhere}#di-weather-card .di-weather-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#di-weather-card .di-weather-value{padding:12px;border-radius:11px;background:#f0f7fd}#di-weather-card .di-weather-value span{display:block;font-size:12px;color:#52718c}#di-weather-card .di-weather-value strong{display:block;font-size:20px;color:#1268a8;margin-top:4px}#di-weather-card .di-weather-hours{overflow-x:auto}#di-weather-card table{border-collapse:collapse;min-width:420px;width:100%;font-size:12px}#di-weather-card th,#di-weather-card td{padding:10px 6px;border-bottom:1px solid #e1eaf2;text-align:left;white-space:nowrap}#di-weather-card th{color:#36556e}#di-weather-center{display:block;width:100%;min-height:44px;margin:6px 0 12px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(weatherStyle);
