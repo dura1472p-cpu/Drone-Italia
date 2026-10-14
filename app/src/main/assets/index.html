@@ -3382,4 +3382,23 @@ html body #di-page-home #di-home-hero .di-hero-icon.di-app-logo svg{display:bloc
  hero.querySelectorAll('.di-hero-icon:not(.di-app-logo)').forEach(el=>el.remove());
 })();
 </script>
+
+<style>
+#di-dflight-preflight{margin:14px 0;padding:14px;border:1px solid #b9d9f3;border-radius:14px;background:#edf7ff;color:#173e61}
+#di-dflight-preflight a{display:block;text-align:center;padding:13px 15px;background:#126ce0;color:#fff!important;text-decoration:none;font-weight:750;border-radius:12px}
+#di-dflight-preflight p{font-size:12px;line-height:1.5;margin:9px 0 0;color:#315b7c}
+html.di-dark #di-dflight-preflight{background:#1b3449;color:#e8f4ff;border-color:#41637f}
+html.di-dark #di-dflight-preflight p{color:#c6dff4}
+</style>
+<script>
+(function(){
+ const root=document.getElementById('flight-tools');if(!root||document.getElementById('di-dflight-preflight'))return;
+ const section=document.createElement('div');section.id='di-dflight-preflight';
+ const link=document.createElement('a');link.href='https://www.d-flight.it/portal/';link.target='_blank';link.rel='noopener noreferrer';link.textContent='↗ Verifica su d-flight';
+ const note=document.createElement('p');note.textContent='Apri il portale ufficiale e verifica le zone geografiche UAS e le regole applicabili prima del volo. Questo collegamento non verifica automaticamente la tua posizione e non costituisce autorizzazione al volo.';
+ section.append(link,note);
+ const check=document.getElementById('ft-check');
+ if(check){check.insertAdjacentElement('afterbegin',section)}else{root.insertAdjacentElement('afterbegin',section)}
+})();
+</script>
 </body></html>
