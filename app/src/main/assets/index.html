@@ -1006,7 +1006,7 @@ function renderDrones(){
    if(deleteDroneAndMaintenance(d.id)){renderDrones();if(droneEdit&&droneEdit.id===d.id)resetDroneForm();if(maintenanceEdit&&maintenanceEdit.original.droneId===d.id)resetMaintenanceForm();renderMaintenance()}
   };const edit=node('button','✎ Modifica');edit.type='button';edit.onclick=()=>editDrone(d);actions.append(choose,edit,del);row.append(actions);box.append(row);
  });
- if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();if(window.diRefreshBatteries)window.diRefreshBatteries();
+ if(!box.children.length)box.append(node('p','Nessun drone in archivio.'));populateMaintenanceDrones();if(window.diRefreshBatteries)window.diRefreshBatteries();if(window.diRefreshDroneImage)window.diRefreshDroneImage();
 }
 $('di-add-drone').onclick=()=>{
  const name=$('di-drone-name').value.trim(),weight=Number($('di-drone-weight').value),ident=$('di-drone-id').value.trim();
@@ -1359,7 +1359,7 @@ if(name==='map'&&typeof map!=='undefined'&&map){
  setTimeout(resizeMap,150);
  setTimeout(resizeMap,450);
 }
-if(anchor)setTimeout(()=>{const el=document.getElementById(anchor);if(el)el.scrollIntoView({block:'start',behavior:'smooth'})},100);
+if(anchor)setTimeout(()=>{const el=document.getElementById(anchor);if(el){if(window.diExpandSettingsFor)window.diExpandSettingsFor(el);el.scrollIntoView({block:'start',behavior:'smooth'})}},100);
 }
 window.droneItaliaOpenPage=openPage;
 for(const [name,label] of Object.entries(navNames)){
@@ -2841,7 +2841,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  }
  function choose(d){
   name.value=d.name;weight.value=d.weight;get('di-drone-brand').value='DJI';get('di-drone-max-minutes').value=d.minutes;get('di-drone-wind').value=d.wind;
-  selected={catalogId:d.id,catalogSource:d.url,catalogWeightText:d.weightText,catalogVerified:'2026-10-14'};source(selected);
+  selected={catalogId:d.id,catalogSource:d.url,catalogWeightText:d.weightText,catalogVerified:'2026-10-14'};source(selected);if(window.diSetDroneImage)window.diSetDroneImage({name:d.name,catalogId:d.id});
   get('di-catalog-status').textContent='Dati compilati per '+d.name+'. Controlla i valori e premi Aggiungi drone oppure Salva modifiche.';
   name.focus({preventScroll:true});
  }
@@ -2851,7 +2851,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   get('di-catalog-status').textContent=!key(query)?'Scrivi il modello per cercarlo nel catalogo.':found.length?found.length+' modelli trovati. Tocca il tuo modello per compilare i dati.':'Modello non presente: puoi compilare i campi manualmente.';
  }
  get('di-catalog-search').addEventListener('input',render);
- name.addEventListener('input',()=>{selected=null;source(null)});
+ name.addEventListener('input',()=>{selected=null;source(null);if(window.diSetDroneImage)window.diSetDroneImage({name:name.value})});
  function numeric(id,min,max){const value=get(id).value.trim();if(!value)return null;const n=Number(value);if(!Number.isFinite(n)||n<min||n>max)throw Error('Valore non valido: '+(id==='di-drone-wind'?'resistenza al vento':'autonomia massima'));return n}
  window.diDroneTechnicalFields=()=>{
   const minutes=numeric('di-drone-max-minutes',1,300);if(minutes!==null&&!Number.isInteger(minutes))throw Error('Inserisci minuti interi per l’autonomia dichiarata.');
@@ -2860,9 +2860,57 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  window.diLoadDroneTechnical=d=>{
   selected=d&&d.catalogId?{catalogId:d.catalogId,catalogSource:d.catalogSource||'',catalogWeightText:d.catalogWeightText||'',catalogVerified:d.catalogVerified||''}:null;
   for(const [id,k] of [['di-drone-brand','brand'],['di-drone-max-minutes','maxFlightMinutes'],['di-drone-wind','windResistance'],['di-drone-serial','serial']])get(id).value=d&&d[k]!=null?String(d[k]):'';
-  get('di-catalog-search').value='';render();source(d);
+  get('di-catalog-search').value='';render();source(d);if(window.diSetDroneImage)window.diSetDroneImage(d);
  };
  const style=document.createElement('style');style.textContent='#di-drone-catalog{padding:14px;border:1px solid #cfe2f2;border-radius:14px;background:#eff7ff;margin-bottom:16px}#di-drone-catalog h4{margin:0 0 10px}#di-drone-catalog p,#di-drone-technical p,#di-drone-spec-source{font-size:12px;line-height:1.5;color:#52718b}#di-catalog-results{display:grid;gap:7px}#di-catalog-results button{text-align:left;margin:0!important;min-height:44px;border-radius:10px}#di-drone-spec-source[hidden]{display:none!important}html.di-dark #di-drone-catalog{background:#21354a;border-color:#40566d}html.di-dark #di-drone-catalog p,html.di-dark #di-drone-technical p,html.di-dark #di-drone-spec-source{color:#afc0d1}';document.head.append(style);
  window.diLoadDroneTechnical(null);
+})();
+</script><script>
+(function(){
+ const get=id=>document.getElementById(id),page=get('di-page-settings');if(!page)return;
+ const groups=Array.from(page.children).filter(n=>n.classList.contains('di-tool-group'));
+ const footer=Array.from(page.children).find(n=>n.tagName==='FOOTER');if(footer){const group=document.createElement('section');group.className='di-tool-group';const title=document.createElement('h3');title.textContent='Informazioni sull’app';footer.before(group);group.append(title,footer);groups.push(group)}
+ const disclosures=[];
+ groups.forEach(group=>{
+  const heading=Array.from(group.children).find(n=>n.tagName==='H3');if(!heading)return;
+  const details=document.createElement('details');details.className='di-settings-disclosure';
+  const summary=document.createElement('summary');summary.append(heading);
+  const body=document.createElement('div');body.className='di-settings-content';
+  Array.from(group.childNodes).forEach(n=>body.append(n));
+  details.append(summary,body);group.append(details);disclosures.push(details);
+  details.addEventListener('toggle',()=>{if(details.open)disclosures.forEach(other=>{if(other!==details)other.open=false})});
+ });
+ window.diExpandSettingsFor=el=>{let parent=el&&el.parentElement;while(parent&&parent!==page){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement}};
+ const images={
+ 'dji-mini-4-pro':['DJI Mini 4 Pro','f255909c0783c37eb297b38f96b21729'],
+ 'dji-mini-3':['DJI Mini 3','8713fc0e55ee803566485bea9ad13e24'],
+ 'dji-air-3':['DJI Air 3','5fa772a86ca8dd4fe8ce05130a3916b2'],
+ 'dji-air-3s':['DJI Air 3S','e054f84da41f62b9fc8ccf8d25e0594a'],
+ 'dji-neo':['DJI Neo','21f49a8490c715f10723507dcc7a8453'],
+ 'dji-flip':['DJI Flip','776d14f17296093a34361b2b94de91b8'],
+ 'dji-mavic-3-classic':['DJI Mavic 3 Classic','1523afbc27809ee7936ed7ee8bc36a90']
+ };
+ const normalize=x=>String(x||'').toLowerCase().replace(/^dji\s*/,'').replace(/[^a-z0-9]/g,'');
+ function modelId(d){if(!d)return null;if(images[d.catalogId])return d.catalogId;return Object.keys(images).find(id=>normalize(images[id][0])===normalize(d.name))||null}
+ const preview=document.createElement('figure');preview.id='di-drone-image-panel';preview.innerHTML='<div id="di-drone-image-area"></div><figcaption id="di-drone-image-caption"></figcaption><p id="di-drone-image-status" role="status"></p><a id="di-drone-image-source" target="_blank" rel="noopener noreferrer" hidden>Foto del produttore DJI ↗</a><button type="button" id="di-drone-image-retry" hidden>Ricarica foto</button>';
+ const catalog=get('di-drone-catalog');if(catalog)catalog.before(preview);
+ let override=null,currentImage=null;
+ function activeDrone(){try{const ds=JSON.parse(localStorage.getItem('drone-italia-beta-drones')||'[]'),active=localStorage.getItem('drone-italia-beta-active-drone');return Array.isArray(ds)?ds.find(d=>d&&d.id===active)||null:null}catch(e){return null}}
+ function show(d){
+  const area=get('di-drone-image-area'),caption=get('di-drone-image-caption'),status=get('di-drone-image-status'),link=get('di-drone-image-source'),retry=get('di-drone-image-retry');
+  area.replaceChildren();currentImage=null;link.hidden=true;retry.hidden=true;
+  caption.textContent=d?d.name||'Drone selezionato':'Immagine del drone';const id=modelId(d);
+  if(!id){status.textContent=d?'Immagine non disponibile per questo modello nel catalogo.':'Seleziona un modello dal catalogo o attiva un drone in archivio.';return}
+  const img=document.createElement('img');currentImage=img;img.alt='Foto di '+images[id][0];img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
+  status.textContent='Foto del modello dal sito DJI. Il caricamento richiede Internet.';
+  img.onload=()=>{if(currentImage!==img)return;status.textContent='Foto indicativa del modello. Fonte: DJI.';retry.hidden=true};
+  img.onerror=()=>{if(currentImage!==img)return;img.hidden=true;status.textContent='Foto non disponibile. Controlla la connessione e riprova.';retry.hidden=false};
+  img.src='https://se-cdn.djiits.com/tpc/uploads/in_the_box/cover/'+images[id][1]+'%40retina_small.png';
+  area.append(img);link.href='https://store.dji.com/product/'+id;link.hidden=false;retry.onclick=()=>show(override||activeDrone());
+ }
+ window.diSetDroneImage=d=>{override=d||null;show(override||activeDrone())};
+ window.diRefreshDroneImage=()=>show(override||activeDrone());
+ const style=document.createElement('style');style.textContent='#di-page-settings .di-tool-group{padding:0!important;overflow:hidden}#di-page-settings .di-settings-disclosure{background:transparent;border:0;margin:0;padding:0}#di-page-settings .di-settings-disclosure>summary{display:flex;align-items:center;justify-content:space-between;list-style:none;padding:16px;cursor:pointer;min-height:56px;box-sizing:border-box}#di-page-settings .di-settings-disclosure>summary::-webkit-details-marker{display:none}#di-page-settings .di-settings-disclosure>summary::after{content:"＋";font-size:22px;color:#1268a8;margin-left:12px}#di-page-settings .di-settings-disclosure[open]>summary::after{content:"−"}#di-page-settings .di-settings-disclosure>summary h3{margin:0!important;font-size:16px}#di-page-settings .di-settings-content{padding:0 16px 16px;border-top:1px solid #e4edf5}#di-page-settings .di-settings-content>button{background:#126bc4;color:white}#di-page-settings .di-settings-content>label:first-child{margin-top:14px}#di-drone-image-panel{margin:14px 0;padding:14px;border:1px solid #dce8f2;border-radius:14px;background:#f6faff;text-align:center}#di-drone-image-area{min-height:80px;display:flex;align-items:center;justify-content:center}#di-drone-image-area:empty{min-height:0}#di-drone-image-area img{width:100%;max-width:280px;height:180px;object-fit:contain}#di-drone-image-panel figcaption{font-weight:700;color:#173a60;margin-top:8px}#di-drone-image-panel p,#di-drone-image-panel a{font-size:12px;line-height:1.5}#di-drone-image-panel [hidden]{display:none!important}html.di-dark #di-page-settings .di-settings-content{border-color:#33475b}html.di-dark #di-drone-image-panel{background:#21354a;border-color:#40566d}html.di-dark #di-drone-image-panel figcaption,html.di-dark #di-page-settings .di-settings-disclosure>summary::after{color:#b9dcff}';document.head.append(style);
+ show(activeDrone());
 })();
 </script></body></html>
