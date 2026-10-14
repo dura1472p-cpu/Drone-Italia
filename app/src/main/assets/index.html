@@ -2913,7 +2913,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   const values={'di-drone-name':d.name,'di-drone-weight':d.weight,'di-drone-brand':d.brand||'DJI','di-drone-max-minutes':d.minutes,'di-drone-wind':d.wind};
   for(const [id,value] of Object.entries(values)){const input=get(id);if(!input){get('di-catalog-status').textContent='Campi del drone non disponibili. Riapri l’app.';return}input.value=value==null?'':String(value)}
   selected={catalogId:d.id,catalogSource:d.url,catalogWeightText:d.weightText,catalogVerified:d.verified||'',easaClasses:d.easaClasses||[],easaModels:d.easaModels||[],easaSource:d.easaSource||''};source(selected);
-  const technical=get('di-drone-technical');technical.hidden=false;
+  const technical=get('di-drone-technical');technical.hidden=false;if(window.diSetDroneDataVisibility)window.diSetDroneDataVisibility(true);
   if(window.diExpandSettingsFor)window.diExpandSettingsFor(get('di-drone-weight'));
   get('di-catalog-status').textContent='✓ '+d.name+': dati disponibili compilati. '+(d.community?'Fonte comunitaria: verifica i valori. ':'')+'Completa i campi vuoti e salva il drone.';
   if(window.diSetDroneImage){try{window.diSetDroneImage({name:d.name,catalogId:d.id})}catch(e){}}
@@ -2948,7 +2948,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  window.diLoadDroneTechnical=(d,options={})=>{
   selected=d&&d.catalogId?{catalogId:d.catalogId,catalogSource:d.catalogSource||'',catalogWeightText:d.catalogWeightText||'',catalogVerified:d.catalogVerified||'',easaClasses:d.easaClasses||[],easaModels:d.easaModels||[],easaSource:d.easaSource||''}:null;
   for(const [id,k] of [['di-drone-brand','brand'],['di-drone-max-minutes','maxFlightMinutes'],['di-drone-wind','windResistance'],['di-drone-serial','serial']])get(id).value=d&&d[k]!=null?String(d[k]):'';
-  if(!options.preserveSearch)get('di-catalog-search').value='';render();source(d);if(window.diSetDroneImage)window.diSetDroneImage(d);
+  if(!options.preserveSearch)get('di-catalog-search').value='';render();source(d);if(window.diSetDroneImage)window.diSetDroneImage(d);if(window.diSetDroneDataVisibility)window.diSetDroneDataVisibility(!!d);
  };
 
  window.diDroneCatalogSaved=()=>{
@@ -3048,5 +3048,20 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  show(activeDrone());
  if(window.diRefreshDroneArchive)window.diRefreshDroneArchive();
  const compactStyle=document.createElement('style');compactStyle.textContent='#di-drones .di-drone-heading{align-items:center;gap:10px}#di-drones .di-drone-heading h4{flex:1;min-width:0}#di-drones .di-drone-thumbnail{display:flex;align-items:center;justify-content:center;flex:0 0 76px;width:76px;height:68px;border:1px solid #dce8f2;border-radius:10px;background:#f6faff;overflow:hidden;text-decoration:none}#di-drones .di-drone-thumbnail img{width:100%;height:100%;object-fit:contain}#di-drones .di-drone-thumbnail span{font-size:9px;line-height:1.3;text-align:center;color:#587186}#di-drone-image-panel{padding:8px;margin:10px 0;display:grid;grid-template-columns:88px minmax(0,1fr);column-gap:10px;text-align:left}#di-drone-image-panel[hidden]{display:none!important}#di-drone-image-area{grid-row:1/5;min-height:0}#di-drone-image-area img{width:88px;height:76px;max-width:88px}#di-drone-image-panel figcaption{margin:0;font-size:13px}#di-drone-image-panel p{margin:3px 0;font-size:11px}#di-drone-image-panel a{font-size:11px}html.di-dark #di-drones .di-drone-thumbnail{background:#21354a;border-color:#40566d}';document.head.append(compactStyle);
+})();
+</script><script>
+(function(){
+ const get=id=>document.getElementById(id),catalog=get('di-drone-catalog'),name=get('di-drone-name'),cancel=get('di-drone-cancel');if(!catalog||!name||!cancel)return;
+ const first=name.closest('label'),form=document.createElement('div');form.id='di-drone-data-form';form.hidden=true;first.before(form);
+ let node=first;
+ while(node){const next=node.nextSibling;form.append(node);if(node===cancel)break;node=next}
+ window.diSetDroneDataVisibility=visible=>{form.hidden=!visible;if(visible&&window.diExpandSettingsFor)window.diExpandSettingsFor(form)};
+ const manual=document.createElement('button');manual.type='button';manual.id='di-drone-manual-entry';manual.textContent='Modello non presente? Inserisci manualmente';catalog.after(manual);
+ manual.onclick=()=>{
+  cancel.click();window.diSetDroneDataVisibility(true);
+  get('di-drone-status').textContent='Inserisci i dati del tuo drone e premi Aggiungi drone.';
+  name.scrollIntoView({behavior:'smooth',block:'center'});name.focus({preventScroll:true});
+ };
+ const style=document.createElement('style');style.textContent='#di-drone-data-form[hidden]{display:none!important}#di-drone-data-form{margin-top:14px;padding-top:12px;border-top:1px solid #dce8f2}#di-drone-manual-entry{width:100%;min-height:44px;border-radius:10px;margin:8px 0!important;background:#eaf3fd!important;color:#145b96!important;font-size:13px}html.di-dark #di-drone-data-form{border-color:#40566d}html.di-dark #di-drone-manual-entry{background:#2c435a!important;color:#e4edf6!important}';document.head.append(style);
 })();
 </script></body></html>
