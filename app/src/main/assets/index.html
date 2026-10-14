@@ -744,7 +744,7 @@ window.diClearTemporaryMapMarkers=()=>{
  if(map&&radiusCircle){map.removeLayer(radiusCircle);radiusCircle=null}
  planPicking=false;if(planReturn)planReturn.hidden=true;selected=null;first=null;measuring=false;if(!window.diFlightPickingOnMap)window.diFlightChosenPoint=null;
 };
-window.droneItaliaMapClick=point=>{if(window.diManualRouteDrawing){if(window.diAddManualRoutePoint)window.diAddManualRoutePoint(point);return}selected={lat:point.lat,lng:point.lng};if(!measuring&&!window.diFlightPickingOnMap){if(setPlanPoint(point)&&planPicking&&planReturn){planReturn.disabled=false;planReturn.textContent='✓ Torna al piano con questo punto'}}if(window.diFlightPickingOnMap){window.diFlightPendingMapPoint={lat:Number(point.lat),lng:Number(point.lng)};const back=document.getElementById('di-flight-map-return');if(back)back.textContent='✓ Conferma punto e torna al volo'};if(map){if(selectedMarker)map.removeLayer(selectedMarker);selectedMarker=L.circleMarker([point.lat,point.lng],{radius:9,color:'#fff',weight:3,fillColor:'#1673dc',fillOpacity:1}).addTo(map).bindPopup('Punto selezionato: '+point.lat.toFixed(5)+', '+point.lng.toFixed(5));selectedMarker.openPopup();}if(!measuring)return;if(!first){first=point;$('di-measure-status').textContent='Primo punto selezionato: scegli il secondo.';return}const meters=map.distance(first,point);if(segment)map.removeLayer(segment);segment=L.polyline([first,point],{color:'#186da0',weight:5,opacity:0.95}).addTo(map);segment.bindTooltip(Math.round(meters)+' m',{permanent:true,direction:'center',className:'di-distance-label',interactive:false}).openTooltip();$('di-measure-status').textContent='Distanza approssimativa in linea retta: '+Math.round(meters)+' m. Non è una distanza di sicurezza.';first=null;measuring=false};
+window.droneItaliaMapClick=point=>{if(window.diManualRouteDrawing){if(window.diAddManualRoutePoint)window.diAddManualRoutePoint(point);return}selected={lat:point.lat,lng:point.lng};if(!measuring&&!window.diFlightPickingOnMap){if(setPlanPoint(point)&&planPicking&&planReturn){planReturn.disabled=false;planReturn.textContent='✓ Torna al piano con questo punto'}}if(window.diFlightPickingOnMap){window.diFlightPendingMapPoint={lat:Number(point.lat),lng:Number(point.lng)};const back=document.getElementById('di-flight-map-return');if(back)back.textContent='✓ Conferma punto e torna al volo'};if(map){if(selectedMarker)map.removeLayer(selectedMarker);selectedMarker=L.circleMarker([point.lat,point.lng],{radius:9,color:'#fff',weight:3,fillColor:'#1673dc',fillOpacity:1}).addTo(map).bindPopup('<span>Punto selezionato: '+point.lat.toFixed(5)+', '+point.lng.toFixed(5)+'</span><button type="button" class="di-close-selected-point" onclick="window.diCloseSelectedPoint()" aria-label="Chiudi punto selezionato" title="Rimuovi punto">×</button>',{closeButton:false});selectedMarker.openPopup();}if(!measuring)return;if(!first){first=point;$('di-measure-status').textContent='Primo punto selezionato: scegli il secondo.';return}const meters=map.distance(first,point);if(segment)map.removeLayer(segment);segment=L.polyline([first,point],{color:'#186da0',weight:5,opacity:0.95}).addTo(map);segment.bindTooltip(Math.round(meters)+' m',{permanent:true,direction:'center',className:'di-distance-label',interactive:false}).openTooltip();$('di-measure-status').textContent='Distanza approssimativa in linea retta: '+Math.round(meters)+' m. Non è una distanza di sicurezza.';first=null;measuring=false};
 $('di-measure').onclick=()=>{if(!map){$('di-measure-status').textContent='Mappa non disponibile';return}measuring=true;first=null;$('di-measure-status').textContent='Tocca il primo punto sulla mappa.'};
 $('di-clear-measure').onclick=()=>{first=null;measuring=false;if(segment&&map)map.removeLayer(segment);segment=null;$('di-measure-status').textContent='Misura azzerata.'};
 $('di-favorite').onclick=()=>{if(!selected){alert('Tocca prima un punto sulla mappa.');return}const a=load('favorites');const name=prompt('Nome del punto preferito (facoltativo)','');if(name===null)return;a.push({...selected,name:name.trim().slice(0,80)});if(save('favorites',a))refresh()};
@@ -3493,6 +3493,22 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
   quick.append(b);
  });
  document.addEventListener('pointerdown',e=>{if(!e.target.closest('#di-map-quick'))quick.querySelectorAll('.di-dflight-round').forEach(b=>b.classList.remove('di-compact-selected'))});
+})();
+</script>
+
+<style>
+.leaflet-popup-content:has(.di-close-selected-point){display:flex;align-items:center;gap:10px;max-width:min(75vw,300px);margin:10px 12px!important;font-size:13px;overflow-wrap:anywhere}
+.di-close-selected-point{flex:0 0 32px!important;width:32px!important;min-width:32px!important;height:32px!important;padding:0!important;border:0!important;border-radius:50%!important;background:#eaf2fa!important;color:#174f7c!important;font-size:23px!important;line-height:1!important;box-shadow:none!important}
+</style>
+<script>
+(function(){
+ window.diCloseSelectedPoint=function(){
+  const popup=document.querySelector('.di-close-selected-point');
+  if(!popup)return;
+  if(typeof window.diClearTemporaryMapMarkers==='function')window.diClearTemporaryMapMarkers();
+  const mapPopup=popup.closest('.leaflet-popup');
+  if(mapPopup)mapPopup.remove();
+ };
 })();
 </script>
 </body></html>
