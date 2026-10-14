@@ -2782,14 +2782,14 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  html body #di-page-home.di-active{height:auto!important;min-height:0!important;max-height:none!important;grid-template-rows:90px 46px 200px auto!important;gap:6px!important;padding:6px!important;margin:8px auto 72px!important}
  html body #di-page-home.di-home-small.di-active{grid-template-rows:52px 38px 176px auto!important}
  html body #di-page-home #di-home-grid{width:calc(2 * var(--di-home-square-side,110px) + 8px)!important;height:calc(3 * var(--di-home-square-side,110px) + 16px)!important;max-width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(3,var(--di-home-square-side,110px))!important;gap:8px!important;margin:0 auto!important;align-self:start;justify-self:center}
- html body #di-page-home #di-home-grid button{width:100%!important;height:100%!important;aspect-ratio:1!important;box-sizing:border-box!important;min-height:0!important;padding:9px 5px!important;gap:9px!important;border-radius:15px!important}
- html body #di-page-home #di-home-grid .di-home-icon{width:64px!important;height:64px!important;min-width:64px!important;border-radius:13px!important}
- html body #di-page-home #di-home-grid .di-home-icon svg{width:56px!important;height:56px!important}
- html body #di-page-home #di-home-grid .di-home-label{font-size:18px!important;line-height:1.2!important;font-weight:750!important}
- html body #di-page-home.di-home-small #di-home-grid .di-home-icon{width:48px!important;height:48px!important;min-width:48px!important}
- html body #di-page-home.di-home-small #di-home-grid .di-home-icon svg{width:42px!important;height:42px!important}
- html body #di-page-home.di-home-small #di-home-grid button{gap:6px!important}
- html body #di-page-home.di-home-small #di-home-grid .di-home-label{font-size:16px!important;line-height:1.15!important}
+ html body #di-page-home #di-home-grid button{width:100%!important;height:100%!important;aspect-ratio:1!important;box-sizing:border-box!important;min-height:0!important;padding:5px 3px!important;gap:5px!important;border-radius:15px!important}
+ html body #di-page-home #di-home-grid .di-home-icon{width:84px!important;height:84px!important;min-width:84px!important;border-radius:13px!important}
+ html body #di-page-home #di-home-grid .di-home-icon svg{width:74px!important;height:74px!important}
+ html body #di-page-home #di-home-grid .di-home-label{font-size:23px!important;line-height:1.1!important;font-weight:750!important;max-width:100%;overflow-wrap:normal}
+ html body #di-page-home.di-home-small #di-home-grid .di-home-icon{width:62px!important;height:62px!important;min-width:62px!important}
+ html body #di-page-home.di-home-small #di-home-grid .di-home-icon svg{width:54px!important;height:54px!important}
+ html body #di-page-home.di-home-small #di-home-grid button{gap:4px!important}
+ html body #di-page-home.di-home-small #di-home-grid .di-home-label{font-size:19px!important;line-height:1.1!important}
  `;document.head.append(style);
  function squareSide(width,remaining){return Math.max(84,Math.min(220,Math.floor(Math.min((width-8)/2,(remaining-16)/3))))}
  function fitHome(){
