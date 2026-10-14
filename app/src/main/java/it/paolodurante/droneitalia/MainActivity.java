@@ -173,6 +173,27 @@ public class MainActivity extends Activity {
  web.setWebViewClient(new WebViewClient(){
  @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
  String url=req.getUrl().toString();
+ if(url.equals("https://app.local/easa-drone-catalog.json")){
+  java.net.HttpURLConnection connection=null;
+  try{
+   java.net.URL source=new java.net.URL("https://www.easa.europa.eu/en/domains/drones-air-mobility/drones-evtol-designs/drones-eu-operations/export-json?_format=json&page=");
+   connection=(java.net.HttpURLConnection)source.openConnection();
+   connection.setConnectTimeout(6000);connection.setReadTimeout(10000);connection.setUseCaches(false);
+   connection.setRequestProperty("Accept","application/json");connection.setRequestProperty("User-Agent","DroneItalia/1.0");
+   if(connection.getResponseCode()!=200)throw new java.io.IOException("EASA unavailable");
+   java.io.ByteArrayOutputStream buffer=new java.io.ByteArrayOutputStream();
+   try(java.io.InputStream input=connection.getInputStream()){
+    byte[] chunk=new byte[8192];int count;
+    while((count=input.read(chunk))!=-1){if(buffer.size()+count>2000000)throw new java.io.IOException("Catalog too large");buffer.write(chunk,0,count);}
+   }
+   byte[] bytes=buffer.toByteArray();
+   new org.json.JSONArray(new String(bytes,java.nio.charset.StandardCharsets.UTF_8));
+   return new WebResourceResponse("application/json","UTF-8",new java.io.ByteArrayInputStream(bytes));
+  }catch(Exception error){
+   return new WebResourceResponse("application/json","UTF-8",503,"Service Unavailable",java.util.Collections.singletonMap("Cache-Control","no-store"),new java.io.ByteArrayInputStream("[]".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+  }finally{if(connection!=null)connection.disconnect();}
+ }
+
  if(url.equals("https://app.local/jszip.min.js")){try{return new WebResourceResponse("application/javascript","UTF-8",getAssets().open("jszip.min.js"));}catch(Exception e){return null;}}
  if(url.equals("https://app.local/home-background-hd.jpg")){try{return new WebResourceResponse("image/jpeg",null,getAssets().open("home-background-hd.jpg"));}catch(Exception e){return null;}}
  if(url.equals("https://app.local/index.html")) {try{return new WebResourceResponse("text/html","UTF-8",getAssets().open("index.html"));}catch(Exception e){return null;}}
