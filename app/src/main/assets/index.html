@@ -964,7 +964,7 @@ function updatedDroneRecords(drones,logs,maintenance,edit,fields){
  return {drones:nextDrones,logs:nextLogs,maintenance:nextMaintenance,original,rename,sameName};
 }
 function resetDroneForm(){
- droneEdit=null;if(window.diLoadDroneTechnical)window.diLoadDroneTechnical(null);for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
+ droneEdit=null;if(window.diLoadDroneTechnical)window.diLoadDroneTechnical(null,{preserveSearch:true});for(const id of ['di-drone-name','di-drone-weight','di-drone-id'])$(id).value='';
  $('di-add-drone').textContent='Aggiungi drone';$('di-drone-cancel').hidden=true;
 }
 function editDrone(d){
@@ -1017,10 +1017,10 @@ $('di-add-drone').onclick=()=>{
  try{
   if(droneEdit){
    const result=updatedDroneRecords(load('drones'),load('logs'),load('maintenance'),droneEdit,{name,weight,ident,...(window.diDroneTechnicalFields?window.diDroneTechnicalFields():{})});
-   persistDroneEdit(result);resetDroneForm();refresh();$('di-drone-status').textContent='Drone aggiornato. Voli e manutenzioni collegati sono stati aggiornati.';
+   persistDroneEdit(result);resetDroneForm();refresh();$('di-drone-status').textContent='Drone aggiornato. Voli e manutenzioni collegati sono stati aggiornati.';if(window.diDroneCatalogSaved)window.diDroneCatalogSaved();
   }else{
    const a=load('drones'),id=String(Date.now())+'-'+Math.random().toString(36).slice(2);a.push({id,name,weight,ident,...(window.diDroneTechnicalFields?window.diDroneTechnicalFields():{})});
-   if(save('drones',a)){localStorage.setItem(key+'active-drone',id);resetDroneForm();renderDrones();$('di-drone-status').textContent='Drone aggiunto.'}
+   if(save('drones',a)){localStorage.setItem(key+'active-drone',id);resetDroneForm();renderDrones();$('di-drone-status').textContent='Drone aggiunto.';if(window.diDroneCatalogSaved)window.diDroneCatalogSaved()}
   }
  }catch(err){alert(err.message)}
 };
@@ -2933,10 +2933,17 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   const minutes=numeric('di-drone-max-minutes',.1,1440);
   return {brand:get('di-drone-brand').value.trim().slice(0,60),maxFlightMinutes:minutes,windResistance:numeric('di-drone-wind',0,50),serial:get('di-drone-serial').value.trim().slice(0,100),catalogId:selected?.catalogId||null,catalogSource:selected?.catalogSource||'',catalogWeightText:selected?.catalogWeightText||'',catalogVerified:selected?.catalogVerified||'',easaClasses:selected?.easaClasses||[],easaModels:selected?.easaModels||[],easaSource:selected?.easaSource||''};
  };
- window.diLoadDroneTechnical=d=>{
+ window.diLoadDroneTechnical=(d,options={})=>{
   selected=d&&d.catalogId?{catalogId:d.catalogId,catalogSource:d.catalogSource||'',catalogWeightText:d.catalogWeightText||'',catalogVerified:d.catalogVerified||'',easaClasses:d.easaClasses||[],easaModels:d.easaModels||[],easaSource:d.easaSource||''}:null;
   for(const [id,k] of [['di-drone-brand','brand'],['di-drone-max-minutes','maxFlightMinutes'],['di-drone-wind','windResistance'],['di-drone-serial','serial']])get(id).value=d&&d[k]!=null?String(d[k]):'';
-  get('di-catalog-search').value='';render();source(d);if(window.diSetDroneImage)window.diSetDroneImage(d);
+  if(!options.preserveSearch)get('di-catalog-search').value='';render();source(d);if(window.diSetDroneImage)window.diSetDroneImage(d);
+ };
+
+ window.diDroneCatalogSaved=()=>{
+  render();const search=get('di-catalog-search');
+  if(window.diExpandSettingsFor)window.diExpandSettingsFor(search);
+  get('di-catalog-status').textContent='Drone salvato. Il catalogo è pronto: scegli un altro risultato oppure cambia la ricerca.';
+  search.scrollIntoView({behavior:'smooth',block:'center'});
  };
  const style=document.createElement('style');style.textContent='#di-drone-catalog{padding:14px;border:1px solid #cfe2f2;border-radius:14px;background:#eff7ff;margin-bottom:16px}#di-drone-catalog h4{margin:0 0 10px}#di-drone-catalog p,#di-drone-technical p,#di-drone-spec-source{font-size:12px;line-height:1.5;color:#52718b}#di-catalog-results{display:grid;gap:7px}#di-catalog-results button{text-align:left;margin:0!important;min-height:44px;border-radius:10px}#di-drone-spec-source[hidden]{display:none!important}html.di-dark #di-drone-catalog{background:#21354a;border-color:#40566d}html.di-dark #di-drone-catalog p,html.di-dark #di-drone-technical p,html.di-dark #di-drone-spec-source{color:#afc0d1}';document.head.append(style);
 
