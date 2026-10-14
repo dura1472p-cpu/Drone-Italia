@@ -630,7 +630,7 @@ html.di-home-backdrop body{padding-bottom:0!important}
 const zones=[];
 let map,marker,accuracy;
 function inspect(lat,lng){const hits=zones.filter(z=>lat>=z.bounds[0][0]&&lat<=z.bounds[1][0]&&lng>=z.bounds[0][1]&&lng<=z.bounds[1][1]);const el=document.getElementById('detail');el.replaceChildren();const h=document.createElement('h2');h.textContent=hits.length?'Zone di prova al punto selezionato':'Dati aeronautici non disponibili';el.append(h);const p=document.createElement('p');p.textContent=lat.toFixed(5)+', '+lng.toFixed(5);el.append(p);for(const z of hits){const v=document.createElement('p');v.textContent=z.name+' — '+z.status+' · Quota: '+z.limit+'. '+z.rule+' Fonte: dati sintetici. Validità: nessuna.';el.append(v);}const note=document.createElement('p');note.textContent='L’assenza di zone non indica che il volo sia consentito. Verifica sempre le fonti ufficiali.';el.append(note);}
-function showPosition(lat,lng,meters){const flightGps=window.diFlightGpsPending===true;window.diFlightGpsPending=false;if(!flightGps&&window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');window.droneItaliaLastGps={lat,lng,meters};if(flightGps&&typeof window.diFlightGpsReceived==='function')window.diFlightGpsReceived({lat,lng,meters});if(flightGps)return;if(!map)return;if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);if(!window.diManualRouteDrawing||!window.diRouteDrawingPointCount)map.setView([lat,lng],window.diManualRouteDrawing?15:13);inspect(lat,lng);}
+function showPosition(lat,lng,meters,weatherGps=false){if(weatherGps){window.droneItaliaLastGps={lat,lng,meters};if(typeof window.diWeatherGpsReceived==='function')window.diWeatherGpsReceived({lat,lng,meters});return}const flightGps=window.diFlightGpsPending===true;window.diFlightGpsPending=false;if(!flightGps&&window.droneItaliaOpenPage)window.droneItaliaOpenPage('map');window.droneItaliaLastGps={lat,lng,meters};if(flightGps&&typeof window.diFlightGpsReceived==='function')window.diFlightGpsReceived({lat,lng,meters});if(flightGps)return;if(!map)return;if(marker)map.removeLayer(marker);if(accuracy)map.removeLayer(accuracy);marker=L.marker([lat,lng]).addTo(map);accuracy=L.circle([lat,lng],{radius:meters,color:'#126b7a'}).addTo(map);if(!window.diManualRouteDrawing||!window.diRouteDrawingPointCount)map.setView([lat,lng],window.diManualRouteDrawing?15:13);inspect(lat,lng);}
 if(typeof L==='undefined'){document.getElementById('map').textContent='Leaflet non caricato: controlla la connessione e le richieste CDN (verifica la connessione).';document.getElementById('map-status').textContent='ERRORE: libreria Leaflet non disponibile. Nessuna valutazione di volo possibile.';}else{map=L.map('map').setView([42.5,12.5],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map).on('tileerror',e=>{const st=document.getElementById('map-status');st.dataset.failed='1';st.textContent='ERRORE TESSERE OSM: possibile HTTP 403 o problema di rete. Controlla Logcat (DroneItaliaMap). Nessuna valutazione di volo possibile.';console.warn('Errore tile OSM',e);}).on('tileload',()=>{const st=document.getElementById('map-status');if(!st.dataset.failed)st.textContent='Cartografia stradale caricata. Nessuna zona aeronautica ufficiale integrata.';});for(const z of zones){L.rectangle(z.bounds,{color:z.color,fillOpacity:.22}).addTo(map).on('click',e=>inspect(e.latlng.lat,e.latlng.lng));}L.control.scale({imperial:false}).addTo(map);map.on('click',e=>{inspect(e.latlng.lat,e.latlng.lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick(e.latlng);});}
 document.getElementById('search').addEventListener('submit',e=>{e.preventDefault();const raw=document.getElementById('coords').value.trim().split(',');const lat=Number(raw[0]),lng=Number(raw[1]);if(raw.length!==2||raw.some(s=>!s.trim())||!Number.isFinite(lat)||!Number.isFinite(lng)||lat<35||lat>48||lng<6||lng>19){document.getElementById('detail').textContent='Inserisci coordinate valide nell’area italiana, separate da una virgola.';return;}if(map){map.setView([lat,lng],15);inspect(lat,lng);if(window.droneItaliaMapClick)window.droneItaliaMapClick({lat,lng});}else document.getElementById('detail').textContent='Mappa non disponibile: controlla la connessione.';});
 </script><section id="flight-tools">
@@ -914,19 +914,41 @@ function renderWeather(data,point,source){
  }else weatherCard.append(node('p','Previsioni orarie non disponibili.'));
  const note=node('p','Fonte: Open-Meteo. Dati indicativi: verifica le condizioni sul posto e i limiti del drone. Non costituiscono una valutazione di sicurezza del volo.');note.className='di-weather-meta';weatherCard.append(note);weatherCard.hidden=false;
 }
+
+function acquireWeatherGps(){
+ return new Promise((resolve,reject)=>{
+  let finished=false;
+  const cleanup=()=>{clearTimeout(timer);window.diWeatherGpsReceived=null;window.diWeatherGpsFailed=null};
+  const success=p=>{if(finished)return;const point=weatherPoint(p);if(!point){failure('Posizione GPS non valida. Riprova.');return}finished=true;cleanup();window.droneItaliaLastGps={...p};resolve(point)};
+  const failure=message=>{if(finished)return;finished=true;cleanup();reject(Error(message||'Posizione GPS non disponibile.'))};
+  const timer=setTimeout(()=>failure('Posizione GPS non disponibile. Attiva la posizione e riprova.'),35000);
+  window.diWeatherGpsReceived=success;window.diWeatherGpsFailed=failure;
+  try{
+   if(window.DroneItaliaNative&&typeof window.DroneItaliaNative.locateWeather==='function')window.DroneItaliaNative.locateWeather();
+   else if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>success({lat:p.coords.latitude,lng:p.coords.longitude,meters:p.coords.accuracy}),e=>failure(e.code===1?'Permesso GPS negato. Consenti la posizione per aggiornare il meteo.':'Posizione GPS non disponibile. Attiva la posizione e riprova.'),{enableHighAccuracy:true,timeout:25000,maximumAge:120000});
+   else failure('GPS non disponibile in questo ambiente.');
+  }catch(e){failure('Impossibile avviare il GPS. Controlla il permesso posizione.')}
+ });
+}
 $('di-weather').onclick=async()=>{
- const out=$('di-weather-status'),button=$('di-weather'),gps=$('di-weather-center').value==='gps',point=weatherPoint(gps?window.droneItaliaLastGps:selected);
+ const out=$('di-weather-status'),button=$('di-weather'),selector=$('di-weather-center');if(button.disabled)return;
+ const gps=selector.value==='gps';let point=weatherPoint(gps?window.droneItaliaLastGps:selected);
  weatherCard.hidden=true;
- if(!point){out.textContent=gps?'Acquisisci prima la posizione dalla mappa con «La mia posizione».':'Seleziona prima un punto sulla mappa.';return}
- button.disabled=true;out.textContent='Caricamento meteo…';
+ if(!gps&&!point){out.textContent='Seleziona prima un punto sulla mappa.';return}
+ button.disabled=true;selector.disabled=true;
  try{
+  if(gps&&!point){
+   out.textContent='Acquisizione posizione GPS… Se richiesto, consenti l’accesso alla posizione.';
+   try{point=await acquireWeatherGps()}catch(e){out.textContent=e.message;return}
+  }
+  out.textContent='Caricamento meteo…';
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);let response;
   const params=new URLSearchParams({latitude:String(point.lat),longitude:String(point.lng),current:'temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation',hourly:'temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation',forecast_hours:'12',wind_speed_unit:'kmh',temperature_unit:'celsius',precipitation_unit:'mm',timezone:'auto'});
   try{response=await fetch('https://api.open-meteo.com/v1/forecast?'+params,{signal:controller.signal})}finally{clearTimeout(timeout)}
   if(!response.ok)throw Error('HTTP '+response.status);
   renderWeather(await response.json(),point,gps?'Ultima posizione GPS':'Punto scelto sulla mappa');out.textContent='Meteo aggiornato. Scorri la tabella per confrontare le ore.';
  }catch(e){out.textContent='Meteo non disponibile: controlla la connessione e riprova.'}
- finally{button.disabled=false}
+ finally{button.disabled=false;selector.disabled=false}
 };
 
 function droneArchiveSummary(drone,logs,maintenance,today){
