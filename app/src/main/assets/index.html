@@ -604,6 +604,12 @@ html.di-home-backdrop body{padding-bottom:0!important}
 #di-page-home.di-home-small #di-home-overview span{font-size:10px!important}
 #di-page-home.di-home-small #di-home-grid .di-home-label{font-size:10px!important}
 </style>
+<style id="di-home-two-columns">
+#di-page-home #di-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(44px,1fr))!important}
+#di-page-home.di-active{grid-template-rows:140px 54px 230px 210px!important}
+#di-page-home.di-home-tight{grid-template-rows:90px 46px 200px 156px!important}
+#di-page-home.di-home-small{grid-template-rows:52px 38px 176px 140px!important}
+</style>
 </head><body><header><h1>Drone Italia</h1><p>Mappe, zone e diario di volo · Versione dimostrativa</p></header>
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
@@ -2776,7 +2782,7 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
   const bottom=nav?Math.min(nav.getBoundingClientRect().top,viewport):viewport-64;
   const available=Math.floor(bottom-home.getBoundingClientRect().top-8);
   home.style.setProperty('--di-home-fit-height',Math.max(1,available)+'px');
-  if(home.classList.contains('di-home-tight')!==(available<620))home.classList.toggle('di-home-tight',available<620);if(home.classList.contains('di-home-short')!==(available<365))home.classList.toggle('di-home-short',available<365);if(home.classList.contains('di-home-small')!==(available<500))home.classList.toggle('di-home-small',available<500);
+  if(home.classList.contains('di-home-tight')!==(available<680))home.classList.toggle('di-home-tight',available<680);if(home.classList.contains('di-home-short')!==(available<365))home.classList.toggle('di-home-short',available<365);if(home.classList.contains('di-home-small')!==(available<540))home.classList.toggle('di-home-small',available<540);
   home.querySelectorAll('.di-home-ready-meta,#di-home-ready strong').forEach(el=>el.title=el.textContent);
  }
  let scheduled=false;function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;fitHome()})}
