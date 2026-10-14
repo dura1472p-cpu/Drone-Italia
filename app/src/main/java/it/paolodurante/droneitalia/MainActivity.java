@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
  private byte[] pendingBackup;
  private volatile boolean darkTheme=false;
  private boolean weatherLocationRequest=false;
+ private RemoteIdScanner remoteIdScanner;
 
  private int noticeDp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
  private GradientDrawable noticeBackground(int color,int border,float radius){
@@ -141,6 +142,8 @@ public class MainActivity extends Activity {
  }
  @JavascriptInterface public void setDarkTheme(boolean enabled){darkTheme=enabled;}
  @JavascriptInterface public void locate(){runOnUiThread(()->{weatherLocationRequest=false;MainActivity.this.locate();});}
+ @JavascriptInterface public void startRemoteId(){runOnUiThread(()->{if(remoteIdScanner==null)remoteIdScanner=new RemoteIdScanner(MainActivity.this,new RemoteIdScanner.Sink(){public void status(String message,boolean active){runOnUiThread(()->web.evaluateJavascript("if(window.diRemoteIdStatus)window.diRemoteIdStatus("+org.json.JSONObject.quote(message)+","+active+")",null));}public void packet(String json){runOnUiThread(()->web.evaluateJavascript("if(window.diRemoteIdPacket)window.diRemoteIdPacket("+json+")",null));}});remoteIdScanner.start();});}
+ @JavascriptInterface public void stopRemoteId(){runOnUiThread(()->{if(remoteIdScanner!=null)remoteIdScanner.stop();});}
  @JavascriptInterface public void locateWeather(){runOnUiThread(()->{weatherLocationRequest=true;MainActivity.this.locate();});}
  @JavascriptInterface public void saveBackup(String encoded){
  try{byte[] bytes=Base64.decode(encoded,Base64.DEFAULT);if(bytes.length>12000000)throw new IllegalArgumentException("Backup troppo grande");runOnUiThread(()->{pendingBackup=bytes;Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/json");intent.putExtra(Intent.EXTRA_TITLE,"drone-italia-backup.json");startActivityForResult(intent,BACKUP_SAVE);});}catch(Exception e){runOnUiThread(()->Toast.makeText(MainActivity.this,"Backup non disponibile",Toast.LENGTH_LONG).show());}
@@ -268,8 +271,8 @@ public class MainActivity extends Activity {
   web.evaluateJavascript("if(window.diWeatherGpsFailed)window.diWeatherGpsFailed("+org.json.JSONObject.quote(message)+");",null);
  }
  private void stopLocation(){if(manager!=null&&listener!=null){manager.removeUpdates(listener);listener=null;}}
- @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==10){if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED)locate();else {reportWeatherLocationError("Permesso GPS negato. Consenti la posizione per aggiornare il meteo.");Toast.makeText(this,"Puoi usare la mappa senza GPS",Toast.LENGTH_LONG).show();}}}
- @Override protected void onStop(){stopLocation();super.onStop();}
+ @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==42){if(remoteIdScanner!=null)remoteIdScanner.permissionsResult();return;}if(r==10){if(checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)==PackageManager.PERMISSION_GRANTED)locate();else {reportWeatherLocationError("Permesso GPS negato. Consenti la posizione per aggiornare il meteo.");Toast.makeText(this,"Puoi usare la mappa senza GPS",Toast.LENGTH_LONG).show();}}}
+ @Override protected void onStop(){if(remoteIdScanner!=null)remoteIdScanner.stop();stopLocation();super.onStop();}
  @Override protected void onResume(){
  super.onResume();
  if(web!=null)web.postDelayed(()->{if(!isFinishing()&&!isDestroyed())web.evaluateJavascript("if(window.diCheckMaintenanceAtStartup)window.diCheckMaintenanceAtStartup();",null);},1200);
