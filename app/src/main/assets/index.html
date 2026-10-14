@@ -3214,4 +3214,28 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
 })();
 
 </script>
+<script>
+(function(){
+ const get=id=>document.getElementById(id),page=get('di-page-flights');if(!page)return;const sections=[];
+ function wrap(target,title,id){
+  if(!target)return;const details=document.createElement('details');details.id=id;details.className='di-flights-disclosure';const summary=document.createElement('summary');summary.textContent=title;target.before(details);details.append(summary,target);sections.push(details);
+  details.addEventListener('toggle',()=>{if(details.open)sections.forEach(other=>{if(other!==details)other.open=false})});return details;
+ }
+ wrap(get('di-flight-calendar'),'📅 Calendario voli','di-calendar-disclosure');
+ const tools=wrap(get('flight-tools'),'✓ Prima del volo e strumenti','di-tools-disclosure');
+ const plan=get('di-save-plan')?.closest('.di-tool-group');wrap(plan,'📍 Piano di volo personale','di-plan-disclosure');
+ const report=get('di-report')?.closest('.di-tool-group');wrap(report,'📄 Rapporto personale','di-report-disclosure');
+ const logs=get('di-logs')?.closest('.di-tool-group');if(logs)get('di-flights-dashboard').after(logs);
+ function expand(el){let parent=el;while(parent&&parent!==page){if(parent.tagName==='DETAILS')parent.open=true;parent=parent.parentElement}}
+ const previousExpand=window.diExpandSettingsFor;window.diExpandSettingsFor=el=>{if(el&&page.contains(el))expand(el);else if(previousExpand)previousExpand(el)};
+ const openPage=window.droneItaliaOpenPage;window.droneItaliaOpenPage=function(name,anchor){
+  if(name!=='flights'){sections.forEach(d=>d.open=false);const stats=get('di-stats-content'),toggle=get('di-stats-toggle');if(stats)stats.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');const arrow=toggle.querySelector('span');if(arrow)arrow.textContent='▾';}}
+  const result=openPage.apply(this,arguments);if(name==='flights'&&anchor)expand(get(anchor));return result;
+ };
+ get('flight-tools').addEventListener('click',e=>{if(e.target.closest('[data-pane]')&&tools)tools.open=true});
+ get('ft-proceed').addEventListener('click',()=>{if(!get('ft-proceed').disabled){expand(get('di-date'));get('di-date').scrollIntoView({behavior:'smooth',block:'center'})}});
+ const style=document.createElement('style');style.textContent='#di-page-flights .di-flights-disclosure{margin:12px;border:1px solid #dce8f3;border-radius:17px;background:#fff;box-shadow:0 3px 12px #163d5d0c;overflow:hidden}#di-flights-dashboard .di-flights-disclosure{margin:14px 0 0}#di-page-flights .di-flights-disclosure>summary{display:flex;align-items:center;justify-content:space-between;list-style:none;cursor:pointer;min-height:58px;padding:16px;font-weight:750;font-size:16px;color:#173b59}#di-page-flights .di-flights-disclosure>summary::-webkit-details-marker{display:none}#di-page-flights .di-flights-disclosure>summary::after{content:"＋";font-size:22px;color:#1268a8;margin-left:10px}#di-page-flights .di-flights-disclosure[open]>summary::after{content:"−"}#di-page-flights .di-flights-disclosure>section{margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}#di-page-flights .di-flights-disclosure>section>h3:first-of-type,#di-calendar-disclosure .di-calendar-head h3{display:none}#di-calendar-disclosure .di-calendar-head{justify-content:center}#di-tools-disclosure #flight-tools{padding-top:0!important}html.di-dark #di-page-flights .di-flights-disclosure{background:#192a3b;border-color:#33475b}html.di-dark #di-page-flights .di-flights-disclosure>summary{color:#e4edf6}';document.head.append(style);
+})();
+
+</script>
 </body></html>
