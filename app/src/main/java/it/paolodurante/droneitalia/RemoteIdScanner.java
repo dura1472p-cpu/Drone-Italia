@@ -68,7 +68,7 @@ final class RemoteIdScanner {
   @Override public void onScanFailed(int code){bleActive=false;if(!wifiActive){stopSilently();sink.status("Scansione Bluetooth non riuscita ("+code+"). Attendi qualche secondo e riprova.",false);}else sink.status("Bluetooth non disponibile ("+code+"). Ricezione Wi-Fi Beacon attiva.",true);}
  };
  private final Runnable wifiTick=new Runnable(){public void run(){if(!active||!wifiActive)return;try{wifi.startScan();}catch(SecurityException e){stop();return;}handler.postDelayed(this,30000);}};
- private final Runnable autoStop=()->{stopSilently();sink.status("Scansione terminata dopo 5 minuti. Premi Cerca droni per ricominciare.",false);};
+ private final Runnable autoStop=new Runnable(){public void run(){stopSilently();sink.status("Scansione terminata dopo 5 minuti. Premi Cerca droni per ricominciare.",false);}};
  private final Map<String,Long> seenWifi=new HashMap<>();
  private void wifiResults(){
   try{for(android.net.wifi.ScanResult r:wifi.getScanResults()){
