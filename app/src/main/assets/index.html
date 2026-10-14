@@ -3297,4 +3297,39 @@ document.getElementById('di-flight-pick').onclick=()=>{window.diFlightPendingMap
  syncLabels();
 })();
 </script>
+
+<style>
+#ft-model-list{width:100%}
+#ft-registered-drone-hint{display:block;font-size:12px;color:#54718a;margin:5px 0 10px}
+</style>
+<script>
+(function(){
+ const input=document.getElementById('ft-model');
+ if(!input)return;
+ const list=document.createElement('datalist');list.id='ft-model-list';
+ input.setAttribute('list',list.id);
+ input.insertAdjacentElement('afterend',list);
+ const hint=document.createElement('small');hint.id='ft-registered-drone-hint';
+ hint.textContent='Cerca o seleziona un drone registrato; puoi anche scrivere un modello nuovo.';
+ list.insertAdjacentElement('afterend',hint);
+ function refreshRegisteredDrones(){
+  let drones=[];
+  try{const data=JSON.parse(localStorage.getItem('drone-italia-beta-drones')||'[]');if(Array.isArray(data))drones=data;}catch(e){}
+  const unique=new Set();
+  list.replaceChildren();
+  drones.forEach(drone=>{
+   const name=String(drone&&drone.name||'').trim();
+   if(!name||unique.has(name.toLocaleLowerCase('it')))return;
+   unique.add(name.toLocaleLowerCase('it'));
+   const option=document.createElement('option');option.value=name;list.append(option);
+  });
+  hint.textContent=unique.size?'Seleziona un drone registrato oppure scrivi un altro modello.':'Nessun drone registrato: puoi inserire il modello manualmente.';
+ }
+ input.addEventListener('focus',refreshRegisteredDrones);
+ input.addEventListener('input',refreshRegisteredDrones);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshRegisteredDrones()});
+ window.addEventListener('storage',refreshRegisteredDrones);
+ refreshRegisteredDrones();
+})();
+</script>
 </body></html>
