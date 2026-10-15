@@ -1,30 +1,37 @@
-# Drone Italia — distribuzione diretta e licenze (progetto)
+# Drone Italia — vendita APK con PayPal e codici manuali
 
-## Impostazioni concordate
-- Distribuzione: APK firmato, senza Google Play Store.
-- Trial: **5 giorni** dal primo avvio verificato dal servizio licenze.
-- Sblocco permanente: **4,99 EUR**, pagamento singolo.
-- Metodi di pagamento previsti: **Stripe Checkout** e **PayPal Checkout**.
-- Identificativo prodotto interno: `drone_italia_full`.
-- **Stato: preparazione, nessun blocco attivo, nessun pagamento attivo.**
+## Decisione commerciale attuale
+- Distribuzione: APK firmato fuori dal Google Play Store.
+- Prova gratuita: **5 giorni**.
+- Alla scadenza, acquisto obbligatorio per continuare a usare l'app.
+- Opzione standard: **4,99 EUR**, sblocco permanente.
+- Opzione sostegno extra: **7,99 EUR**, identico sblocco permanente, contributo aggiuntivo sul prezzo base.
+- Metodo di pagamento: **PayPal**; Stripe non fa più parte del flusso commerciale scelto.
+- Consegna licenza: **manuale**. Il gestore verifica il pagamento PayPal e invia un codice di attivazione al cliente.
+- I pagamenti obbligatori sono **acquisti**, non donazioni.
+- **Stato: progetto in preparazione. Nessun paywall, trial o pagamento attivo nell'APK.**
 
-## Architettura da implementare
-1. Servizio licenze HTTPS con database, account o identità utente verificabile e data di inizio trial registrata sul server. La reinstallazione e il cambio dell'orologio non devono azzerare la trial.
-2. Endpoint per creare sessioni Stripe Checkout e ordini PayPal. **Prezzo e valuta stabiliti sul server**, non dall'APK; nessuna chiave privata nell'app o nel repository.
-3. Webhook Stripe con verifica firma e webhook PayPal con verifica autenticità. Registrare pagamenti confermati in modo idempotente; gestire rimborsi e contestazioni.
-4. Emissione della licenza solo dopo pagamento confermato server-side. Endpoint autenticato per verificare e ripristinare l'accesso su nuovo dispositivo.
-5. Gestire interruzioni di rete con un periodo di tolleranza offline e stato verificato in cache; definire politica sui dispositivi.
-6. UI app: visualizzazione giorni residui, pagina acquisto esterna, ripristino licenza. **Non bloccare l'app** prima di test end-to-end riusciti.
-7. Informativa privacy, termini, gestione richieste clienti, imposte/fatturazione e policy di distribuzione APK.
+## Esperienza utente prevista
+1. Al primo utilizzo il cliente inizia la prova di 5 giorni, con indicazione chiara della scadenza.
+2. Scaduta la prova, compare una schermata con le due opzioni PayPal (4,99/7,99 EUR), la spiegazione dei tempi di invio del codice e un campo «Ho già un codice».
+3. Il cliente paga sul sito PayPal esterno. Per associare pagamento e richiesta di attivazione serve un identificativo d'ordine e un recapito comunicato con informativa privacy.
+4. Il gestore controlla il pagamento effettivo nell'account PayPal, inclusi importo, valuta, stato, eventuali duplicati o rimborsi; non si fida di screenshot o schermate di successo.
+5. Il gestore genera e invia un codice **univoco**, non prevedibile e non riutilizzabile da altri clienti.
+6. L'app verifica la firma crittografica del codice oppure interroga un servizio di verifica. Non inserire nell'APK segreti che permettano di creare codici validi.
+7. Il cliente può recuperare la licenza in caso di reinstallazione o cambio telefono tramite procedura di assistenza e identificazione dell'acquisto.
 
-## Prerequisiti
-- Account Stripe e PayPal Business verificati.
-- Dominio HTTPS e servizio backend (hosting/database); indirizzo di supporto.
-- Chiavi API e segreti webhook conservati solo nelle variabili d'ambiente del server.
-- APK firmato con chiave stabile e distribuito da una fonte HTTPS affidabile.
+## Sicurezza e limiti
+- Un semplice link PayPal.me o pulsante «Dona» non conferma automaticamente il pagamento all'app e non genera codici.
+- Per ridurre la dipendenza da un server si può usare un sistema di **licenze firmate asimmetricamente**: chiave privata custodita solo dal gestore, chiave pubblica incorporata nell'app. I codici devono essere legati a un'identità o installazione con una politica esplicita di trasferimento.
+- La prova basata soltanto su orologio e memoria locale è aggirabile cancellando dati/reinstallando l'app; per una trial robusta servono identità persistente e verifica server-side.
+- Preparare procedura di emissione codici, registro pagamenti, assistenza, rimborsi, privacy e obblighi fiscali prima del lancio.
+- Non attivare il blocco dopo 5 giorni finché non sono stati verificati pagamento, generazione codice, attivazione, reinstallazione e ripristino.
+- Non inserire credenziali o password PayPal nella chat o nel repository.
 
-## Sicurezza
-Non fidarsi di localStorage, timestamp del telefono, query string `success`, schermate di conferma o codici statici nell'APK per concedere licenze. L'esito del browser non costituisce prova del pagamento.
+## Prossimi dati necessari
+- Link PayPal pubblico destinato ai clienti, preferibilmente **due link di pagamento con importi preimpostati**.
+- Procedura di contatto del cliente e consegna del codice (ad esempio email).
+- Decisione su numero di dispositivi e recupero della licenza.
 
-## Stato implementazione
-Google Play Billing è stato rimosso. Questo file definisce la configurazione e le attività necessarie; non costituisce un checkout funzionante. La versione attuale dell'app resta libera e utilizzabile.
+## Componenti precedenti
+La cartella `licensing/` contiene un **prototipo Stripe in sandbox non distribuito**. È materiale sperimentale precedente alla decisione PayPal; non costituisce il sistema di licenze attuale e non va attivato per la vendita. Google Play Billing è stato rimosso.
