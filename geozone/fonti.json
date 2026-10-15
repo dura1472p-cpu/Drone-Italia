@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-15",
+  "coverage": "none",
+  "sources": [
+    {
+      "id": "enac-uas",
+      "name": "ENAC Zone geografiche UAS",
+      "url": "https://www.enac.gov.it/sicurezza-aerea/droni/zone-geografiche-space/voli-con-droni-uas-limitazioni-riserve-dello/",
+      "role": "normativa e verifica",
+      "geometry_download_verified": false,
+      "reuse_license_verified": false,
+      "import_status": "blocked"
+    },
+    {
+      "id": "enav-aip",
+      "name": "ENAV AIP Italia",
+      "url": "https://www.enav.it/servizi-online",
+      "role": "pubblicazioni aeronautiche",
+      "geometry_download_verified": false,
+      "reuse_license_verified": false,
+      "import_status": "blocked"
+    },
+    {
+      "id": "dflight",
+      "name": "d-flight UAS GeoZone",
+      "url": "https://www.d-flight.it/portal/",
+      "role": "verifica operativa ufficiale",
+      "geometry_download_verified": false,
+      "reuse_license_verified": false,
+      "import_status": "excluded_subscription_required"
+    },
+    {
+      "id": "basilicata-airport-area",
+      "name": "Basilicata database topografico - aree aeroportuali",
+      "url": "https://www.dati.gov.it/node/view-dataset/dataset?id=7477a1e9-f2fb-40c4-a787-eb8a1373d29f",
+      "role": "contorni infrastrutturali, non zone UAS",
+      "geometry_download_verified": false,
+      "reuse_license_verified": true,
+      "license": "IODL 2.0",
+      "import_status": "excluded_not_uas_zone"
+    }
+  ],
+  "policy": "Importare soltanto geometrie con fonte, licenza di riutilizzo verificata, validità e classificazione esplicita. Non dedurre permessi di volo dall'assenza di geometrie."
+}
