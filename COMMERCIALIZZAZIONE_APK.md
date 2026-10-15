@@ -35,3 +35,11 @@
 
 ## Componenti precedenti
 La cartella `licensing/` contiene un **prototipo Stripe in sandbox non distribuito**. È materiale sperimentale precedente alla decisione PayPal; non costituisce il sistema di licenze attuale e non va attivato per la vendita. Google Play Billing è stato rimosso.
+
+## Link PayPal.Me comunicato dal gestore
+- Profilo pubblico: https://paypal.me/pdura1472p
+- Link candidato licenza standard 4,99 EUR: https://paypal.me/pdura1472p/4.99EUR
+- Link candidato licenza sostegno extra 7,99 EUR: https://paypal.me/pdura1472p/7.99EUR
+- **Da verificare manualmente sul sito PayPal:** intestatario corretto, importi in EUR, possibilità che il cliente modifichi l'importo e modalità di pagamento.
+- PayPal.Me **non comunica automaticamente all'APK** l'avvenuto pagamento. I codici vanno emessi solo dopo verifica manuale della transazione nell'account PayPal.
+- I link non sono ancora attivi nell'app; non attivare la scadenza della trial fino a test end-to-end.
