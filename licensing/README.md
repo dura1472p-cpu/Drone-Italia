@@ -20,3 +20,15 @@ Trial di 5 giorni; acquisto definitivo di EUR 4,99 via Stripe e PayPal; ripristi
 Identità verificata (email con OTP o login), database transazionale, creazione sessioni Stripe Checkout e ordini PayPal server-side, webhook verificati, rimborsi, ripristino e rate limiting. Mai considerare il redirect del browser prova di acquisto. Non usare un ID dispositivo come unica identità per una licenza a pagamento.
 
 Non usare questo scheletro per vendite finché non sono stati implementati e testati i punti precedenti.
+
+## Stripe in modalità TEST (aggiunto)
+
+Il server supporta un primo collaudo **esclusivamente con chiave Stripe `sk_test_`**. Non usa chiavi live e non rilascia licenze.
+
+1. Configurare `STRIPE_SECRET_KEY=sk_test_...`, `STRIPE_WEBHOOK_SECRET=whsec_...`, `PUBLIC_BASE_URL=https://<dominio-reale>`, `TEST_CHECKOUT_TOKEN` (segreto casuale di almeno 32 caratteri), `DB_PATH`.
+2. Avviare il server dietro proxy HTTPS. Il processo ascolta solo su `127.0.0.1`.
+3. Configurare webhook Stripe per `POST /v1/webhooks/stripe` (almeno `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`). Il server verifica la firma e registra gli ID evento per deduplicazione, **senza sbloccare l'app**.
+4. Da terminale amministratore, richiedere `POST /v1/admin/stripe-test-checkout` con header `x-test-checkout-token`. Restituisce URL Stripe Checkout sandbox a 4,99 EUR. Non inserire il token nell'app.
+5. I percorsi `/payment-test/success` e `/payment-test/cancel` sono placeholder non ancora implementati: configurare pagine HTTPS dedicate prima di testare il redirect.
+
+**Non distribuire il token amministratore.** Il percorso test va disabilitato/rimosso prima di un lancio commerciale. Restano da implementare autenticazione, verifica pagamento collegata all'utente, ripristino, PayPal e trial server-side. Nessun blocco è attivo.
