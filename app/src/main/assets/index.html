@@ -3683,7 +3683,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('di-show')});
  // Inserire esclusivamente la chiave PUBBLICA SPKI base64 generata offline dal titolare.
  // Non includere mai la chiave privata nell'APK o nel repository.
- const LICENSE_PUBLIC_KEY_SPKI_BASE64='MCowBQYDK2VwAyEAXi9rgYOGwtqbe6rWfD9a/6432s3zYYOckkowiNViuR4='; // SOLO TEST: sostituire prima della vendita
+ const LICENSE_PUBLIC_KEY_SPKI_BASE64='MCowBQYDK2VwAyEAB5KChCcYuKGZGUlsJA7X4I4yoVQwOwJSixlFJswsHZM='; // SOLO TEST: sostituire prima della vendita
  const codeInput=document.getElementById('di-license-code');
  const result=document.getElementById('di-license-result');
  const fromBase64Url=s=>{const padded=s.replace(/-/g,'+').replace(/_/g,'/');const raw=atob(padded+'='.repeat((4-padded.length%4)%4));return Uint8Array.from(raw,c=>c.charCodeAt(0))};
@@ -3704,8 +3704,9 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
   result.textContent='Verifica in corso…';
   try{
    const payload=await validateCode(codeInput.value);
-   localStorage.setItem('di_verified_license_v1',codeInput.value.trim());
-   result.textContent='Licenza verificata: '+payload.licenseId+'. Sblocco futuro in preparazione.';
+   if(payload.orderId!=='TEST-NO-PAYMENT')throw Error('In questa versione sono ammessi soltanto codici di collaudo.');
+   localStorage.setItem('di_verified_license_test_v1',codeInput.value.trim());
+   result.textContent='Codice di COLLAUDO valido e salvato su questo dispositivo. Nessun acquisto o sblocco commerciale attivo.';
   }catch(err){result.textContent=err&&err.message?err.message:'Impossibile verificare il codice.'}
  });
 })();
