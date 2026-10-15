@@ -3672,7 +3672,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
   <textarea id="di-license-code" rows="3" spellcheck="false" autocomplete="off" placeholder="Incolla qui il codice DI1..." style="width:100%;resize:vertical;border:1px solid #b8c9d9;border-radius:10px;padding:11px;font:13px monospace"></textarea>
   <button type="button" id="di-license-verify" style="width:100%;margin-top:8px;border-radius:10px;padding:12px;background:#164d82;color:white;font-weight:700">Verifica codice</button>
   <p id="di-license-result" role="status" aria-live="polite" style="font-size:13px"></p>
-  <p class="di-license-note">La verifica richiede l'attivazione della chiave pubblica ufficiale. Non acquistare ancora: il pagamento non attiva automaticamente l'app e questa versione resta utilizzabile senza licenza.</p>
+  <p class="di-license-note">Verifica in modalità di prova: nessuna licenza commerciale è ancora emessa. Non acquistare ancora: il pagamento non attiva automaticamente l'app e questa versione resta utilizzabile senza licenza.</p>
  </div>
 </div>
 <script>
@@ -3683,7 +3683,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('di-show')});
  // Inserire esclusivamente la chiave PUBBLICA SPKI base64 generata offline dal titolare.
  // Non includere mai la chiave privata nell'APK o nel repository.
- const LICENSE_PUBLIC_KEY_SPKI_BASE64='';
+ const LICENSE_PUBLIC_KEY_SPKI_BASE64='MCowBQYDK2VwAyEAXi9rgYOGwtqbe6rWfD9a/6432s3zYYOckkowiNViuR4='; // SOLO TEST: sostituire prima della vendita
  const codeInput=document.getElementById('di-license-code');
  const result=document.getElementById('di-license-result');
  const fromBase64Url=s=>{const padded=s.replace(/-/g,'+').replace(/_/g,'/');const raw=atob(padded+'='.repeat((4-padded.length%4)%4));return Uint8Array.from(raw,c=>c.charCodeAt(0))};
