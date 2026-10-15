@@ -3584,4 +3584,72 @@ html.di-dark #di-dflight-download p{color:#c2d7e8}
 #di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content span{display:inline!important;white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important}
 #di-page-map .leaflet-popup:has(.di-close-selected-point) .leaflet-popup-content::after{content:'Tocca per chiudere';display:block!important;white-space:nowrap!important;font-size:11px!important;color:#55718a!important;margin-top:5px!important}
 </style>
+
+<style>
+#di-geozone-panel{margin:14px 12px;padding:16px;border:1px solid #b9d7e9;border-radius:16px;background:#f1f8ff;color:#173e61}
+#di-geozone-panel h3{margin:0 0 8px;font-size:17px}
+#di-geozone-panel p{font-size:12px;line-height:1.5;margin:8px 0}
+#di-geozone-panel .di-gz-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+#di-geozone-panel button,#di-geozone-panel .di-gz-download{display:flex;justify-content:center;align-items:center;text-align:center;padding:11px 8px;border:0;border-radius:10px;background:#126ce0;color:#fff!important;font-size:12px;font-weight:750;text-decoration:none;min-height:43px}
+#di-geozone-panel #di-gz-import{background:#e0edfb;color:#145b91!important}
+#di-geozone-panel #di-gz-status{font-weight:650;overflow-wrap:anywhere}
+html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41637f}
+</style>
+<script>
+(function(){
+ const zones=document.getElementById('di-page-zones');if(!zones||document.getElementById('di-geozone-panel'))return;
+ const base='https://raw.githubusercontent.com/dura1472p-cpu/Drone-Italia/main/geozone/';
+ const key='di-geozone-offline-v1',metaKey='di-geozone-meta-v1';
+ const panel=document.createElement('section');panel.id='di-geozone-panel';
+ panel.innerHTML='<h3>GeoZone Italia · Online e offline</h3><p>Dataset informativo indipendente. Non è la cartografia ufficiale d-flight: l’assenza di zone non significa che il volo sia consentito.</p><div class="di-gz-actions"><button type="button" id="di-gz-update">↻ Aggiorna adesso</button><a class="di-gz-download" href="'+base+'italia.geojson" target="_blank" rel="noopener noreferrer" download="italia.geojson">↓ Scarica JSON</a><button type="button" id="di-gz-import">↑ Importa JSON</button><button type="button" id="di-gz-hide">Nascondi zone</button></div><input id="di-gz-file" type="file" accept=".geojson,.json,application/json" hidden><p id="di-gz-status" role="status">Nessun dato GeoZone caricato.</p><p id="di-gz-meta"></p><p>Per la verifica operativa delle restrizioni consulta sempre d-flight.</p>';
+ zones.prepend(panel);
+ const status=panel.querySelector('#di-gz-status'),meta=panel.querySelector('#di-gz-meta');
+ let layer=null,loaded=null;
+ function validate(data){
+  if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length>30000)throw Error('Il file deve essere un GeoJSON FeatureCollection valido (massimo 30.000 zone).');
+  for(const f of data.features){if(!f||f.type!=='Feature'||!f.geometry||!['Polygon','MultiPolygon','Point','MultiPoint','LineString','MultiLineString'].includes(f.geometry.type))throw Error('Geometria GeoJSON non supportata.')}
+  return data;
+ }
+ function render(data,source){
+  loaded=validate(data);
+  function draw(){
+   if(typeof L==='undefined'||typeof map==='undefined'||!map||typeof map.addLayer!=='function')return false;
+   if(layer)map.removeLayer(layer);
+   layer=L.geoJSON(loaded,{style:{color:'#d07916',weight:2,fillColor:'#f6b453',fillOpacity:0.22},onEachFeature:(f,l)=>{
+    const p=f.properties||{};const title=String(p.name||p.nome||'Zona informativa').slice(0,140);
+    const sourceName=String(p.source||p.fonte||'Fonte non specificata').slice(0,180);
+    const box=document.createElement('div'),strong=document.createElement('strong'),small=document.createElement('p');
+    strong.textContent=title;small.textContent='Fonte: '+sourceName+' · Verificare sempre d-flight';box.append(strong,small);l.bindPopup(box);
+   }}).addTo(map);return true;
+  }
+  if(!draw()){let attempts=0;const timer=setInterval(()=>{if(draw()||++attempts>=20)clearInterval(timer)},500)}
+  status.textContent=loaded.features.length+' zone caricate ('+source+'). '+(loaded.features.length===0?'Database ancora vuoto.':'Livello indicativo, non ufficiale.');
+ }
+ function save(data,info){
+  try{localStorage.setItem(key,JSON.stringify(data));localStorage.setItem(metaKey,JSON.stringify(info));meta.textContent='Versione: '+(info.version||'importazione manuale')+' · Data: '+(info.updated_at||'non specificata')}
+  catch(e){status.textContent+=' Impossibile salvare offline: memoria insufficiente.'}
+ }
+ try{const cached=localStorage.getItem(key);if(cached){render(JSON.parse(cached),'offline');const info=JSON.parse(localStorage.getItem(metaKey)||'{}');meta.textContent='Versione: '+(info.version||'locale')+' · Data: '+(info.updated_at||'non specificata')}}catch(e){status.textContent='Archivio locale non leggibile.'}
+ panel.querySelector('#di-gz-update').addEventListener('click',async()=>{
+  status.textContent='Controllo aggiornamenti in corso…';
+  try{
+   const [mr,dr]=await Promise.all([fetch(base+'manifest.json?ts='+Date.now(),{cache:'no-store'}),fetch(base+'italia.geojson?ts='+Date.now(),{cache:'no-store'})]);
+   if(!mr.ok||!dr.ok)throw Error('Download non disponibile');
+   const info=await mr.json(),data=validate(await dr.json());render(data,'online');save(data,info);
+  }catch(e){status.textContent='Aggiornamento non riuscito. I dati offline precedenti restano disponibili.'}
+ });
+ const file=panel.querySelector('#di-gz-file');
+ panel.querySelector('#di-gz-import').addEventListener('click',()=>file.click());
+ file.addEventListener('change',async()=>{
+  if(!file.files||!file.files[0])return;
+  try{const f=file.files[0];if(f.size>12000000)throw Error('File troppo grande (massimo 12 MB)');
+   const data=validate(JSON.parse(await f.text()));render(data,'file locale');save(data,{version:'manuale',updated_at:new Date().toISOString().slice(0,10)});
+  }catch(e){status.textContent='Importazione non riuscita: '+e.message}finally{file.value=''}
+ });
+ panel.querySelector('#di-gz-hide').addEventListener('click',()=>{
+  if(layer&&typeof map!=='undefined'&&map){map.removeLayer(layer);layer=null;status.textContent='Livello nascosto. I dati rimangono salvati offline.'}
+  else if(loaded){render(loaded,'offline')}
+ });
+})();
+</script>
 </body></html>
