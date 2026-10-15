@@ -36,7 +36,6 @@ public class MainActivity extends Activity {
  private volatile boolean darkTheme=false;
  private boolean weatherLocationRequest=false;
  private RemoteIdScanner remoteIdScanner;
- private DroneBilling droneBilling;
 
  private int noticeDp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
  private GradientDrawable noticeBackground(int color,int border,float radius){
@@ -88,7 +87,6 @@ public class MainActivity extends Activity {
 
  @Override public void onCreate(Bundle state) {
  super.onCreate(state);
- droneBilling=new DroneBilling(this);droneBilling.connect();
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
  box.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
@@ -279,5 +277,5 @@ public class MainActivity extends Activity {
  super.onResume();
  if(web!=null)web.postDelayed(()->{if(!isFinishing()&&!isDestroyed())web.evaluateJavascript("if(window.diCheckMaintenanceAtStartup)window.diCheckMaintenanceAtStartup();",null);},1200);
  }
- @Override protected void onDestroy(){if(droneBilling!=null)droneBilling.close();web.destroy();super.onDestroy();}
+ @Override protected void onDestroy(){web.destroy();super.onDestroy();}
 }
