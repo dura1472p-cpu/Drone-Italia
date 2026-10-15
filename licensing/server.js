@@ -8,6 +8,7 @@ app.disable("x-powered-by");
 const port = Number(process.env.PORT || 8787);
 const trialDays = 5;
 const priceCents = 499;
+const stripePriceId = "price_1UQvh4RYZnoLDcaVxWmBGP2V";
 const stripeKey = process.env.STRIPE_SECRET_KEY || "";
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 const adminToken = process.env.TEST_CHECKOUT_TOKEN || "";
@@ -57,7 +58,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok", service: "drone-itali
 app.get("/v1/config", (_req, res) => res.json({
  productId: "drone_italia_full", trialDays, currency: "EUR", priceCents,
  checkoutEnabled: false, enforcementEnabled: false,
- stripeSandboxReady: testCheckoutReady, paymentMethodsPlanned: ["stripe", "paypal"]
+ stripeSandboxReady: testCheckoutReady, stripePriceId, paymentMethodsPlanned: ["stripe", "paypal"]
 }));
 
 // Administrator-only Stripe test checkout. No production key or actual license is accepted.
@@ -68,8 +69,7 @@ app.post("/v1/admin/stripe-test-checkout", async (req, res) => {
  try {
   const session = await stripe.checkout.sessions.create({
    mode: "payment",
-   line_items: [{ price_data: { currency: "eur", unit_amount: priceCents,
-    product_data: { name: "Drone Italia — sblocco definitivo (TEST)" } }, quantity: 1 }],
+   line_items: [{ price: stripePriceId, quantity: 1 }],
    success_url: baseUrl + "/payment-test/success?session_id={CHECKOUT_SESSION_ID}",
    cancel_url: baseUrl + "/payment-test/cancel",
    metadata: { product_id: "drone_italia_full", environment: "sandbox" }
