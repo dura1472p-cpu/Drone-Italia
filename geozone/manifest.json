@@ -1,0 +1,10 @@
+{
+  "name": "Drone Italia GeoZone",
+  "version": "0.1.0",
+  "updated_at": "2026-10-15",
+  "source": "Nessun dato geografico pubblicato",
+  "official": false,
+  "coverage": "none",
+  "data_file": "italia.geojson",
+  "notice": "Dataset iniziale vuoto. Non indica zone di volo consentite. Verificare sempre d-flight."
+}
