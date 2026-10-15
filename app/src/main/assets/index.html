@@ -614,8 +614,8 @@ html.di-home-backdrop body{padding-bottom:0!important}
 <div class="notice">⚠️ Zone dimostrative, non ufficiali. Prima di volare consulta sempre D-Flight.</div>
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
 <section aria-label="Importazione cartografia personale" style="padding:12px;background:#e8f2fa;border:1px solid #b4d1e6;border-radius:10px;margin:10px">
-<h2>📂 Le tue mappe GeoJSON</h2>
-<p style="font-size:14px">Carica un file GeoJSON locale (FeatureCollection con poligoni). Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
+<h2>📂 Le mie mappe personali</h2>
+<p style="font-size:14px">Importa qui i tuoi file GeoJSON personali (FeatureCollection con poligoni). Questa sezione è separata dal database nazionale GeoZone Italia. Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
 <input id="di-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Scegli file GeoJSON">
 <button type="button" id="di-geojson-clear">Elimina tutte le mappe</button><button type="button" id="di-maps-export">💾 Esporta backup mappe</button>
 <label style="display:block;margin-top:8px">📥 Ripristina backup mappe <input type="file" id="di-maps-restore" accept=".json,application/json"></label>
@@ -3601,7 +3601,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
  const base='https://raw.githubusercontent.com/dura1472p-cpu/Drone-Italia/main/geozone/';
  const key='di-geozone-offline-v1',metaKey='di-geozone-meta-v1';
  const panel=document.createElement('section');panel.id='di-geozone-panel';
- panel.innerHTML='<h3>GeoZone Italia · Online e offline</h3><p>Dataset informativo indipendente. Non è la cartografia ufficiale d-flight: l’assenza di zone non significa che il volo sia consentito.</p><div class="di-gz-actions"><button type="button" id="di-gz-update">↻ Aggiorna adesso</button><a class="di-gz-download" href="'+base+'italia.geojson" target="_blank" rel="noopener noreferrer" download="italia.geojson">↓ Scarica JSON</a><button type="button" id="di-gz-import">↑ Importa JSON</button><button type="button" id="di-gz-hide">Nascondi zone</button></div><input id="di-gz-file" type="file" accept=".geojson,.json,application/json" hidden><p id="di-gz-status" role="status">Nessun dato GeoZone caricato.</p><p id="di-gz-meta"></p><p>Per la verifica operativa delle restrizioni consulta sempre d-flight.</p>';
+ panel.innerHTML='<h3>🇮🇹 GeoZone Italia · Database nazionale</h3><p>Aggiornamento e download del database nazionale. Non usare questa sezione per le mappe personali. Il database non è la cartografia ufficiale d-flight: l’assenza di zone non significa che il volo sia consentito.</p><div class="di-gz-actions"><button type="button" id="di-gz-update">↻ Aggiorna adesso</button><a class="di-gz-download" href="'+base+'italia.geojson" target="_blank" rel="noopener noreferrer" download="italia.geojson">↓ Scarica JSON</a><button type="button" id="di-gz-hide">Nascondi zone</button></div><p class="di-gz-help">Per importare file dal telefono usa <strong>Le mie mappe personali</strong> qui sotto: è l’unica area di importazione e backup.</p><p id="di-gz-status" role="status">Nessun dato GeoZone caricato.</p><p id="di-gz-meta"></p><p>Per la verifica operativa delle restrizioni consulta sempre d-flight.</p>';
  zones.prepend(panel);
  const status=panel.querySelector('#di-gz-status'),meta=panel.querySelector('#di-gz-meta');
  let layer=null,loaded=null;
@@ -3637,14 +3637,6 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
    if(!mr.ok||!dr.ok)throw Error('Download non disponibile');
    const info=await mr.json(),data=validate(await dr.json());if(data.features.length===0&&loaded&&loaded.features.length>0){status.textContent='Il database online è ancora vuoto: mantengo le '+loaded.features.length+' zone già importate sul telefono.';return;}render(data,'online');save(data,info);
   }catch(e){status.textContent='Aggiornamento non riuscito. I dati offline precedenti restano disponibili.'}
- });
- const file=panel.querySelector('#di-gz-file');
- panel.querySelector('#di-gz-import').addEventListener('click',()=>file.click());
- file.addEventListener('change',async()=>{
-  if(!file.files||!file.files[0])return;
-  try{const f=file.files[0];if(f.size>12000000)throw Error('File troppo grande (massimo 12 MB)');
-   const data=validate(JSON.parse(await f.text()));render(data,'file locale');save(data,{version:'manuale',updated_at:new Date().toISOString().slice(0,10)});
-  }catch(e){status.textContent='Importazione non riuscita: '+e.message}finally{file.value=''}
  });
  panel.querySelector('#di-gz-hide').addEventListener('click',()=>{
   if(layer&&typeof map!=='undefined'&&map){map.removeLayer(layer);layer=null;status.textContent='Livello nascosto. I dati rimangono salvati offline.'}
