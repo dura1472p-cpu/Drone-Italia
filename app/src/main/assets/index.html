@@ -3668,7 +3668,11 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
   <a class="di-license-link" href="https://paypal.me/pdura1472p/7.99EUR" target="_blank" rel="noopener noreferrer">PayPal — Sostegno extra 7,99 €</a>
   <p>Hai pagato? Richiedi il codice via email indicando il riferimento della transazione PayPal. Non inviare password o dati della carta.</p>
   <a class="di-license-link di-license-secondary" href="mailto:dura1472P@gmail.com?subject=Drone%20Italia%20-%20Richiesta%20codice%20di%20attivazione&body=Buongiorno%2C%0Aho%20acquistato%20la%20licenza%20Drone%20Italia.%0ARiferimento%20transazione%20PayPal%3A%20%0AImporto%3A%20%0A">✉ Richiedi codice di attivazione</a>
-  <p class="di-license-note">L'inserimento e la verifica dei codici saranno disponibili dopo il completamento dei controlli di sicurezza. Il pagamento non attiva automaticamente l'app. Non è necessario acquistare ora per continuare a usare questa versione.</p>
+  <label for="di-license-code" style="display:block;font-weight:700;margin:16px 0 6px">Hai già un codice di attivazione?</label>
+  <textarea id="di-license-code" rows="3" spellcheck="false" autocomplete="off" placeholder="Incolla qui il codice DI1..." style="width:100%;resize:vertical;border:1px solid #b8c9d9;border-radius:10px;padding:11px;font:13px monospace"></textarea>
+  <button type="button" id="di-license-verify" style="width:100%;margin-top:8px;border-radius:10px;padding:12px;background:#164d82;color:white;font-weight:700">Verifica codice</button>
+  <p id="di-license-result" role="status" aria-live="polite" style="font-size:13px"></p>
+  <p class="di-license-note">La verifica richiede l'attivazione della chiave pubblica ufficiale. Non acquistare ancora: il pagamento non attiva automaticamente l'app e questa versione resta utilizzabile senza licenza.</p>
  </div>
 </div>
 <script>
@@ -3677,6 +3681,33 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
  document.getElementById('di-license-close').addEventListener('click',()=>overlay.classList.remove('di-show'));
  open.addEventListener('click',()=>overlay.classList.add('di-show'));
  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('di-show')});
+ // Inserire esclusivamente la chiave PUBBLICA SPKI base64 generata offline dal titolare.
+ // Non includere mai la chiave privata nell'APK o nel repository.
+ const LICENSE_PUBLIC_KEY_SPKI_BASE64='';
+ const codeInput=document.getElementById('di-license-code');
+ const result=document.getElementById('di-license-result');
+ const fromBase64Url=s=>{const padded=s.replace(/-/g,'+').replace(/_/g,'/');const raw=atob(padded+'='.repeat((4-padded.length%4)%4));return Uint8Array.from(raw,c=>c.charCodeAt(0))};
+ const fromBase64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+ async function validateCode(value){
+  const parts=value.trim().split('.');
+  if(parts.length!==3||parts[0]!=='DI1'||!parts[1]||!parts[2])throw Error('Formato codice non valido.');
+  if(!LICENSE_PUBLIC_KEY_SPKI_BASE64)throw Error('Attivazione non ancora disponibile: chiave pubblica ufficiale non configurata.');
+  if(!window.crypto||!crypto.subtle)throw Error('Questo dispositivo non supporta la verifica crittografica richiesta.');
+  const key=await crypto.subtle.importKey('spki',fromBase64(LICENSE_PUBLIC_KEY_SPKI_BASE64),{name:'Ed25519'},false,['verify']);
+  const valid=await crypto.subtle.verify('Ed25519',key,fromBase64Url(parts[2]),new TextEncoder().encode(parts[1]));
+  if(!valid)throw Error('Firma del codice non valida.');
+  const payload=JSON.parse(new TextDecoder().decode(fromBase64Url(parts[1])));
+  if(payload.v!==1||payload.product!=='drone_italia_full'||payload.permanent!==true||typeof payload.licenseId!=='string'||!payload.licenseId||!['standard','supporter'].includes(payload.tier))throw Error('Dati licenza non validi.');
+  return payload;
+ }
+ document.getElementById('di-license-verify').addEventListener('click',async()=>{
+  result.textContent='Verifica in corso…';
+  try{
+   const payload=await validateCode(codeInput.value);
+   localStorage.setItem('di_verified_license_v1',codeInput.value.trim());
+   result.textContent='Licenza verificata: '+payload.licenseId+'. Sblocco futuro in preparazione.';
+  }catch(err){result.textContent=err&&err.message?err.message:'Impossibile verificare il codice.'}
+ });
 })();
 </script>
 </body></html>
