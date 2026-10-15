@@ -10,7 +10,8 @@
       "role": "normativa e verifica",
       "geometry_download_verified": false,
       "reuse_license_verified": false,
-      "import_status": "blocked"
+      "import_status": "blocked",
+      "notes": "ENAC indica che le restrizioni UAS sono pubblicate su d-flight; la sola documentazione non è un dataset geometrico redistribuibile."
     },
     {
       "id": "enav-aip",
@@ -19,7 +20,8 @@
       "role": "pubblicazioni aeronautiche",
       "geometry_download_verified": false,
       "reuse_license_verified": false,
-      "import_status": "blocked"
+      "import_status": "blocked",
+      "notes": "Le zone permanenti sono pubblicate in AIP; il diritto di estrazione e redistribuzione di geometrie va verificato prima dell'importazione."
     },
     {
       "id": "dflight",
@@ -28,7 +30,9 @@
       "role": "verifica operativa ufficiale",
       "geometry_download_verified": false,
       "reuse_license_verified": false,
-      "import_status": "excluded_subscription_required"
+      "import_status": "excluded_subscription_required",
+      "notes": "Manuale d-flight v15, capitolo 6: download ED-269 riservato a operatori BASE/PRO con abbonamento attivo; non importare o ripubblicare senza autorizzazione.",
+      "documentation_url": "https://www.d-flight.it/new_portal/wp-content/uploads/2026/01/D-Flight-Manuale_Utente-v15-ITA.pdf"
     },
     {
       "id": "basilicata-airport-area",
