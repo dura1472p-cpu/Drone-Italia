@@ -615,7 +615,7 @@ html.di-home-backdrop body{padding-bottom:0!important}
 <section aria-label="Cartografia ufficiale"><h2>🗺️ Verifica le zone ufficiali</h2><p>Le zone colorate qui mostrate sono <strong>solo dimostrative</strong>. Prima di ogni volo consulta la cartografia aeronautica ufficiale aggiornata.</p><p><a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 16px;background:#1763b6;color:white;border-radius:9px;font-weight:700;text-decoration:none">Apri mappa ufficiale D-Flight ↗</a></p><p style="font-size:.9em">D-Flight permette agli operatori UAS con abbonamento BASE o PRO attivo di scaricare le zone geografiche in formato JSON EUROCAE ED-269, tramite il menu «Download UAS GeoZone». Il download non autorizza automaticamente la ripubblicazione dei dati in app di terzi. Per questo le zone ufficiali non sono ancora sovrapposte alla nostra mappa. Consulta sempre D-Flight prima del volo; nessuna autorizzazione al volo viene fornita dall’app.</p></section>
 <section aria-label="Importazione cartografia personale" style="padding:12px;background:#e8f2fa;border:1px solid #b4d1e6;border-radius:10px;margin:10px">
 <h2>📂 Le mie mappe personali</h2>
-<p style="font-size:14px">Importa qui i tuoi file GeoJSON personali (FeatureCollection con poligoni). Questa sezione è separata dal database nazionale GeoZone Italia. Le geometrie saranno visualizzate <strong>solo sul tuo telefono</strong>, senza invio a server. I dati non sono verificati né automaticamente aggiornati. Non equivale a una verifica delle zone UAS ufficiali.</p>
+<p style="font-size:14px">Importa i tuoi file GeoJSON (poligoni). Restano <strong>solo sul telefono</strong> e sono separati da GeoZone Italia. Non sono verificati né aggiornati automaticamente: controlla sempre d-flight.</p>
 <input id="di-geojson-file" type="file" accept=".geojson,.json,application/geo+json,application/json" aria-label="Scegli file GeoJSON">
 <button type="button" id="di-geojson-clear">Elimina tutte le mappe</button><button type="button" id="di-maps-export">💾 Esporta backup mappe</button>
 <label style="display:block;margin-top:8px">📥 Ripristina backup mappe <input type="file" id="di-maps-restore" accept=".json,application/json"></label>
@@ -3601,10 +3601,10 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
  const base='https://raw.githubusercontent.com/dura1472p-cpu/Drone-Italia/main/geozone/';
  const key='di-geozone-offline-v1',metaKey='di-geozone-meta-v1';
  const panel=document.createElement('section');panel.id='di-geozone-panel';
- panel.innerHTML='<h3>🇮🇹 GeoZone Italia · Database nazionale</h3><p>Aggiornamento e download del database nazionale. Non usare questa sezione per le mappe personali. Il database non è la cartografia ufficiale d-flight: l’assenza di zone non significa che il volo sia consentito.</p><div class="di-gz-actions"><button type="button" id="di-gz-update">↻ Aggiorna adesso</button><a class="di-gz-download" href="'+base+'italia.geojson" target="_blank" rel="noopener noreferrer" download="italia.geojson">↓ Scarica JSON</a><button type="button" id="di-gz-hide">Nascondi zone</button></div><p class="di-gz-help">Per importare file dal telefono usa <strong>Le mie mappe personali</strong> qui sotto: è l’unica area di importazione e backup.</p><p id="di-gz-status" role="status">Nessun dato GeoZone caricato.</p><p id="di-gz-meta"></p><p>Per la verifica operativa delle restrizioni consulta sempre d-flight.</p>';
+ panel.innerHTML='<h3>🇮🇹 GeoZone Italia · Database nazionale</h3><p>Consulta e aggiorna il database nazionale informativo. Non è d-flight: zero zone non significa volo consentito.</p><div class="di-gz-actions"><button type="button" id="di-gz-update">↻ Aggiorna adesso</button><a class="di-gz-download" href="'+base+'italia.geojson" target="_blank" rel="noopener noreferrer" download="italia.geojson">↓ Scarica JSON</a><button type="button" id="di-gz-hide">Nascondi zone</button></div><p class="di-gz-help">Per importare file usa <strong>Le mie mappe personali</strong> più sotto.</p><p id="di-gz-status" role="status">Nessun dato GeoZone caricato.</p><p id="di-gz-meta"></p><p>Prima di volare verifica sempre le restrizioni su d-flight.</p>';
  zones.prepend(panel);
  const status=panel.querySelector('#di-gz-status'),meta=panel.querySelector('#di-gz-meta');
- let layer=null,loaded=null;
+ let layer=null,loaded=null,visible=true;const toggle=panel.querySelector('#di-gz-hide');function updateToggle(){toggle.textContent=visible?'Nascondi zone':'Mostra zone';toggle.setAttribute('aria-pressed',String(visible));}updateToggle();
  function validate(data){
   if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length>30000)throw Error('Il file deve essere un GeoJSON FeatureCollection valido (massimo 30.000 zone).');
   for(const f of data.features){if(!f||f.type!=='Feature'||!f.geometry||!['Polygon','MultiPolygon','Point','MultiPoint','LineString','MultiLineString'].includes(f.geometry.type))throw Error('Geometria GeoJSON non supportata.')}
@@ -3612,6 +3612,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
  }
  function render(data,source){
   loaded=validate(data);
+  if(!visible){status.textContent=loaded.features.length+' zone disponibili ('+source+'), livello nascosto.';return;}
   function draw(){
    if(typeof L==='undefined'||typeof map==='undefined'||!map||typeof map.addLayer!=='function')return false;
    if(layer)map.removeLayer(layer);
@@ -3639,8 +3640,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
   }catch(e){status.textContent='Aggiornamento non riuscito. I dati offline precedenti restano disponibili.'}
  });
  panel.querySelector('#di-gz-hide').addEventListener('click',()=>{
-  if(layer&&typeof map!=='undefined'&&map){map.removeLayer(layer);layer=null;status.textContent='Livello nascosto. I dati rimangono salvati offline.'}
-  else if(loaded){render(loaded,'offline')}
+  visible=!visible;updateToggle();if(!visible){if(layer&&typeof map!=='undefined'&&map)map.removeLayer(layer);layer=null;status.textContent=(loaded?loaded.features.length:0)+' zone disponibili, livello nascosto. I dati restano salvati.';}else if(loaded){render(loaded,'offline')}else{status.textContent='Livello attivo. Nessuna zona caricata.';}
  });
 })();
 </script>
