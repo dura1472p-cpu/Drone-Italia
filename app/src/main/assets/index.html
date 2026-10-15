@@ -3635,7 +3635,7 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
   try{
    const [mr,dr]=await Promise.all([fetch(base+'manifest.json?ts='+Date.now(),{cache:'no-store'}),fetch(base+'italia.geojson?ts='+Date.now(),{cache:'no-store'})]);
    if(!mr.ok||!dr.ok)throw Error('Download non disponibile');
-   const info=await mr.json(),data=validate(await dr.json());render(data,'online');save(data,info);
+   const info=await mr.json(),data=validate(await dr.json());if(data.features.length===0&&loaded&&loaded.features.length>0){status.textContent='Il database online è ancora vuoto: mantengo le '+loaded.features.length+' zone già importate sul telefono.';return;}render(data,'online');save(data,info);
   }catch(e){status.textContent='Aggiornamento non riuscito. I dati offline precedenti restano disponibili.'}
  });
  const file=panel.querySelector('#di-gz-file');
