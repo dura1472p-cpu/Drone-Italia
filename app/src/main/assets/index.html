@@ -895,7 +895,42 @@ $('di-restore').onchange=async e=>{
  finally{e.target.value='';backupBusy=false;$('di-backup').disabled=false}
 };
 window.diPrintLogReport=printLogReport;
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p>
+<!-- DI_PAYPAL_LICENSE_UI_V1 -->
+<style>
+#di-license-launch{position:fixed;right:14px;bottom:88px;z-index:8500;border:1px solid #d7e4f5;border-radius:28px;background:#103f77;color:white;padding:10px 14px;font:700 13px system-ui;box-shadow:0 3px 12px #0003}
+#di-license-overlay{display:none;position:fixed;inset:0;z-index:99000;background:#07192ec9;align-items:center;justify-content:center;padding:15px}
+#di-license-overlay.di-show{display:flex}
+#di-license-panel{width:min(100%,440px);max-height:90vh;overflow:auto;background:white;color:#183348;border-radius:18px;padding:20px;font:15px system-ui;box-shadow:0 12px 40px #0005}
+#di-license-panel h2{font-size:21px;margin:0 0 8px}#di-license-panel p{line-height:1.45}
+#di-license-panel .di-license-link{display:block;background:#105fba;color:white;text-decoration:none;text-align:center;border-radius:12px;padding:13px;margin:9px 0;font-weight:700}
+#di-license-panel .di-license-secondary{background:#edf4ff;color:#124a88}
+#di-license-panel .di-license-close{float:right;background:#e9eff5;color:#15344d;border-radius:10px;padding:6px 11px}
+#di-license-panel .di-license-note{font-size:12px;color:#586a78}
+</style>
+<button id="di-license-launch" type="button">♡ Licenza e supporto</button>
+<div id="di-license-overlay" role="dialog" aria-modal="true" aria-label="Licenza Drone Italia">
+ <div id="di-license-panel">
+  <button class="di-license-close" id="di-license-close" type="button" aria-label="Chiudi">✕</button>
+  <h2>Drone Italia — Licenza</h2>
+  <p><strong>Prova gratuita prevista: 5 giorni.</strong> Il blocco alla scadenza non è ancora attivo: l'app resta utilizzabile durante la preparazione del sistema di licenze.</p>
+  <p>Scegli l'acquisto una tantum: entrambe le opzioni prevedono lo stesso sblocco permanente.</p>
+  <a class="di-license-link" href="https://paypal.me/pdura1472p/4.99EUR" target="_blank" rel="noopener noreferrer">PayPal — Licenza standard 4,99 €</a>
+  <a class="di-license-link" href="https://paypal.me/pdura1472p/7.99EUR" target="_blank" rel="noopener noreferrer">PayPal — Sostegno extra 7,99 €</a>
+  <p>Hai pagato? Richiedi il codice via email indicando il riferimento della transazione PayPal. Non inviare password o dati della carta.</p>
+  <a class="di-license-link di-license-secondary" href="mailto:dura1472P@gmail.com?subject=Drone%20Italia%20-%20Richiesta%20codice%20di%20attivazione&body=Buongiorno%2C%0Aho%20acquistato%20la%20licenza%20Drone%20Italia.%0ARiferimento%20transazione%20PayPal%3A%20%0AImporto%3A%20%0A">✉ Richiedi codice di attivazione</a>
+  <p class="di-license-note">L'inserimento e la verifica dei codici saranno disponibili dopo il completamento dei controlli di sicurezza. Il pagamento non attiva automaticamente l'app. Non è necessario acquistare ora per continuare a usare questa versione.</p>
+ </div>
+</div>
+<script>
+(function(){
+ const open=document.getElementById('di-license-launch'),overlay=document.getElementById('di-license-overlay');
+ document.getElementById('di-license-close').addEventListener('click',()=>overlay.classList.remove('di-show'));
+ open.addEventListener('click',()=>overlay.classList.add('di-show'));
+ overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('di-show')});
+})();
+</script>
+</body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
 const weatherStyle=document.createElement('style');weatherStyle.textContent='#di-weather-card[hidden]{display:none!important}#di-weather-card{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce6ef;border-radius:15px}#di-weather-card h4{margin:0 0 8px;color:#174b73}#di-weather-card .di-weather-meta{font-size:12px;line-height:1.5;color:#52718c;overflow-wrap:anywhere}#di-weather-card .di-weather-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#di-weather-card .di-weather-value{padding:12px;border-radius:11px;background:#f0f7fd}#di-weather-card .di-weather-value span{display:block;font-size:12px;color:#52718c}#di-weather-card .di-weather-value strong{display:block;font-size:20px;color:#1268a8;margin-top:4px}#di-weather-card .di-weather-hours{overflow-x:auto}#di-weather-card table{border-collapse:collapse;min-width:420px;width:100%;font-size:12px}#di-weather-card th,#di-weather-card td{padding:10px 6px;border-bottom:1px solid #e1eaf2;text-align:left;white-space:nowrap}#di-weather-card th{color:#36556e}#di-weather-center{display:block;width:100%;min-height:44px;margin:6px 0 12px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(weatherStyle);
