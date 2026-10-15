@@ -3700,6 +3700,19 @@ html.di-dark #di-geozone-panel{background:#1b3449;color:#e8f4ff;border-color:#41
   if(payload.v!==1||payload.product!=='drone_italia_full'||payload.permanent!==true||typeof payload.licenseId!=='string'||!payload.licenseId||!['standard','supporter'].includes(payload.tier))throw Error('Dati licenza non validi.');
   return payload;
  }
+ async function restoreTestLicense(){
+  const saved=localStorage.getItem('di_verified_license_test_v1');
+  if(!saved)return;
+  try{
+   const payload=await validateCode(saved);
+   if(payload.orderId!=='TEST-NO-PAYMENT')throw Error('Codice non di collaudo');
+   result.textContent='Codice di COLLAUDO già salvato e verificato dopo la riapertura. Nessuno sblocco commerciale attivo.';
+  }catch(err){
+   localStorage.removeItem('di_verified_license_test_v1');
+   result.textContent='Codice di prova salvato non valido: ripeti il collaudo.';
+  }
+ }
+ restoreTestLicense();
  document.getElementById('di-license-verify').addEventListener('click',async()=>{
   result.textContent='Verifica in corso…';
   try{
