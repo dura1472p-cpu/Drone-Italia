@@ -30,7 +30,7 @@
 
 ## Prossimi dati necessari
 - Link PayPal pubblico destinato ai clienti, preferibilmente **due link di pagamento con importi preimpostati**.
-- Procedura di contatto del cliente e consegna del codice (ad esempio email).
+- Contatto per richiesta codice: **dura1472P@gmail.com**. Il cliente invia il riferimento della transazione PayPal, non password o dati della carta.
 - Decisione su numero di dispositivi e recupero della licenza.
 
 ## Componenti precedenti
