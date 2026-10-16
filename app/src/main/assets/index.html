@@ -3650,4 +3650,31 @@ html body #di-page-home #di-home-hero{background:#06264b url("drone-italia-logo.
 html body #di-page-home #di-home-hero>*{display:none!important;}
 html body #di-page-home #di-home-hero::before,html body #di-page-home #di-home-hero::after{display:none!important;}
 </style>
+
+<script id="di-official-logo-runtime">
+(function(){
+ let attempts=0;
+ const timer=setInterval(function(){
+  const hero=document.getElementById('di-home-hero');
+  if(!hero){if(++attempts>40)clearInterval(timer);return;}
+  clearInterval(timer);
+  const img=new Image();
+  img.alt='Logo ufficiale Drone Italia';
+  img.onload=function(){
+   hero.replaceChildren(img);
+   hero.style.setProperty('background','#06264b','important');
+   hero.style.setProperty('height','auto','important');
+   hero.style.setProperty('min-height','0','important');
+   hero.style.setProperty('aspect-ratio','auto','important');
+   hero.style.setProperty('padding','0','important');
+   hero.style.setProperty('margin','12px auto','important');
+   hero.style.setProperty('width','calc(100% - 24px)','important');
+   hero.style.setProperty('overflow','hidden','important');
+   img.style.cssText='display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;visibility:visible!important;opacity:1!important;position:relative!important;';
+  };
+  img.onerror=function(){console.warn('Logo ufficiale non disponibile negli assets');};
+  img.src='https://app.local/drone-italia-logo.png';
+ },250);
+})();
+</script>
 </body></html>
