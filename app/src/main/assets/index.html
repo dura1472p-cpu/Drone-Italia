@@ -1368,6 +1368,11 @@ const icons={home:'⌂',map:'🗺',flights:'✈',photos:'▧',settings:'••�
 const buttons={};
 let previousPage='home';
 function openPage(name,anchor){
+ // Quando si rientra nelle Impostazioni, richiudi tutte le sezioni.
+ if(name==='settings'&&previousPage!=='settings'){
+  const settingsPage=document.getElementById('di-page-settings');
+  if(settingsPage)settingsPage.querySelectorAll('details.di-settings-disclosure').forEach(function(section){section.open=false});
+ }
  const reopeningMap=name==='map'&&previousPage!=='map';
  if(name==='flights'&&previousPage!=='flights'&&typeof window.diResetCalendarSelection==='function')window.diResetCalendarSelection();
  previousPage=name;
