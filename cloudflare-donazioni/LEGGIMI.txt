@@ -1,1 +1,2 @@
 File di configurazione Cloudflare
+Collegamento Cloudflare attivato
