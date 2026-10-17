@@ -910,65 +910,6 @@ $('di-restore').onchange=async e=>{
 };
 window.diPrintLogReport=printLogReport;
 function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p>
-<style id="di-donation-reminder-style">
-#di-donation-reminder{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(8,20,35,.62)}
-#di-donation-reminder[hidden]{display:none!important}
-#di-donation-reminder-card{width:min(100%,380px);padding:22px;border-radius:20px;background:#fff;color:#18344b;box-shadow:0 15px 45px rgba(0,0,0,.28);text-align:center}
-#di-donation-reminder-card h3{margin:0 0 12px;font-size:22px;color:#174b78}
-#di-donation-reminder-card p{font-size:15px;line-height:1.55;margin:0 0 20px}
-#di-donation-reminder-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-#di-donation-reminder-actions button{min-height:44px;padding:10px 15px;border-radius:12px;cursor:pointer}
-#di-donation-reminder-donate{background:#126bc4;color:white;border:0}
-#di-donation-reminder-later{background:#eef3f8;color:#23465e;border:1px solid #cbd8e5}
-html.di-dark #di-donation-reminder-card{background:#1d2e3c;color:#f1f5fa}
-html.di-dark #di-donation-reminder-card h3{color:#c9e7ff}
-</style>
-<script id="di-donation-reminder-script">
-(function(){
-'use strict';
-var home=document.getElementById('di-page-home');
-var bannerButton=document.querySelector('#di-donation-banner button');
-if(!home||!bannerButton)return;
-var phrases=[
-'🚁 Ehi pilota! Il drone vola con la batteria… Drone Italia con qualche caffè! ☕😄',
-'🛸 Nessun pedaggio nei cieli! Ma se ti piace Drone Italia, un piccolo contributo ci dà una spinta. ❤️',
-'☕ Torre di controllo chiama pilota: qui il carburante preferito è il caffè! Una donazione è sempre facoltativa. 😄',
-'🚁 Le eliche girano, le idee pure! Se Drone Italia ti aiuta, puoi offrirci un sorriso… o un caffè. ❤️'
-];
-var overlay=document.createElement('div');overlay.id='di-donation-reminder';overlay.hidden=true;
-overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-labelledby','di-donation-reminder-title');
-var card=document.createElement('div');card.id='di-donation-reminder-card';
-var title=document.createElement('h3');title.id='di-donation-reminder-title';title.textContent='Un saluto dalla torre di controllo! 🚁';
-var message=document.createElement('p');
-var actions=document.createElement('div');actions.id='di-donation-reminder-actions';
-var donate=document.createElement('button');donate.type='button';donate.id='di-donation-reminder-donate';donate.textContent='❤️ Dona con PayPal';
-var later=document.createElement('button');later.type='button';later.id='di-donation-reminder-later';later.textContent='Non ora';
-actions.append(donate,later);card.append(title,message,actions);overlay.append(card);document.body.appendChild(overlay);
-var shown=0,previous=-1,started=Date.now(),nextAt=started+15*60*1000,priorFocus=null;
-function close(){overlay.hidden=true;if(priorFocus&&typeof priorFocus.focus==='function')priorFocus.focus()}
-function show(){
-var idx=Math.floor(Math.random()*phrases.length);
-if(idx===previous)idx=(idx+1)%phrases.length;
-previous=idx;message.textContent=phrases[idx];
-priorFocus=document.activeElement;overlay.hidden=false;shown++;
-nextAt=Date.now()+(15+Math.random()*15)*60*1000;
-later.focus();
-}
-function tick(){
-if(shown>=2||!overlay.hidden||document.hidden||Date.now()<nextAt)return;
-if(!home.classList.contains('di-active'))return;
-var verified=false;
-try{verified=JSON.parse(localStorage.getItem('di_donation_v1')||'{}').verified===true}catch(e){}
-if(verified)return;
-show();
-}
-later.addEventListener('click',close);
-donate.addEventListener('click',function(){close();bannerButton.click()});
-overlay.addEventListener('click',function(e){if(e.target===overlay)close()});
-overlay.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
-setInterval(tick,20000);
-})();
-</script>
 </body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
@@ -3879,6 +3820,65 @@ check.addEventListener('click',verify);
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!data.verified)verify()});
 window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verify()});
 render();
+})();
+</script>
+<style id="di-donation-reminder-style">
+#di-donation-reminder{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(8,20,35,.62)}
+#di-donation-reminder[hidden]{display:none!important}
+#di-donation-reminder-card{width:min(100%,380px);padding:22px;border-radius:20px;background:#fff;color:#18344b;box-shadow:0 15px 45px rgba(0,0,0,.28);text-align:center}
+#di-donation-reminder-card h3{margin:0 0 12px;font-size:22px;color:#174b78}
+#di-donation-reminder-card p{font-size:15px;line-height:1.55;margin:0 0 20px}
+#di-donation-reminder-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#di-donation-reminder-actions button{min-height:44px;padding:10px 15px;border-radius:12px;cursor:pointer}
+#di-donation-reminder-donate{background:#126bc4;color:white;border:0}
+#di-donation-reminder-later{background:#eef3f8;color:#23465e;border:1px solid #cbd8e5}
+html.di-dark #di-donation-reminder-card{background:#1d2e3c;color:#f1f5fa}
+html.di-dark #di-donation-reminder-card h3{color:#c9e7ff}
+</style>
+<script id="di-donation-reminder-script">
+(function(){
+'use strict';
+var home=document.getElementById('di-page-home');
+var bannerButton=document.querySelector('#di-donation-banner button');
+if(!home||!bannerButton)return;
+var phrases=[
+'🚁 Ehi pilota! Il drone vola con la batteria… Drone Italia con qualche caffè! ☕😄',
+'🛸 Nessun pedaggio nei cieli! Ma se ti piace Drone Italia, un piccolo contributo ci dà una spinta. ❤️',
+'☕ Torre di controllo chiama pilota: qui il carburante preferito è il caffè! Una donazione è sempre facoltativa. 😄',
+'🚁 Le eliche girano, le idee pure! Se Drone Italia ti aiuta, puoi offrirci un sorriso… o un caffè. ❤️'
+];
+var overlay=document.createElement('div');overlay.id='di-donation-reminder';overlay.hidden=true;
+overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-labelledby','di-donation-reminder-title');
+var card=document.createElement('div');card.id='di-donation-reminder-card';
+var title=document.createElement('h3');title.id='di-donation-reminder-title';title.textContent='Un saluto dalla torre di controllo! 🚁';
+var message=document.createElement('p');
+var actions=document.createElement('div');actions.id='di-donation-reminder-actions';
+var donate=document.createElement('button');donate.type='button';donate.id='di-donation-reminder-donate';donate.textContent='❤️ Dona con PayPal';
+var later=document.createElement('button');later.type='button';later.id='di-donation-reminder-later';later.textContent='Non ora';
+actions.append(donate,later);card.append(title,message,actions);overlay.append(card);document.body.appendChild(overlay);
+var shown=0,previous=-1,started=Date.now(),nextAt=started+15*60*1000,priorFocus=null;
+function close(){overlay.hidden=true;if(priorFocus&&typeof priorFocus.focus==='function')priorFocus.focus()}
+function show(){
+var idx=Math.floor(Math.random()*phrases.length);
+if(idx===previous)idx=(idx+1)%phrases.length;
+previous=idx;message.textContent=phrases[idx];
+priorFocus=document.activeElement;overlay.hidden=false;shown++;
+nextAt=Date.now()+(15+Math.random()*15)*60*1000;
+later.focus();
+}
+function tick(){
+if(shown>=2||!overlay.hidden||document.hidden||Date.now()<nextAt)return;
+if(!home.classList.contains('di-active'))return;
+var verified=false;
+try{verified=JSON.parse(localStorage.getItem('di_donation_v1')||'{}').verified===true}catch(e){}
+if(verified)return;
+show();
+}
+later.addEventListener('click',close);
+donate.addEventListener('click',function(){close();bannerButton.click()});
+overlay.addEventListener('click',function(e){if(e.target===overlay)close()});
+overlay.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+setInterval(tick,20000);
 })();
 </script>
 </body></html>
