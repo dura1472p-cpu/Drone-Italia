@@ -3768,6 +3768,7 @@ html body #di-page-home #di-home-grid>*{min-height:125px!important;padding:10px 
 #di-donation-banner strong{display:block;font-size:13px}#di-donation-banner button{flex-shrink:0;min-height:39px;padding:9px 12px;background:#126bc4;color:white;font-size:12px}
 #di-donation-banner[hidden]{display:none!important}#di-donation-status{font-size:12px;margin:8px 0;color:#365b78;overflow-wrap:anywhere}
 #di-donation-amount{width:100%;margin:8px 0}#di-donation-check{display:block;margin-top:8px;background:#e7f1fc;color:#155b96}
+#di-donation-check[hidden]{display:none!important}
 html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#3a6584}
 </style>
 <script id="di-donations-verified-script">
@@ -3796,7 +3797,7 @@ function render(){banner.hidden=data.verified===true;link.textContent=data.verif
 function message(text){status.textContent=text}
 async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
 var busy=false;
-async function verify(){if(busy||!data.orderId||data.verified)return;busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
+async function verify(){if(busy)return;if(!data.orderId){message('Nessun pagamento da verificare. Non è stata effettuata alcuna donazione.');return}if(data.verified){message('Donazione già verificata da PayPal. Grazie!');return}busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
 var result=await post('/capture-order',{donationId:data.donationId,orderId:data.orderId});
 if(result.verified===true){data.verified=true;save(data);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
 }catch(e){message('Impossibile verificare ora. Controlla la connessione e riprova.')}finally{busy=false;check.disabled=false}}
