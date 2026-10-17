@@ -3724,4 +3724,26 @@ html body #di-page-home #di-home-hero>img{width:100%!important;height:auto!impor
 html body #di-page-home #di-home-grid{grid-auto-rows:minmax(125px,auto)!important;gap:8px!important;}
 html body #di-page-home #di-home-grid>*{min-height:125px!important;padding:10px 6px!important;}
 </style>
+<script id="di-flights-auto-scroll-2026">
+/* Scorrimento automatico verso la sezione appena aperta. */
+(function(){
+  var page=document.getElementById('di-page-flights');
+  if(!page)return;
+  page.addEventListener('click',function(event){
+    var header=event.target.closest('summary, #di-stats-toggle');
+    if(!header||!page.contains(header))return;
+    var section=header.tagName==='SUMMARY'?header.parentElement:document.getElementById('di-flight-statistics');
+    if(!section)return;
+    var opening=header.tagName==='SUMMARY'?!section.open:header.getAttribute('aria-expanded')!=='true';
+    if(!opening)return;
+    window.setTimeout(function(){
+      if(!page.classList.contains('di-active'))return;
+      if(header.tagName==='SUMMARY'&&!section.open)return;
+      if(header.id==='di-stats-toggle'&&header.getAttribute('aria-expanded')!=='true')return;
+      var top=header.getBoundingClientRect().top+window.scrollY-18;
+      window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+    },110);
+  });
+})();
+</script>
 </body></html>
