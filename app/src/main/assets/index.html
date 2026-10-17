@@ -909,7 +909,59 @@ $('di-restore').onchange=async e=>{
  finally{e.target.value='';backupBusy=false;$('di-backup').disabled=false}
 };
 window.diPrintLogReport=printLogReport;
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p><style id="di-donations-verified-style">
+#di-donation-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 10px 12px;padding:11px 12px;background:#e9f4ff;border:1px solid #bcd9f2;border-radius:13px;color:#17476e;font-size:12px;line-height:1.4}
+#di-donation-banner strong{display:block;font-size:13px}#di-donation-banner button{flex-shrink:0;min-height:39px;padding:9px 12px;background:#126bc4;color:white;font-size:12px}
+#di-donation-banner[hidden]{display:none!important}#di-donation-status{font-size:12px;margin:8px 0;color:#365b78;overflow-wrap:anywhere}
+#di-donation-amount{width:100%;margin:8px 0}#di-donation-check{display:block;margin-top:8px;background:#e7f1fc;color:#155b96}
+html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#3a6584}
+</style>
+<script id="di-donations-verified-script">
+(function(){
+'use strict';
+var API='https://drone-italia-donazioni.turni-vigilanza-pdura.workers.dev';
+var KEY='di_donation_v1';
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function token(){var a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,function(x){return x.toString(16).padStart(2,'0')}).join('')}
+var data=read();if(!/^[a-f0-9]{32,64}$/i.test(data.donationId||'')){data={donationId:token()};save(data)}
+var home=document.getElementById('di-page-home'),settings=document.getElementById('di-paypal-support'),link=document.getElementById('di-paypal-donate');
+if(!home||!settings||!link)return;
+var banner=document.createElement('div');banner.id='di-donation-banner';
+var copy=document.createElement('div');copy.innerHTML='<strong>❤️ Sostieni Drone Italia</strong>Un piccolo contributo volontario aiuta a mantenere l’app gratuita.';
+var bannerButton=document.createElement('button');bannerButton.type='button';bannerButton.textContent='Dona';banner.append(copy,bannerButton);
+var hero=document.getElementById('di-home-hero');if(hero)hero.insertAdjacentElement('afterend',banner);else home.insertBefore(banner,home.firstChild);
+var amountLabel=document.createElement('label');amountLabel.textContent='Importo della donazione (€)';amountLabel.htmlFor='di-donation-amount';
+var amount=document.createElement('select');amount.id='di-donation-amount';
+[1,2,5,10,20].forEach(function(n){var o=document.createElement('option');o.value=String(n);o.textContent=n+' €';if(n===5)o.selected=true;amount.appendChild(o)});
+var status=document.createElement('p');status.id='di-donation-status';status.setAttribute('role','status');
+var check=document.createElement('button');check.type='button';check.id='di-donation-check';check.textContent='Verifica pagamento';check.hidden=true;
+link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);
+link.removeAttribute('href');link.removeAttribute('target');link.setAttribute('role','button');link.setAttribute('tabindex','0');
+function render(){banner.hidden=data.verified===true;link.textContent=data.verified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||data.verified===true;if(data.verified)status.textContent='Donazione verificata da PayPal. Grazie!'}
+function message(text){status.textContent=text}
+async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
+var busy=false;
+async function verify(){if(busy||!data.orderId||data.verified)return;busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
+var result=await post('/capture-order',{donationId:data.donationId,orderId:data.orderId});
+if(result.verified===true){data.verified=true;save(data);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
+}catch(e){message('Impossibile verificare ora. Controlla la connessione e riprova.')}finally{busy=false;check.disabled=false}}
+async function donate(ev){if(ev)ev.preventDefault();if(busy||data.verified)return;
+if(data.orderId){message('Hai già una donazione in attesa. Verificala prima di iniziarne un’altra.');check.hidden=false;return}
+busy=true;message('Apertura di PayPal…');try{var result=await post('/create-order',{donationId:data.donationId,amount:Number(amount.value)});if(!result.orderId||!/^https:\/\//.test(result.approvalUrl||''))throw new Error('Risposta non valida');
+var url=new URL(result.approvalUrl);if(!/(^|\.)paypal\.com$/.test(url.hostname))throw new Error('Indirizzo PayPal non valido');
+data.orderId=result.orderId;save(data);render();message('Completa il pagamento su PayPal, poi torna nell’app e tocca “Verifica pagamento”.');
+window.open(url.href,'_blank','noopener,noreferrer');
+}catch(e){message('Non è stato possibile aprire PayPal. Riprova più tardi.')}finally{busy=false}}
+link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
+bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
+check.addEventListener('click',verify);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!data.verified)verify()});
+window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verify()});
+render();
+})();
+</script>
+</body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
 const weatherStyle=document.createElement('style');weatherStyle.textContent='#di-weather-card[hidden]{display:none!important}#di-weather-card{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce6ef;border-radius:15px}#di-weather-card h4{margin:0 0 8px;color:#174b73}#di-weather-card .di-weather-meta{font-size:12px;line-height:1.5;color:#52718c;overflow-wrap:anywhere}#di-weather-card .di-weather-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#di-weather-card .di-weather-value{padding:12px;border-radius:11px;background:#f0f7fd}#di-weather-card .di-weather-value span{display:block;font-size:12px;color:#52718c}#di-weather-card .di-weather-value strong{display:block;font-size:20px;color:#1268a8;margin-top:4px}#di-weather-card .di-weather-hours{overflow-x:auto}#di-weather-card table{border-collapse:collapse;min-width:420px;width:100%;font-size:12px}#di-weather-card th,#di-weather-card td{padding:10px 6px;border-bottom:1px solid #e1eaf2;text-align:left;white-space:nowrap}#di-weather-card th{color:#36556e}#di-weather-center{display:block;width:100%;min-height:44px;margin:6px 0 12px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(weatherStyle);
@@ -1918,7 +1970,59 @@ pdfButton.onclick=()=>{
  const monthRows=Object.entries(monthCounts).sort((a,b)=>b[0].localeCompare(a[0])).map(([m,n])=>'<tr><td>'+safeHtml(m)+'</td><td>'+n+'</td></tr>').join('');
  const droneRows=flightDroneSummary(logs).map(x=>'<tr><td>'+safeHtml(x.model)+'</td><td>'+x.count+'</td><td>'+safeHtml(formatFlightTime(x.minutes))+'</td></tr>').join('');
  const flightRows=logs.map(x=>'<tr><td>'+safeHtml(x.when)+'</td><td>'+safeHtml(x.place||'Non indicata')+'</td><td>'+safeHtml(x.duration||0)+' min</td></tr>').join('');
- const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Statistiche Drone Italia</title><style>body{font-family:Arial,sans-serif;color:#20384b;padding:24px}h1{color:#1268a8}h2{margin-top:26px;color:#1268a8}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left}th{background:#eaf3fa}p{line-height:1.5}</style></head><body><h1>Drone Italia - Statistiche di volo</h1><p>Rapporto personale generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><p><b>Voli registrati:</b> '+logs.length+'<br><b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'<br><b>Volo piu lungo:</b> '+safeHtml(formatFlightTime(Math.max(0,...logs.map(x=>Number(x.duration)||0))))+'</p><h2>Utilizzo per drone</h2><table><tr><th>Drone</th><th>Voli</th><th>Tempo totale</th></tr>'+droneRows+'</table><h2>Voli per mese</h2><table><tr><th>Mese</th><th>Voli</th></tr>'+monthRows+'</table><h2>Localita</h2><table><tr><th>Localita</th><th>Voli</th></tr>'+locationRows+'</table><h2>Elenco voli</h2><table><tr><th>Data</th><th>Luogo</th><th>Durata</th></tr>'+flightRows+'</table><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
+ const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Statistiche Drone Italia</title><style>body{font-family:Arial,sans-serif;color:#20384b;padding:24px}h1{color:#1268a8}h2{margin-top:26px;color:#1268a8}table{border-collapse:collapse;width:100%}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left}th{background:#eaf3fa}p{line-height:1.5}</style></head><body><h1>Drone Italia - Statistiche di volo</h1><p>Rapporto personale generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><p><b>Voli registrati:</b> '+logs.length+'<br><b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'<br><b>Volo piu lungo:</b> '+safeHtml(formatFlightTime(Math.max(0,...logs.map(x=>Number(x.duration)||0))))+'</p><h2>Utilizzo per drone</h2><table><tr><th>Drone</th><th>Voli</th><th>Tempo totale</th></tr>'+droneRows+'</table><h2>Voli per mese</h2><table><tr><th>Mese</th><th>Voli</th></tr>'+monthRows+'</table><h2>Localita</h2><table><tr><th>Localita</th><th>Voli</th></tr>'+locationRows+'</table><h2>Elenco voli</h2><table><tr><th>Data</th><th>Luogo</th><th>Durata</th></tr>'+flightRows+'</table><p>Documento personale: non costituisce autorizzazione al volo.</p><style id="di-donations-verified-style">
+#di-donation-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 10px 12px;padding:11px 12px;background:#e9f4ff;border:1px solid #bcd9f2;border-radius:13px;color:#17476e;font-size:12px;line-height:1.4}
+#di-donation-banner strong{display:block;font-size:13px}#di-donation-banner button{flex-shrink:0;min-height:39px;padding:9px 12px;background:#126bc4;color:white;font-size:12px}
+#di-donation-banner[hidden]{display:none!important}#di-donation-status{font-size:12px;margin:8px 0;color:#365b78;overflow-wrap:anywhere}
+#di-donation-amount{width:100%;margin:8px 0}#di-donation-check{display:block;margin-top:8px;background:#e7f1fc;color:#155b96}
+html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#3a6584}
+</style>
+<script id="di-donations-verified-script">
+(function(){
+'use strict';
+var API='https://drone-italia-donazioni.turni-vigilanza-pdura.workers.dev';
+var KEY='di_donation_v1';
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function token(){var a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,function(x){return x.toString(16).padStart(2,'0')}).join('')}
+var data=read();if(!/^[a-f0-9]{32,64}$/i.test(data.donationId||'')){data={donationId:token()};save(data)}
+var home=document.getElementById('di-page-home'),settings=document.getElementById('di-paypal-support'),link=document.getElementById('di-paypal-donate');
+if(!home||!settings||!link)return;
+var banner=document.createElement('div');banner.id='di-donation-banner';
+var copy=document.createElement('div');copy.innerHTML='<strong>❤️ Sostieni Drone Italia</strong>Un piccolo contributo volontario aiuta a mantenere l’app gratuita.';
+var bannerButton=document.createElement('button');bannerButton.type='button';bannerButton.textContent='Dona';banner.append(copy,bannerButton);
+var hero=document.getElementById('di-home-hero');if(hero)hero.insertAdjacentElement('afterend',banner);else home.insertBefore(banner,home.firstChild);
+var amountLabel=document.createElement('label');amountLabel.textContent='Importo della donazione (€)';amountLabel.htmlFor='di-donation-amount';
+var amount=document.createElement('select');amount.id='di-donation-amount';
+[1,2,5,10,20].forEach(function(n){var o=document.createElement('option');o.value=String(n);o.textContent=n+' €';if(n===5)o.selected=true;amount.appendChild(o)});
+var status=document.createElement('p');status.id='di-donation-status';status.setAttribute('role','status');
+var check=document.createElement('button');check.type='button';check.id='di-donation-check';check.textContent='Verifica pagamento';check.hidden=true;
+link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);
+link.removeAttribute('href');link.removeAttribute('target');link.setAttribute('role','button');link.setAttribute('tabindex','0');
+function render(){banner.hidden=data.verified===true;link.textContent=data.verified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||data.verified===true;if(data.verified)status.textContent='Donazione verificata da PayPal. Grazie!'}
+function message(text){status.textContent=text}
+async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
+var busy=false;
+async function verify(){if(busy||!data.orderId||data.verified)return;busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
+var result=await post('/capture-order',{donationId:data.donationId,orderId:data.orderId});
+if(result.verified===true){data.verified=true;save(data);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
+}catch(e){message('Impossibile verificare ora. Controlla la connessione e riprova.')}finally{busy=false;check.disabled=false}}
+async function donate(ev){if(ev)ev.preventDefault();if(busy||data.verified)return;
+if(data.orderId){message('Hai già una donazione in attesa. Verificala prima di iniziarne un’altra.');check.hidden=false;return}
+busy=true;message('Apertura di PayPal…');try{var result=await post('/create-order',{donationId:data.donationId,amount:Number(amount.value)});if(!result.orderId||!/^https:\/\//.test(result.approvalUrl||''))throw new Error('Risposta non valida');
+var url=new URL(result.approvalUrl);if(!/(^|\.)paypal\.com$/.test(url.hostname))throw new Error('Indirizzo PayPal non valido');
+data.orderId=result.orderId;save(data);render();message('Completa il pagamento su PayPal, poi torna nell’app e tocca “Verifica pagamento”.');
+window.open(url.href,'_blank','noopener,noreferrer');
+}catch(e){message('Non è stato possibile aprire PayPal. Riprova più tardi.')}finally{busy=false}}
+link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
+bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
+check.addEventListener('click',verify);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!data.verified)verify()});
+window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verify()});
+render();
+})();
+</script>
+</body></html>';
  if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport)window.DroneItaliaNative.printReport(html);else alert('Esportazione PDF disponibile nell’app Android aggiornata.');
 };
 function mappedFlightIndex(x,logs){
@@ -2038,7 +2142,59 @@ function filteredFlightsReport(entries){
  const selected=[['Anno',mapFilters.year||'Tutti'],['Mese',mapFilters.month?months[Number(mapFilters.month)-1]:'Tutti'],['Drone',mapFilters.model||'Tutti'],['Località',mapFilters.place.trim()||'Tutte']];
  const filters=selected.map(([label,value])=>'<li><b>'+label+':</b> '+safeHtml(value)+'</li>').join('');
  const rows=entries.map(x=>'<tr><td>'+safeHtml(x.when||'Non indicata')+'</td><td>'+safeHtml(x.place||'Non indicata')+'</td><td>'+safeHtml(x.model||'Non indicato')+'</td><td>'+safeHtml(formatFlightTime(Math.max(0,Number(x.duration)||0)))+'</td><td>'+safeHtml(Number(x.lat).toFixed(5)+', '+Number(x.lng).toFixed(5))+'</td></tr>').join('');
- return '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Voli filtrati Drone Italia</title><style>@page{size:A4 landscape;margin:15mm}body{font:14px Arial,sans-serif;color:#20384b}h1,h2{color:#1268a8}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left;overflow-wrap:anywhere}th{background:#eaf3fa}thead{display:table-header-group}tr{break-inside:avoid}ul{padding-left:20px}p{line-height:1.5}</style></head><body><h1>Drone Italia — Voli filtrati sulla mappa</h1><p>Rapporto generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><h2>Filtri applicati</h2><ul>'+filters+'</ul><p><b>Voli:</b> '+entries.length+' · <b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'</p><table><thead><tr><th>Data</th><th>Località</th><th>Drone</th><th>Durata</th><th>Coordinate GPS</th></tr></thead><tbody>'+rows+'</tbody></table><p>Il rapporto include solo i voli con coordinate GPS corrispondenti ai filtri selezionati.</p><p>Documento personale: non costituisce autorizzazione al volo.</p></body></html>';
+ return '<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Voli filtrati Drone Italia</title><style>@page{size:A4 landscape;margin:15mm}body{font:14px Arial,sans-serif;color:#20384b}h1,h2{color:#1268a8}table{border-collapse:collapse;width:100%;table-layout:fixed}th,td{border:1px solid #d3dfe8;padding:8px;text-align:left;overflow-wrap:anywhere}th{background:#eaf3fa}thead{display:table-header-group}tr{break-inside:avoid}ul{padding-left:20px}p{line-height:1.5}</style></head><body><h1>Drone Italia — Voli filtrati sulla mappa</h1><p>Rapporto generato il '+safeHtml(new Date().toLocaleString('it-IT'))+'</p><h2>Filtri applicati</h2><ul>'+filters+'</ul><p><b>Voli:</b> '+entries.length+' · <b>Tempo totale:</b> '+safeHtml(formatFlightTime(total))+'</p><table><thead><tr><th>Data</th><th>Località</th><th>Drone</th><th>Durata</th><th>Coordinate GPS</th></tr></thead><tbody>'+rows+'</tbody></table><p>Il rapporto include solo i voli con coordinate GPS corrispondenti ai filtri selezionati.</p><p>Documento personale: non costituisce autorizzazione al volo.</p><style id="di-donations-verified-style">
+#di-donation-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 10px 12px;padding:11px 12px;background:#e9f4ff;border:1px solid #bcd9f2;border-radius:13px;color:#17476e;font-size:12px;line-height:1.4}
+#di-donation-banner strong{display:block;font-size:13px}#di-donation-banner button{flex-shrink:0;min-height:39px;padding:9px 12px;background:#126bc4;color:white;font-size:12px}
+#di-donation-banner[hidden]{display:none!important}#di-donation-status{font-size:12px;margin:8px 0;color:#365b78;overflow-wrap:anywhere}
+#di-donation-amount{width:100%;margin:8px 0}#di-donation-check{display:block;margin-top:8px;background:#e7f1fc;color:#155b96}
+html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#3a6584}
+</style>
+<script id="di-donations-verified-script">
+(function(){
+'use strict';
+var API='https://drone-italia-donazioni.turni-vigilanza-pdura.workers.dev';
+var KEY='di_donation_v1';
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function token(){var a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,function(x){return x.toString(16).padStart(2,'0')}).join('')}
+var data=read();if(!/^[a-f0-9]{32,64}$/i.test(data.donationId||'')){data={donationId:token()};save(data)}
+var home=document.getElementById('di-page-home'),settings=document.getElementById('di-paypal-support'),link=document.getElementById('di-paypal-donate');
+if(!home||!settings||!link)return;
+var banner=document.createElement('div');banner.id='di-donation-banner';
+var copy=document.createElement('div');copy.innerHTML='<strong>❤️ Sostieni Drone Italia</strong>Un piccolo contributo volontario aiuta a mantenere l’app gratuita.';
+var bannerButton=document.createElement('button');bannerButton.type='button';bannerButton.textContent='Dona';banner.append(copy,bannerButton);
+var hero=document.getElementById('di-home-hero');if(hero)hero.insertAdjacentElement('afterend',banner);else home.insertBefore(banner,home.firstChild);
+var amountLabel=document.createElement('label');amountLabel.textContent='Importo della donazione (€)';amountLabel.htmlFor='di-donation-amount';
+var amount=document.createElement('select');amount.id='di-donation-amount';
+[1,2,5,10,20].forEach(function(n){var o=document.createElement('option');o.value=String(n);o.textContent=n+' €';if(n===5)o.selected=true;amount.appendChild(o)});
+var status=document.createElement('p');status.id='di-donation-status';status.setAttribute('role','status');
+var check=document.createElement('button');check.type='button';check.id='di-donation-check';check.textContent='Verifica pagamento';check.hidden=true;
+link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);
+link.removeAttribute('href');link.removeAttribute('target');link.setAttribute('role','button');link.setAttribute('tabindex','0');
+function render(){banner.hidden=data.verified===true;link.textContent=data.verified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||data.verified===true;if(data.verified)status.textContent='Donazione verificata da PayPal. Grazie!'}
+function message(text){status.textContent=text}
+async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
+var busy=false;
+async function verify(){if(busy||!data.orderId||data.verified)return;busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
+var result=await post('/capture-order',{donationId:data.donationId,orderId:data.orderId});
+if(result.verified===true){data.verified=true;save(data);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
+}catch(e){message('Impossibile verificare ora. Controlla la connessione e riprova.')}finally{busy=false;check.disabled=false}}
+async function donate(ev){if(ev)ev.preventDefault();if(busy||data.verified)return;
+if(data.orderId){message('Hai già una donazione in attesa. Verificala prima di iniziarne un’altra.');check.hidden=false;return}
+busy=true;message('Apertura di PayPal…');try{var result=await post('/create-order',{donationId:data.donationId,amount:Number(amount.value)});if(!result.orderId||!/^https:\/\//.test(result.approvalUrl||''))throw new Error('Risposta non valida');
+var url=new URL(result.approvalUrl);if(!/(^|\.)paypal\.com$/.test(url.hostname))throw new Error('Indirizzo PayPal non valido');
+data.orderId=result.orderId;save(data);render();message('Completa il pagamento su PayPal, poi torna nell’app e tocca “Verifica pagamento”.');
+window.open(url.href,'_blank','noopener,noreferrer');
+}catch(e){message('Non è stato possibile aprire PayPal. Riprova più tardi.')}finally{busy=false}}
+link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
+bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
+check.addEventListener('click',verify);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!data.verified)verify()});
+window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verify()});
+render();
+})();
+</script>
+</body></html>';
 }
 field('pdf').onclick=()=>{
  const entries=gpsFlights().filter(matchesMapFilters);
@@ -3761,6 +3917,58 @@ html body #di-page-home #di-home-grid>*{min-height:125px!important;padding:10px 
  var about=Array.from(page.querySelectorAll('.di-tool-group')).find(function(el){return el.textContent.indexOf('Informazioni sull’app')!==-1});
  if(about)page.insertBefore(group,about);else page.appendChild(group);
  details.addEventListener('toggle',function(){if(!details.open)return;page.querySelectorAll('.di-settings-disclosure').forEach(function(other){if(other!==details)other.open=false})});
+})();
+</script>
+<style id="di-donations-verified-style">
+#di-donation-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 10px 12px;padding:11px 12px;background:#e9f4ff;border:1px solid #bcd9f2;border-radius:13px;color:#17476e;font-size:12px;line-height:1.4}
+#di-donation-banner strong{display:block;font-size:13px}#di-donation-banner button{flex-shrink:0;min-height:39px;padding:9px 12px;background:#126bc4;color:white;font-size:12px}
+#di-donation-banner[hidden]{display:none!important}#di-donation-status{font-size:12px;margin:8px 0;color:#365b78;overflow-wrap:anywhere}
+#di-donation-amount{width:100%;margin:8px 0}#di-donation-check{display:block;margin-top:8px;background:#e7f1fc;color:#155b96}
+html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#3a6584}
+</style>
+<script id="di-donations-verified-script">
+(function(){
+'use strict';
+var API='https://drone-italia-donazioni.turni-vigilanza-pdura.workers.dev';
+var KEY='di_donation_v1';
+function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+function token(){var a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,function(x){return x.toString(16).padStart(2,'0')}).join('')}
+var data=read();if(!/^[a-f0-9]{32,64}$/i.test(data.donationId||'')){data={donationId:token()};save(data)}
+var home=document.getElementById('di-page-home'),settings=document.getElementById('di-paypal-support'),link=document.getElementById('di-paypal-donate');
+if(!home||!settings||!link)return;
+var banner=document.createElement('div');banner.id='di-donation-banner';
+var copy=document.createElement('div');copy.innerHTML='<strong>❤️ Sostieni Drone Italia</strong>Un piccolo contributo volontario aiuta a mantenere l’app gratuita.';
+var bannerButton=document.createElement('button');bannerButton.type='button';bannerButton.textContent='Dona';banner.append(copy,bannerButton);
+var hero=document.getElementById('di-home-hero');if(hero)hero.insertAdjacentElement('afterend',banner);else home.insertBefore(banner,home.firstChild);
+var amountLabel=document.createElement('label');amountLabel.textContent='Importo della donazione (€)';amountLabel.htmlFor='di-donation-amount';
+var amount=document.createElement('select');amount.id='di-donation-amount';
+[1,2,5,10,20].forEach(function(n){var o=document.createElement('option');o.value=String(n);o.textContent=n+' €';if(n===5)o.selected=true;amount.appendChild(o)});
+var status=document.createElement('p');status.id='di-donation-status';status.setAttribute('role','status');
+var check=document.createElement('button');check.type='button';check.id='di-donation-check';check.textContent='Verifica pagamento';check.hidden=true;
+link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);
+link.removeAttribute('href');link.removeAttribute('target');link.setAttribute('role','button');link.setAttribute('tabindex','0');
+function render(){banner.hidden=data.verified===true;link.textContent=data.verified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||data.verified===true;if(data.verified)status.textContent='Donazione verificata da PayPal. Grazie!'}
+function message(text){status.textContent=text}
+async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
+var busy=false;
+async function verify(){if(busy||!data.orderId||data.verified)return;busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
+var result=await post('/capture-order',{donationId:data.donationId,orderId:data.orderId});
+if(result.verified===true){data.verified=true;save(data);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
+}catch(e){message('Impossibile verificare ora. Controlla la connessione e riprova.')}finally{busy=false;check.disabled=false}}
+async function donate(ev){if(ev)ev.preventDefault();if(busy||data.verified)return;
+if(data.orderId){message('Hai già una donazione in attesa. Verificala prima di iniziarne un’altra.');check.hidden=false;return}
+busy=true;message('Apertura di PayPal…');try{var result=await post('/create-order',{donationId:data.donationId,amount:Number(amount.value)});if(!result.orderId||!/^https:\/\//.test(result.approvalUrl||''))throw new Error('Risposta non valida');
+var url=new URL(result.approvalUrl);if(!/(^|\.)paypal\.com$/.test(url.hostname))throw new Error('Indirizzo PayPal non valido');
+data.orderId=result.orderId;save(data);render();message('Completa il pagamento su PayPal, poi torna nell’app e tocca “Verifica pagamento”.');
+window.open(url.href,'_blank','noopener,noreferrer');
+}catch(e){message('Non è stato possibile aprire PayPal. Riprova più tardi.')}finally{busy=false}}
+link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
+bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
+check.addEventListener('click',verify);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!data.verified)verify()});
+window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verify()});
+render();
 })();
 </script>
 </body></html>
