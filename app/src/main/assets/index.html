@@ -909,39 +909,7 @@ $('di-restore').onchange=async e=>{
  finally{e.target.value='';backupBusy=false;$('di-backup').disabled=false}
 };
 window.diPrintLogReport=printLogReport;
-function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p>
-<style id="di-paypal-donate-style">
-#di-paypal-donate{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;background:#126bc4;color:#fff!important;border-radius:13px;padding:15px 12px;margin:12px 0 7px;font-size:16px;font-weight:800;box-shadow:0 3px 12px #143f6726}
-#di-paypal-donate:focus-visible{outline:3px solid #66aaf3;outline-offset:3px}
-#di-paypal-support .di-paypal-note{font-size:13px;line-height:1.6;margin:10px 0;color:#526778}
-html.di-dark #di-paypal-support .di-paypal-note{color:#afc0d1}
-</style>
-<script>
-(function(){
-  var page=document.getElementById('di-page-settings');
-  if(!page||document.getElementById('di-paypal-support'))return;
-  var group=document.createElement('section');
-  group.className='di-tool-group';group.id='di-paypal-support';
-  var details=document.createElement('details');details.className='di-settings-disclosure';
-  var summary=document.createElement('summary');
-  var heading=document.createElement('h3');heading.textContent='❤️ Sostieni Drone Italia';
-  summary.appendChild(heading);
-  var content=document.createElement('div');content.className='di-settings-content';
-  var note=document.createElement('p');note.className='di-paypal-note';
-  note.textContent='Drone Italia è gratuita. Se vuoi sostenere lo sviluppo dell’app, puoi lasciare una donazione volontaria tramite PayPal. Nessuna funzione richiede una donazione.';
-  var link=document.createElement('a');link.id='di-paypal-donate';
-  link.href='https://paypal.me/pdura1472p';link.target='_blank';link.rel='noopener noreferrer';
-  link.textContent='❤️ Dona con PayPal';
-  content.append(note,link);details.append(summary,content);group.append(details);
-  var about=Array.from(page.querySelectorAll('.di-tool-group')).find(function(el){return el.textContent.indexOf('Informazioni sull’app')!==-1});
-  if(about)page.insertBefore(group,about);else page.appendChild(group);
-  details.addEventListener('toggle',function(){
-    if(!details.open)return;
-    page.querySelectorAll('.di-settings-disclosure').forEach(function(other){if(other!==details)other.open=false});
-  });
-})();
-</script>
-</body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
+function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));const fields=[['Data',x.when],['Luogo',x.place],['Durata (minuti)',x.duration],['Drone',x.model],['Batteria utilizzata',window.diBatteryDisplayName?window.diBatteryDisplayName(x):x.batteryName||'Non indicata'],['Latitudine',x.lat],['Longitudine',x.lng],['Note',x.notes],['Quota prevista (m, se associabile)',(()=>{const plans=load('plans');const matches=plans.filter(p=>typeof x.lat==='number'&&typeof x.lng==='number'&&typeof p.lat==='number'&&typeof p.lng==='number'&&Math.abs(p.lat-x.lat)<0.00001&&Math.abs(p.lng-x.lng)<0.00001);return matches.length===1?matches[0].alt:'Non associata'})()],['Batteria drone (%)',x.droneBattery],['Batteria radiocomando (%)',x.radioBattery]];const rows=fields.map(([k,v])=>'<tr><th style="text-align:left;padding:8px;border:1px solid #aaa">'+escape(k)+'</th><td style="padding:8px;border:1px solid #aaa">'+escape(v)+'</td></tr>').join('');const photo=typeof x.photo==='string'&&x.photo.startsWith('data:image/jpeg;base64,')?'<p><img style="max-width:90%" src="'+x.photo+'"></p>':'';const html='<!doctype html><html><head><meta charset="utf-8"><title>Rapporto Drone Italia</title></head><body><h1>Rapporto personale Drone Italia</h1><table style="border-collapse:collapse">'+rows+'</table>'+photo+'<p>Documento personale. Non costituisce autorizzazione al volo.</p></body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
 const weatherStyle=document.createElement('style');weatherStyle.textContent='#di-weather-card[hidden]{display:none!important}#di-weather-card{margin-top:12px;padding:15px;background:#fff;border:1px solid #dce6ef;border-radius:15px}#di-weather-card h4{margin:0 0 8px;color:#174b73}#di-weather-card .di-weather-meta{font-size:12px;line-height:1.5;color:#52718c;overflow-wrap:anywhere}#di-weather-card .di-weather-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}#di-weather-card .di-weather-value{padding:12px;border-radius:11px;background:#f0f7fd}#di-weather-card .di-weather-value span{display:block;font-size:12px;color:#52718c}#di-weather-card .di-weather-value strong{display:block;font-size:20px;color:#1268a8;margin-top:4px}#di-weather-card .di-weather-hours{overflow-x:auto}#di-weather-card table{border-collapse:collapse;min-width:420px;width:100%;font-size:12px}#di-weather-card th,#di-weather-card td{padding:10px 6px;border-bottom:1px solid #e1eaf2;text-align:left;white-space:nowrap}#di-weather-card th{color:#36556e}#di-weather-center{display:block;width:100%;min-height:44px;margin:6px 0 12px;padding:9px;border:1px solid #bbc9d1;border-radius:8px;font:inherit}';document.head.append(weatherStyle);
@@ -3776,6 +3744,23 @@ html body #di-page-home #di-home-grid>*{min-height:125px!important;padding:10px 
       window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
     },110);
   });
+})();
+</script>
+<style id="di-paypal-style">#di-page-settings #di-paypal-donate{display:block;text-align:center;background:#126bc4;color:#fff;text-decoration:none;border-radius:13px;padding:13px 15px;font-weight:750;margin:12px 0 4px}#di-page-settings #di-paypal-support .di-paypal-note{margin-top:13px}</style>
+<script id="di-paypal-script">
+(function(){
+ var page=document.getElementById('di-page-settings');
+ if(!page||document.getElementById('di-paypal-support'))return;
+ var group=document.createElement('section');group.className='di-tool-group';group.id='di-paypal-support';
+ var details=document.createElement('details');details.className='di-settings-disclosure';
+ var summary=document.createElement('summary');var heading=document.createElement('h3');heading.textContent='❤️ Sostieni Drone Italia';summary.appendChild(heading);
+ var content=document.createElement('div');content.className='di-settings-content';
+ var note=document.createElement('p');note.className='di-paypal-note';note.textContent='Drone Italia è gratuita. Se vuoi sostenere lo sviluppo dell’app, puoi lasciare una donazione volontaria tramite PayPal. Nessuna funzione richiede una donazione.';
+ var link=document.createElement('a');link.id='di-paypal-donate';link.href='https://paypal.me/pdura1472p';link.target='_blank';link.rel='noopener noreferrer';link.textContent='❤️ Dona con PayPal';
+ content.append(note,link);details.append(summary,content);group.append(details);
+ var about=Array.from(page.querySelectorAll('.di-tool-group')).find(function(el){return el.textContent.indexOf('Informazioni sull’app')!==-1});
+ if(about)page.insertBefore(group,about);else page.appendChild(group);
+ details.addEventListener('toggle',function(){if(!details.open)return;page.querySelectorAll('.di-settings-disclosure').forEach(function(other){if(other!==details)other.open=false})});
 })();
 </script>
 </body></html>
