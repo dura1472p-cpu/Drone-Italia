@@ -13,7 +13,7 @@ android { namespace 'it.paolodurante.droneitalia'; compileSdk 36
  }
  buildTypes {
   debug {
-   // Diagnostic app uses a distinct package; ephemeral debug signing is safe here.
+   if (System.getenv('DRONE_SIGNING_STORE_FILE')) signingConfig signingConfigs.permanent
   }
  }
  applicationVariants.all { variant ->
