@@ -1,6 +1,6 @@
 plugins { id 'com.android.application' }
 android { namespace 'it.paolodurante.droneitalia'; compileSdk 36
- defaultConfig { applicationId 'it.paolodurante.droneitalia'; minSdk 26; targetSdk 36; versionCode (System.getenv('DRONE_CI_BUILD_NUMBER') ? 1000 + Integer.parseInt(System.getenv('DRONE_CI_BUILD_NUMBER')) : 4); versionName '0.4-test' }
+ defaultConfig { applicationId 'it.paolodurante.droneitalia.diagnostic'; minSdk 26; targetSdk 36; versionCode (System.getenv('DRONE_CI_BUILD_NUMBER') ? 1000 + Integer.parseInt(System.getenv('DRONE_CI_BUILD_NUMBER')) : 4); versionName '0.4-diagnostic' }
  signingConfigs {
   if (System.getenv('DRONE_SIGNING_STORE_FILE')) {
    permanent {
@@ -13,7 +13,7 @@ android { namespace 'it.paolodurante.droneitalia'; compileSdk 36
  }
  buildTypes {
   debug {
-   if (System.getenv('DRONE_SIGNING_STORE_FILE')) signingConfig signingConfigs.permanent
+   // Diagnostic app uses a distinct package; ephemeral debug signing is safe here.
   }
  }
  applicationVariants.all { variant ->
