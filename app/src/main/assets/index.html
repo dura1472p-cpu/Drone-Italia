@@ -4032,4 +4032,69 @@ html body #di-page-home #di-home-grid .di-home-label{color:#f6fbff!important;}
 html body #di-page-home #di-home-grid .di-home-desc{color:#bed4e6!important;}
 @media(max-height:750px){html body #di-page-home #di-home-hero{height:10dvh!important;max-height:10dvh!important;}}
 </style>
+
+<script id="di-home-reference-structure-v2">
+(function(){
+ function setup(){
+  var home=document.getElementById('di-page-home'),hero=document.getElementById('di-home-hero'),grid=document.getElementById('di-home-grid');
+  if(!home||!hero||!grid)return;
+  if(!document.getElementById('di-reference-header')){
+   var header=document.createElement('div');header.id='di-reference-header';
+   header.innerHTML='<div><strong>CONTROL CENTER · PILOTA</strong><span>Dashboard Drone Italia</span></div><b>v0.4</b>';
+   home.insertBefore(header,hero);
+  }
+  var names=['Mappa','Importa zone','I tuoi voli','Foto','I tuoi droni','Impostazioni','Normative','Supporto'];
+  var desc=['Visualizza la mappa e le restrizioni','Carica file BZ, KML o GeoJSON','Storico e log dei voli','Gestisci le tue foto','Gestisci i tuoi droni','Preferenze dell’app','Regole e regolamenti','FAQ e assistenza'];
+  var buttons=grid.querySelectorAll('button');
+  buttons.forEach(function(btn,i){
+   if(i>=8)return;
+   var title=btn.querySelector('.di-home-label'),sub=btn.querySelector('.di-home-desc');
+   if(title)title.textContent=names[i];
+   if(sub)sub.textContent=desc[i];
+   if(!btn.querySelector('.di-reference-arrow')){var arrow=document.createElement('span');arrow.className='di-reference-arrow';arrow.textContent='›';arrow.setAttribute('aria-hidden','true');btn.appendChild(arrow);}
+  });
+  var stats=document.getElementById('di-home-overview');
+  if(stats){
+   var icons=['✈','◷','🚁'];
+   Array.from(stats.children).forEach(function(card,i){
+    if(!card.querySelector('.di-reference-stat-icon')){var icon=document.createElement('span');icon.className='di-reference-stat-icon';icon.textContent=icons[i]||'•';card.insertBefore(icon,card.firstChild);}
+   });
+  }
+ }
+ function fit(){
+  var home=document.getElementById('di-page-home'),nav=document.getElementById('di-app-nav');
+  if(!home||!nav||!home.classList.contains('di-active'))return;
+  var top=Math.max(0,Math.round(home.getBoundingClientRect().top));
+  var bottom=Math.round(nav.getBoundingClientRect().top);
+  if(bottom>top+300){home.style.setProperty('--di-home-available-height',(bottom-top-5)+'px');}
+ }
+ document.addEventListener('DOMContentLoaded',function(){setup();fit()});
+ window.addEventListener('load',function(){setup();fit()});
+ window.addEventListener('resize',fit);
+ setTimeout(function(){setup();fit()},600);
+ setTimeout(function(){setup();fit()},1700);
+})();
+</script>
+<style id="di-home-reference-layout-v2">
+html body #di-page-home.di-active{height:var(--di-home-available-height,calc(100dvh - 92px))!important;max-height:var(--di-home-available-height,calc(100dvh - 92px))!important;min-height:0!important;width:calc(100% - 16px)!important;max-width:none!important;margin:0 8px!important;box-sizing:border-box!important;display:flex!important;flex-direction:column!important;gap:clamp(4px,.55dvh,8px)!important;overflow:hidden!important;padding:clamp(6px,.75dvh,10px)!important;background:linear-gradient(160deg,#03152b,#082948)!important;border:1px solid #1b5e8c!important;border-radius:16px!important;}
+html body #di-page-home #di-reference-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;flex:0 0 auto!important;border-bottom:1px solid #24618b!important;padding:2px 4px 6px!important;color:#d6edff!important;}
+html body #di-page-home #di-reference-header>div{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important;}
+html body #di-page-home #di-reference-header strong{font-size:clamp(12px,2dvh,19px)!important;letter-spacing:1px!important;color:#85d7ff!important;line-height:1.15!important;}
+html body #di-page-home #di-reference-header span{font-size:clamp(10px,1.4dvh,13px)!important;color:#c5d9e8!important;}
+html body #di-page-home #di-reference-header b{border:1px solid #2380b5!important;border-radius:7px!important;padding:5px!important;color:#89d8ff!important;font-size:11px!important;}
+html body #di-page-home #di-home-hero{height:clamp(72px,13dvh,138px)!important;max-height:clamp(72px,13dvh,138px)!important;min-height:0!important;flex:0 0 auto!important;}
+html body #di-page-home #di-home-hero>img{object-fit:contain!important;object-position:center!important;}
+html body #di-page-home #di-home-overview{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;flex:0 0 auto!important;}
+html body #di-page-home #di-home-overview>div{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:center!important;justify-content:center!important;gap:1px 5px!important;padding:4px!important;}
+html body #di-page-home #di-home-overview .di-reference-stat-icon{grid-column:1!important;grid-row:1/3!important;font-size:clamp(12px,2.3dvh,21px)!important;color:#60d9ff!important;}
+html body #di-page-home #di-home-overview strong{grid-column:2!important;grid-row:1!important;text-align:left!important;}
+html body #di-page-home #di-home-overview span:not(.di-reference-stat-icon){grid-column:2!important;grid-row:2!important;text-align:left!important;}
+html body #di-page-home #di-home-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;flex:1 1 0!important;height:0!important;min-height:0!important;gap:clamp(4px,.55dvh,8px)!important;}
+html body #di-page-home #di-home-grid>button{display:grid!important;grid-template-columns:clamp(24px,4.5dvh,43px) minmax(0,1fr) 12px!important;grid-template-rows:auto auto!important;grid-template-areas:'icon title arrow' 'icon desc arrow'!important;align-content:center!important;align-items:center!important;gap:2px 7px!important;text-align:left!important;padding:5px 7px!important;border-radius:11px!important;}
+html body #di-page-home #di-home-grid .di-home-icon{grid-area:icon!important;width:clamp(24px,4.5dvh,43px)!important;height:clamp(24px,4.5dvh,43px)!important;display:grid!important;place-items:center!important;border:1px solid #1689c5!important;border-radius:9px!important;font-size:clamp(15px,2.4dvh,23px)!important;}
+html body #di-page-home #di-home-grid .di-home-label{grid-area:title!important;align-self:end!important;}
+html body #di-page-home #di-home-grid .di-home-desc{grid-area:desc!important;align-self:start!important;display:block!important;}
+html body #di-page-home #di-home-grid .di-reference-arrow{grid-area:arrow!important;color:#9ce3ff!important;font-size:22px!important;line-height:1!important;}
+@media(max-height:700px){html body #di-page-home #di-home-hero{height:9dvh!important;max-height:9dvh!important;}html body #di-page-home #di-home-grid .di-home-desc{display:none!important;}}
+</style>
 </body></html>
