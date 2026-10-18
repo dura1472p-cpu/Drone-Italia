@@ -961,6 +961,63 @@ window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verif
 render();
 })();
 </script>
+
+<style id="di-home-one-screen-2026">
+/* Home compatta: nessuna modifica alle funzioni di navigazione o ai dati. */
+html body #di-page-home.di-active{
+ height:calc(100dvh - 83px - env(safe-area-inset-bottom))!important;
+ max-height:calc(100dvh - 83px - env(safe-area-inset-bottom))!important;
+ min-height:0!important;overflow-y:hidden!important;overflow-x:hidden!important;
+ display:flex!important;flex-direction:column!important;gap:clamp(3px,.7dvh,9px)!important;
+ padding:clamp(5px,1dvh,10px) 10px 6px!important;
+}
+html body #di-page-home #di-home-hero{
+ flex:0 0 auto!important;width:100%!important;
+ height:clamp(75px,15dvh,165px)!important;min-height:0!important;max-height:15dvh!important;
+ margin:0!important;padding:0!important;overflow:hidden!important;border-radius:12px!important;
+ background:#052247!important;
+}
+html body #di-page-home #di-home-hero>img{
+ width:100%!important;height:100%!important;max-height:100%!important;
+ aspect-ratio:auto!important;object-fit:cover!important;object-position:center 47%!important;
+ border-radius:12px!important;
+}
+html body #di-page-home #di-donation-banner{
+ flex:0 0 auto!important;margin:0!important;padding:5px 9px!important;
+ min-height:0!important;font-size:clamp(10px,1.5dvh,12px)!important;line-height:1.2!important;
+}
+html body #di-page-home #di-donation-banner strong{font-size:clamp(11px,1.7dvh,13px)!important}
+html body #di-page-home #di-donation-banner button{min-height:30px!important;padding:5px 10px!important}
+html body #di-page-home #di-home-grid{
+ flex:1 1 auto!important;min-height:0!important;height:auto!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ grid-template-rows:repeat(4,minmax(0,1fr))!important;grid-auto-rows:minmax(0,1fr)!important;
+ gap:clamp(3px,.65dvh,8px)!important;margin:0!important;padding:0!important;
+ overflow:hidden!important;
+}
+html body #di-page-home #di-home-grid>*{
+ min-height:0!important;height:100%!important;max-height:100%!important;
+ padding:clamp(3px,.6dvh,8px)!important;overflow:hidden!important;
+}
+html body #di-page-home #di-home-grid button{
+ min-height:0!important;height:100%!important;max-height:100%!important;
+ padding:clamp(3px,.6dvh,8px)!important;overflow:hidden!important;
+ grid-template-columns:clamp(23px,4.2dvh,38px) minmax(0,1fr)!important;
+ grid-template-rows:auto minmax(0,1fr)!important;gap:2px 5px!important;
+ font-size:clamp(10px,1.65dvh,14px)!important;line-height:1.12!important;
+}
+html body #di-page-home #di-home-grid .di-home-icon{
+ width:clamp(23px,4.2dvh,38px)!important;height:clamp(23px,4.2dvh,38px)!important;
+}
+html body #di-page-home #di-home-grid .di-home-icon svg{width:75%!important;height:75%!important}
+html body #di-page-home #di-home-sections-title{
+ flex:0 0 auto!important;margin:0!important;font-size:clamp(12px,2dvh,17px)!important;line-height:1.2!important;
+}
+@media(max-height:700px){
+ html body #di-page-home #di-home-hero{height:11dvh!important;max-height:11dvh!important}
+ html body #di-page-home #di-home-grid button{font-size:10px!important}
+}
+</style>
 </body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
