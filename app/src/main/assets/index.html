@@ -3878,4 +3878,90 @@ overlay.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
 setInterval(tick,20000);
 })();
 </script>
+
+<style id="di-cockpit-home-v04">
+/* Cockpit Home: modifiche visive circoscritte alla sola pagina Home */
+html body #di-page-home,
+html body #di-page-home.di-active{
+ background:linear-gradient(165deg,#071b31 0%,#061325 58%,#071d35 100%)!important;
+ color:#e6f5ff!important;border:1px solid #1c527b!important;border-radius:15px!important;
+ box-shadow:inset 0 0 0 1px #0b3556,0 8px 25px #00132255!important;
+ padding:10px 9px 95px!important;
+ width:100%!important;max-width:560px!important;margin:0 auto!important;
+ display:block!important;overflow-x:hidden!important;overflow-y:auto!important;
+ height:calc(100dvh - 85px)!important;
+}
+html body #di-page-home #di-home-hero{
+ background:#06182e!important;border:1px solid #1675b5!important;border-radius:13px!important;
+ overflow:hidden!important;margin:0 0 10px!important;padding:0!important;
+ width:100%!important;height:auto!important;aspect-ratio:auto!important;min-height:0!important;
+ box-shadow:0 0 14px #007be32b!important;
+}
+html body #di-page-home #di-home-hero>img{
+ width:100%!important;height:auto!important;max-height:340px!important;
+ object-fit:contain!important;border-radius:10px!important;
+}
+html body #di-page-home #di-donation-banner,
+html body #di-page-home #di-donation-banner{
+ background:#102b45!important;color:#d4ecff!important;border:1px solid #2875a6!important;
+ box-shadow:inset 3px 0 #ef4864!important;border-radius:11px!important;margin:9px 0 12px!important;
+}
+html body #di-page-home #di-donation-banner strong{color:#f3fbff!important}
+html body #di-page-home #di-donation-banner button{background:#0077df!important;border:1px solid #48b5ff!important;color:white!important}
+html body #di-page-home #di-home-overview{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;
+ margin:8px 0 12px!important;background:transparent!important;border:0!important;
+ padding:0!important;box-shadow:none!important;
+}
+html body #di-page-home #di-home-overview>*{
+ background:linear-gradient(150deg,#102f4d,#071b31)!important;border:1px solid #2172a5!important;
+ border-radius:11px!important;padding:10px 5px!important;text-align:center!important;min-width:0!important;
+ box-shadow:inset 0 0 8px #007ad01c!important;
+}
+html body #di-page-home #di-home-overview strong{color:#6cdaff!important;font-size:12px!important;overflow-wrap:anywhere}
+html body #di-page-home #di-home-overview span{color:#c0d9e9!important;font-size:10px!important}
+html body #di-page-home #di-home-sections-title{
+ display:block!important;margin:12px 2px 10px!important;color:#87d9ff!important;
+ font-size:17px!important;font-weight:850!important;letter-spacing:1px!important;
+ text-transform:uppercase!important;border-bottom:1px solid #1d6c9e!important;padding-bottom:9px!important;
+}
+html body #di-page-home #di-home-grid{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ width:100%!important;gap:9px!important;margin:0!important;padding:0!important;
+ grid-auto-rows:auto!important;
+}
+html body #di-page-home #di-home-grid button,
+html body #di-page-home #di-home-grid>*{
+ background:linear-gradient(145deg,#143a5b 0%,#09213b 68%,#06182d 100%)!important;
+ color:#eefaff!important;border:1px solid #2683b9!important;border-radius:12px!important;
+ min-width:0!important;min-height:122px!important;height:auto!important;
+ padding:12px 9px!important;box-shadow:inset 0 0 0 1px #082d4e,0 2px 9px #0005!important;
+}
+html body #di-page-home #di-home-grid button{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:7px!important;text-align:left!important}
+html body #di-page-home #di-home-grid .di-home-icon{
+ display:grid!important;place-items:center!important;background:#073a59!important;
+ border:1px solid #21b6e7!important;border-radius:12px!important;width:43px!important;height:43px!important;
+ min-width:43px!important;box-shadow:0 0 9px #00c8ff3b!important;
+}
+html body #di-page-home #di-home-grid .di-home-label{color:#f0faff!important;font-size:13px!important;font-weight:800!important}
+html body #di-page-home #di-home-grid .di-home-desc{color:#b9d5e9!important;font-size:11px!important;line-height:1.35!important}
+html body #di-page-home #di-home-grid button:active{background:#15517b!important}
+html body #di-page-home #di-home-ready,
+html body #di-page-home #di-home-map-action{color:#9ddfff!important}
+#di-cockpit-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 1px 10px;padding:8px 5px;border-bottom:1px solid #155b88}
+#di-cockpit-heading strong{color:#8edbff;font-size:13px;letter-spacing:1.3px}
+#di-cockpit-heading small{color:#9cc8df;font-size:11px}
+#di-cockpit-heading .di-cockpit-version{color:#7ad6ff;border:1px solid #1c8fcb;padding:4px 7px;border-radius:7px;font-size:11px}
+html body #di-page-home #di-home-grid button:focus-visible{outline:2px solid #76dfff!important;outline-offset:2px}
+</style>
+<script id="di-cockpit-heading-script">
+(function(){
+ var page=document.getElementById('di-page-home');
+ var hero=document.getElementById('di-home-hero');
+ if(!page||!hero||document.getElementById('di-cockpit-heading'))return;
+ var bar=document.createElement('div');bar.id='di-cockpit-heading';
+ bar.innerHTML='<div><strong>CONTROL CENTER · PILOTA</strong><small style="display:block">Dashboard Drone Italia</small></div><span class="di-cockpit-version">v0.4</span>';
+ hero.before(bar);
+})();
+</script>
 </body></html>
