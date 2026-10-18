@@ -3367,7 +3367,7 @@ html.di-dark #di-about-identity strong{color:#e4f1ff}
  const group=heading&&heading.closest('.di-tool-group');if(!group)return;
  const footer=group.querySelector('footer');if(!footer)return;
  const info=document.createElement('div');info.id='di-about-identity';
- info.innerHTML='<div class="di-about-icon" aria-hidden="true"><svg viewBox="0 0 108 108"><path fill="#049fe7" d="M0 0h108v108H0z"/><path fill="#009246" d="M0 75h36v33H0z"/><path fill="#fff" d="M36 75h36v33H36z"/><path fill="#ce2b37" d="M72 75h36v33H72z"/><g fill="#fff"><path d="M47 45h14v8H47zM51 38h6v16h-6zM29 43h50v5H29zM25 39h14v4H25zM69 39h14v4H69zM23 35h18v3H23zM67 35h18v3H67zM33 53l15-4 3 5-15 6zM75 53l-15-4-3 5 15 6zM47 54l5 1-3 14-5 2zM61 54l-5 1 3 14 5 2z"/><circle cx="29" cy="34" r="5"/><circle cx="79" cy="34" r="5"/><circle cx="29" cy="61" r="5"/><circle cx="79" cy="61" r="5"/></g></svg></div><div><strong>Drone Italia</strong><p>Versione 0.3</p><p>Creatore: dura1472p-cpu</p></div>';
+ info.innerHTML='<div class="di-about-icon" aria-hidden="true"><img src="drone-italia-logo.png" alt="" style="width:100%;height:100%;object-fit:contain"></div><div><strong>Drone Italia</strong><p>Versione 0.3</p><p>Creatore: dura1472p-cpu</p></div>';
  footer.before(info);
 })();
 </script>
@@ -3856,13 +3856,16 @@ var donate=document.createElement('button');donate.type='button';donate.id='di-d
 var later=document.createElement('button');later.type='button';later.id='di-donation-reminder-later';later.textContent='Non ora';
 actions.append(donate,later);card.append(title,message,actions);overlay.append(card);document.body.appendChild(overlay);
 var shown=0,previous=-1,started=Date.now(),nextAt=started+15*60*1000,priorFocus=null;
+var testButton=document.createElement('button');testButton.type='button';testButton.id='di-donation-reminder-test';testButton.textContent='🎭 Prova promemoria adesso';testButton.style.cssText='display:block;margin:12px 0;padding:11px;border-radius:10px;background:#e9f4ff;color:#17476e;border:1px solid #bcd9f2;min-height:44px';
+var support=document.getElementById('di-paypal-support');if(support)support.appendChild(testButton);
+testButton.addEventListener('click',function(){show(true)});
+
 function close(){overlay.hidden=true;if(priorFocus&&typeof priorFocus.focus==='function')priorFocus.focus()}
-function show(){
+function show(isTest){
 var idx=Math.floor(Math.random()*phrases.length);
 if(idx===previous)idx=(idx+1)%phrases.length;
 previous=idx;message.textContent=phrases[idx];
-priorFocus=document.activeElement;overlay.hidden=false;shown++;
-nextAt=Date.now()+(15+Math.random()*15)*60*1000;
+priorFocus=document.activeElement;overlay.hidden=false;if(!isTest){shown++;nextAt=Date.now()+(15+Math.random()*15)*60*1000;}
 later.focus();
 }
 function tick(){
