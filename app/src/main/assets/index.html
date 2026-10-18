@@ -862,6 +862,8 @@ function backupSummary(d){
 let backupBusy=false;
 $('di-backup').onclick=async()=>{
  if(backupBusy)return;backupBusy=true;$('di-backup').disabled=true;
+ $('di-backup-status').textContent='Backup avviato: lettura dei dati in corso…';
+ $('di-backup-status').style.cssText='display:block!important;visibility:visible!important;color:#e8f7ff!important;background:#164f78!important;padding:10px!important;border-radius:8px!important;margin:8px 0!important;';
  try{
   if(!window.diGalleryBackup)throw Error('Archivio della galleria non disponibile');
   const galleryPhotos=(await window.diGalleryBackup.read()).map(x=>({photo:x.photo,place:String(x.place||'Foto personale'),when:String(x.when||'')}));
@@ -871,7 +873,7 @@ $('di-backup').onclick=async()=>{
    let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
    window.DroneItaliaNative.saveBackupZip(btoa(binary));$('di-backup-status').textContent='Backup ZIP preparato: '+backupSummary(obj)+'. Scegli dove salvarlo nella finestra Android.';
   }else throw Error('Backup ZIP disponibile nell’APK Android aggiornato.');
- }catch(err){$('di-backup-status').textContent='Esportazione non riuscita: '+err.message}
+ }catch(err){const message='Esportazione non riuscita: '+(err&&err.message?err.message:String(err));$('di-backup-status').textContent=message;window.alert(message)}
  finally{backupBusy=false;$('di-backup').disabled=false}
 };
 $('di-restore').onchange=async e=>{
