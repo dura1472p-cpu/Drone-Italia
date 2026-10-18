@@ -4197,4 +4197,23 @@ html body #di-page-home #di-home-grid .di-home-desc{
  html body #di-page-home #di-home-grid>button{min-height:72px!important;}
 }
 </style>
+
+<style id="di-home-banner-spacing-adjust-2026">
+/* Keep the 17:30 dashboard sections together; preserve the blue panel height. */
+html body #di-page-home.di-active{
+ justify-content:flex-start!important;
+ gap:clamp(7px,0.8dvh,11px)!important;
+}
+html body #di-page-home #di-home-hero{
+ margin-top:0!important;margin-bottom:0!important;
+}
+html body #di-page-home #di-home-hero>img{
+ object-fit:contain!important;
+ object-position:center center!important;
+}
+html body #di-page-home #di-home-hero .di-wide-logo strong{
+ font-style:italic!important;font-weight:950!important;letter-spacing:-.04em!important;
+}
+html body #di-page-home #di-home-grid{margin-top:0!important;}
+</style>
 </body></html>
