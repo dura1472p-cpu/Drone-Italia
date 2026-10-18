@@ -16,5 +16,10 @@ android { namespace 'it.paolodurante.droneitalia'; compileSdk 36
    if (System.getenv('DRONE_SIGNING_STORE_FILE')) signingConfig signingConfigs.permanent
   }
  }
+ applicationVariants.all { variant ->
+  variant.outputs.all { output ->
+   output.outputFileName = "Drone-Italia-v${variant.versionName}.apk"
+  }
+ }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
