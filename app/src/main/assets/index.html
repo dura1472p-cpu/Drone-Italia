@@ -3934,4 +3934,31 @@ html body #di-page-home #di-home-sections-title{
  html body #di-page-home #di-home-grid button{font-size:10px!important}
 }
 </style>
+
+<script id="di-home-compact-android-fix-2026">
+/* The legacy logo loader applies inline !important sizing: remove only those inline
+   overrides so the final compact CSS can control the banner on Android. */
+(function(){
+ function fix(){
+  var hero=document.getElementById('di-home-hero');
+  if(!hero)return;
+  ['height','min-height','max-height','aspect-ratio','padding','margin','width','overflow','display','flex','flex-shrink','align-self'].forEach(function(p){hero.style.removeProperty(p)});
+  var img=hero.querySelector('img');
+  if(img){['height','max-height','aspect-ratio','object-fit','object-position','width','position','display'].forEach(function(p){img.style.removeProperty(p)});}
+ }
+ document.addEventListener('DOMContentLoaded',fix);
+ window.addEventListener('load',fix);
+ setTimeout(fix,500);setTimeout(fix,1600);
+})();
+</script>
+<style id="di-home-compact-android-final-2026">
+html body #di-page-home.di-active{height:calc(100dvh - 83px - env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 83px - env(safe-area-inset-bottom))!important;overflow-y:hidden!important;display:flex!important;flex-direction:column!important;gap:5px!important;padding:5px 9px 6px!important;}
+html body #di-page-home #di-home-hero{height:clamp(72px,12dvh,112px)!important;max-height:clamp(72px,12dvh,112px)!important;min-height:0!important;width:100%!important;flex:0 0 auto!important;margin:0!important;padding:0!important;overflow:hidden!important;border-radius:10px!important;}
+html body #di-page-home #di-home-hero>img{display:block!important;width:100%!important;height:100%!important;max-height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:center 63%!important;position:static!important;}
+html body #di-page-home #di-home-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;grid-auto-rows:minmax(0,1fr)!important;flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow:hidden!important;margin:0!important;gap:4px!important;}
+html body #di-page-home #di-home-grid>*{min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;}
+html body #di-page-home #di-home-overview{flex:0 0 auto!important;margin:0!important;}
+html body #di-page-home #di-home-sections-title{flex:0 0 auto!important;margin:0!important;}
+html body #di-page-home #di-donation-banner{flex:0 0 auto!important;margin:0!important;}
+</style>
 </body></html>
