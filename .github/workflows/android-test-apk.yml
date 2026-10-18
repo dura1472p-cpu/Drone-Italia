@@ -36,6 +36,7 @@ jobs:
           gradle-version: '8.14'
       - name: Imposta numero progressivo della build diagnostica
         run: echo "DRONE_CI_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+      # Re-run signing validation after updating the keystore secret.
       - name: Configura firma persistente diagnostica
         env:
           DRONE_KEYSTORE_BASE64: ${{ secrets.DRONE_KEYSTORE_BASE64 }}
