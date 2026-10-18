@@ -48,7 +48,15 @@ jobs:
             echo "::error::Configura i quattro GitHub Actions secrets DRONE_KEYSTORE_BASE64, DRONE_SIGNING_STORE_PASSWORD, DRONE_SIGNING_KEY_ALIAS e DRONE_SIGNING_KEY_PASSWORD. Build interrotta per evitare APK con firme variabili."
             exit 1
           fi
-          printf '%s' "$DRONE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/drone-italia-signing.jks"
+          # Ignore whitespace inserted by mobile clipboard; reject malformed Base64.
+          if ! printf '%s' "$DRONE_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$RUNNER_TEMP/drone-italia-signing.jks"; then
+            echo "::error::DRONE_KEYSTORE_BASE64 non contiene Base64 valido. Ricopia il contenuto completo dal file .jks originale."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$RUNNER_TEMP/drone-italia-signing.jks" -storepass "$DRONE_SIGNING_STORE_PASSWORD" >/dev/null 2>&1; then
+            echo "::error::Il file .jks non e leggibile con la password configurata. Controlla la firma e la password."
+            exit 1
+          fi
           echo "DRONE_SIGNING_STORE_FILE=$RUNNER_TEMP/drone-italia-signing.jks" >> "$GITHUB_ENV"
       - name: Compila APK diagnostico separato con firma persistente
         env:
