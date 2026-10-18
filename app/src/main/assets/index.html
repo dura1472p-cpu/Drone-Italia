@@ -3999,4 +3999,37 @@ html body #di-page-home #di-home-grid button{min-height:0!important;height:100%!
 html body #di-page-home #di-home-grid .di-home-icon{width:clamp(20px,3.6dvh,32px)!important;height:clamp(20px,3.6dvh,32px)!important;}
 @media(max-height:720px){html body #di-page-home #di-home-hero{height:9dvh!important;max-height:9dvh!important;}html body #di-page-home #di-home-grid button{font-size:10px!important;}}
 </style>
+
+<script id="di-reference-home-structure-2026">
+(function(){
+ function arrange(){
+  var home=document.getElementById('di-page-home'),hero=document.getElementById('di-home-hero'),stats=document.getElementById('di-home-overview'),grid=document.getElementById('di-home-grid');
+  if(!home||!hero||!grid)return;
+  var donation=document.getElementById('di-donation-banner');
+  if(donation&&donation.parentNode===home&&donation.previousElementSibling!==hero)hero.after(donation);
+  if(stats&&stats.parentNode===home){(donation&&donation.parentNode===home?donation:hero).after(stats);}
+  var heading=document.getElementById('di-home-sections-title');if(heading&&heading.parentNode===home&&heading.nextElementSibling!==grid)grid.before(heading);
+  if(stats)stats.style.setProperty('display','grid','important');
+ }
+ document.addEventListener('DOMContentLoaded',arrange);window.addEventListener('load',arrange);setTimeout(arrange,1000);
+})();
+</script>
+<style id="di-reference-home-dark-2026">
+html body #di-page-home.di-active{background:#061c35!important;color:#eaf7ff!important;border-radius:15px!important;gap:clamp(4px,.6dvh,8px)!important;padding:7px 9px!important;}
+html body #di-page-home #di-home-hero{background:#042342!important;border:1px solid #1c679b!important;height:clamp(85px,15dvh,145px)!important;max-height:clamp(85px,15dvh,145px)!important;}
+html body #di-page-home #di-home-hero>img{object-fit:contain!important;object-position:center!important;background:#042342!important;}
+html body #di-page-home #di-donation-banner{background:#102e4a!important;color:#eaf7ff!important;border:1px solid #245d85!important;border-left:3px solid #ff5c79!important;border-radius:10px!important;}
+html body #di-page-home #di-donation-banner *{color:inherit!important;}
+html body #di-page-home #di-donation-banner button{background:#087be7!important;color:#fff!important;}
+html body #di-page-home #di-home-overview{display:grid!important;visibility:visible!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;gap:5px!important;margin:0!important;}
+html body #di-page-home #di-home-overview>div{display:block!important;background:#0c2c49!important;color:#d4eaf9!important;border:1px solid #205d89!important;border-radius:9px!important;padding:5px 3px!important;text-align:center!important;}
+html body #di-page-home #di-home-overview strong{color:#65d8ff!important;}
+html body #di-page-home #di-home-overview span{color:#c5d7e5!important;}
+html body #di-page-home #di-home-sections-title{display:block!important;visibility:visible!important;color:#74d5ff!important;border-bottom:1px solid #235f89!important;padding:0 0 3px!important;text-transform:uppercase!important;}
+html body #di-page-home #di-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;min-height:0!important;}
+html body #di-page-home #di-home-grid>button{background:linear-gradient(145deg,#103e62,#082640)!important;color:#f2f8ff!important;border:1px solid #21699b!important;border-radius:11px!important;box-shadow:none!important;}
+html body #di-page-home #di-home-grid .di-home-label{color:#f6fbff!important;}
+html body #di-page-home #di-home-grid .di-home-desc{color:#bed4e6!important;}
+@media(max-height:750px){html body #di-page-home #di-home-hero{height:10dvh!important;max-height:10dvh!important;}}
+</style>
 </body></html>
