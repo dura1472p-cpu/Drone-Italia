@@ -4153,94 +4153,46 @@ html body #di-page-home #di-home-grid .di-home-desc{line-height:1.15!important;}
 </style>
 
 
-<style id="di-reference-compact-cards-2026">
-/* Reference 17:30: compact tools, no stretched empty cards. */
-html body #di-page-home.di-active{overflow-y:auto!important;overscroll-behavior:contain!important;height:var(--di-home-available-height,calc(100dvh - 92px))!important;max-height:var(--di-home-available-height,calc(100dvh - 92px))!important;scrollbar-width:thin!important;}
-html body #di-page-home #di-home-grid{flex:0 0 auto!important;height:auto!important;grid-template-rows:repeat(4,minmax(76px,auto))!important;gap:8px!important;padding-bottom:6px!important;}
-html body #di-page-home #di-home-grid>button{min-height:76px!important;max-height:108px!important;padding:9px 8px!important;gap:2px 8px!important;}
-html body #di-page-home #di-home-grid .di-home-icon{width:40px!important;height:40px!important;font-size:22px!important;}
-html body #di-page-home #di-home-grid>button:nth-child(1) .di-home-icon{border-color:#04c6ad!important;background:#063e4e!important;}
-html body #di-page-home #di-home-grid>button:nth-child(2) .di-home-icon{border-color:#168bff!important;background:#063e65!important;}
-html body #di-page-home #di-home-grid>button:nth-child(3) .di-home-icon{border-color:#14c43d!important;background:#064b2d!important;}
-html body #di-page-home #di-home-grid>button:nth-child(4) .di-home-icon{border-color:#f0a51b!important;background:#6d4406!important;}
-html body #di-page-home #di-home-grid>button:nth-child(5) .di-home-icon{border-color:#18bcb9!important;background:#083d51!important;}
-html body #di-page-home #di-home-grid>button:nth-child(6) .di-home-icon{border-color:#aa70ef!important;background:#51377b!important;}
-html body #di-page-home #di-home-grid>button:nth-child(7) .di-home-icon{border-color:#2b9aff!important;background:#124c8a!important;}
-html body #di-page-home #di-home-grid>button:nth-child(8) .di-home-icon{border-color:#fa5d5d!important;background:#7b3036!important;}
-html body #di-page-home #di-home-grid .di-home-label{font-size:clamp(13px,3.6vw,16px)!important;line-height:1.2!important;}
-html body #di-page-home #di-home-grid .di-home-desc{font-size:clamp(10px,2.8vw,13px)!important;line-height:1.2!important;}
-html body #di-page-settings details{margin-block:5px!important;}
-html body #di-page-settings details>summary{padding:10px 12px!important;line-height:1.2!important;}
-@media(max-height:700px){html body #di-page-home #di-home-grid .di-home-desc{display:block!important;}html body #di-page-home #di-home-grid>button{min-height:70px!important;}}
-</style>
 
 
-<style id="di-home-natural-height-fix-2026">
-/* Keep the reference panel as tall as its contents, not the viewport. */
-html body #di-page-home.di-active{
- height:auto!important;max-height:none!important;min-height:0!important;
- overflow:visible!important;flex:0 0 auto!important;
- gap:8px!important;padding:10px!important;
-}
-html body #di-page-home #di-home-grid{
- display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
- grid-template-rows:none!important;grid-auto-rows:minmax(78px,auto)!important;
- height:auto!important;min-height:0!important;flex:none!important;gap:9px!important;
-}
-html body #di-page-home #di-home-grid>button{
- box-sizing:border-box!important;min-height:78px!important;max-height:none!important;
- grid-template-columns:clamp(30px,8vw,40px) minmax(0,1fr) 12px!important;
- padding:8px!important;column-gap:7px!important;align-content:center!important;
-}
-html body #di-page-home #di-home-grid .di-home-icon{width:clamp(30px,8vw,40px)!important;height:clamp(30px,8vw,40px)!important;}
-html body #di-page-home #di-home-grid .di-home-label{font-size:clamp(12px,3.3vw,16px)!important;line-height:1.15!important;}
-html body #di-page-home #di-home-grid .di-home-desc{font-size:clamp(10px,2.6vw,13px)!important;line-height:1.15!important;}
-</style>
 
-<style id="di-home-fill-background-2026">
-/* Fill the available home viewport with its blue panel, without stretching cards. */
+
+
+<style id="di-home-reference-unified-2026">
+/* Unified layout: fill the viewport by distributing sections, not stretching cards. */
 html body #di-page-home.di-active{
  height:var(--di-home-available-height,calc(100dvh - 92px))!important;
  min-height:var(--di-home-available-height,calc(100dvh - 92px))!important;
  max-height:var(--di-home-available-height,calc(100dvh - 92px))!important;
  overflow-y:auto!important;overflow-x:hidden!important;
- align-content:start!important;justify-content:flex-start!important;
+ display:flex!important;flex-direction:column!important;
+ justify-content:space-between!important;
+ gap:clamp(7px,1.2dvh,18px)!important;
+ padding:clamp(8px,1dvh,14px)!important;
 }
 html body #di-page-home #di-home-grid{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ grid-template-rows:repeat(4,minmax(82px,auto))!important;
+ grid-auto-rows:auto!important;gap:clamp(8px,1dvh,14px)!important;
  flex:0 0 auto!important;height:auto!important;min-height:0!important;
- grid-template-rows:none!important;grid-auto-rows:minmax(76px,auto)!important;
 }
-html body #di-page-home #di-home-grid>button{min-height:76px!important;max-height:none!important;}
+html body #di-page-home #di-home-grid>button{
+ min-height:82px!important;max-height:116px!important;
+ padding:9px 8px!important;
+ grid-template-columns:clamp(30px,8vw,42px) minmax(0,1fr) 12px!important;
+ column-gap:7px!important;align-content:center!important;
+}
+html body #di-page-home #di-home-grid .di-home-icon{
+ width:clamp(30px,8vw,42px)!important;height:clamp(30px,8vw,42px)!important;
+}
 html body #di-page-home #di-home-grid .di-home-label{
  font-size:clamp(12px,3.1vw,15px)!important;line-height:1.15!important;
 }
 html body #di-page-home #di-home-grid .di-home-desc{
- font-size:clamp(10px,2.45vw,12px)!important;line-height:1.15!important;
+ display:block!important;font-size:clamp(10px,2.45vw,12px)!important;line-height:1.17!important;
 }
-</style>
-
-<style id="di-home-balanced-cards-2026">
-/* 17:30 reference: moderately taller cards, bounded to avoid giant rows. */
-html body #di-page-home #di-home-grid{
- flex:0 0 auto!important;
- height:auto!important;
- grid-template-rows:repeat(4,minmax(88px,auto))!important;
- grid-auto-rows:auto!important;
- gap:9px!important;
-}
-html body #di-page-home #di-home-grid>button{
- min-height:88px!important;
- max-height:112px!important;
- padding:10px 9px!important;
- align-content:center!important;
-}
-html body #di-page-home #di-home-grid .di-home-label{
- font-size:clamp(13px,3.25vw,16px)!important;
-}
-html body #di-page-home #di-home-grid .di-home-desc{
- font-size:clamp(10px,2.55vw,13px)!important;
-}
-@media(max-height:650px){
+@media(max-height:740px){
+ html body #di-page-home.di-active{justify-content:flex-start!important;}
  html body #di-page-home #di-home-grid{grid-template-rows:repeat(4,minmax(72px,auto))!important;}
  html body #di-page-home #di-home-grid>button{min-height:72px!important;}
 }
