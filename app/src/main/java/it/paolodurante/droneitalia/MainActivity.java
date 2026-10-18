@@ -30,6 +30,7 @@ import android.content.ClipData;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 public class MainActivity extends Activity {
+ private android.widget.FrameLayout startupContainer; private android.widget.ImageView startupImage; private long startupStartedAt;
  private WebView web; private LocationManager manager; private LocationListener listener;
  private ValueCallback<Uri[]> fileCallback; private static final int FILE_PICK=301, BACKUP_SAVE=302, MAPS_SAVE=303, ROUTE_SAVE=304;
  private byte[] pendingBackup;
@@ -176,6 +177,12 @@ public class MainActivity extends Activity {
  });}
  }, "DroneItaliaNative");
  web.setWebViewClient(new WebViewClient(){
+ @Override public void onPageFinished(WebView view,String url){
+  if(!"https://app.local/index.html".equals(url))return;
+  long remaining=Math.max(0,1400-(android.os.SystemClock.uptimeMillis()-startupStartedAt));
+  view.postDelayed(()->hideStartupImage(),remaining+150);
+ }
+
  @Override public WebResourceResponse shouldInterceptRequest(WebView v,WebResourceRequest req){
  String url=req.getUrl().toString();
  if(url.equals("https://app.local/easa-drone-catalog.json")){
@@ -218,7 +225,23 @@ public class MainActivity extends Activity {
  if("https".equals(u.getScheme()))startActivity(new Intent(Intent.ACTION_VIEW,u));return true;
  }});
  box.addView(web,new LinearLayout.LayoutParams(-1,0,1));
- setContentView(box);web.loadUrl("https://app.local/index.html");
+ startupStartedAt=android.os.SystemClock.uptimeMillis();
+ startupContainer=new android.widget.FrameLayout(this);
+ startupContainer.addView(box,new android.widget.FrameLayout.LayoutParams(-1,-1));
+ startupImage=new android.widget.ImageView(this);
+ startupImage.setBackgroundColor(Color.rgb(3,25,54));
+ startupImage.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+ try(java.io.InputStream imageStream=getAssets().open("splash_drone_italia.png")){
+  android.graphics.Bitmap splashBitmap=BitmapFactory.decodeStream(imageStream);
+  if(splashBitmap!=null)startupImage.setImageBitmap(splashBitmap);
+ }catch(Exception ignored){}
+ startupContainer.addView(startupImage,new android.widget.FrameLayout.LayoutParams(-1,-1));
+ setContentView(startupContainer);
+ web.loadUrl("https://app.local/index.html");
+ startupImage.postDelayed(()->hideStartupImage(),10000);
+ }
+ private void hideStartupImage(){
+  if(startupImage!=null&&startupContainer!=null&&startupImage.getParent()==startupContainer)startupContainer.removeView(startupImage);
  }
  @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}
  if(request==BACKUP_SAVE||request==MAPS_SAVE||request==ROUTE_SAVE){if(result==RESULT_OK&&data!=null&&data.getData()!=null&&pendingBackup!=null){try(OutputStream out=getContentResolver().openOutputStream(data.getData())){if(out==null)throw new Exception("Destinazione non disponibile");out.write(pendingBackup);Toast.makeText(this,request==ROUTE_SAVE?"Percorso GPX salvato":"Backup salvato",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,request==ROUTE_SAVE?"Errore salvataggio percorso":"Errore salvataggio backup",Toast.LENGTH_LONG).show();}}pendingBackup=null;}}
