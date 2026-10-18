@@ -927,32 +927,6 @@ html body #di-page-home #di-home-ready,html body #di-page-home #di-home-map-acti
 @media(max-height:680px){html body #di-page-home #di-home-hero{height:8dvh!important;max-height:8dvh!important;}html body #di-page-home #di-home-grid .di-home-desc{display:none!important;}}
 </style>
 
-<script id="di-backup-click-diagnostic-2026">
-(function(){
- const id='di-backup';
- function show(message){
-  let el=document.getElementById('di-backup-diagnostic');
-  if(!el){el=document.createElement('div');el.id='di-backup-diagnostic';el.setAttribute('role','alert');el.style.cssText='display:block!important;position:relative!important;z-index:99999!important;background:#153f60!important;color:#fff!important;padding:12px!important;margin:8px 0!important;border:2px solid #ffc857!important;border-radius:8px!important;font-size:15px!important;white-space:pre-wrap!important;';const btn=document.getElementById(id);if(btn)btn.insertAdjacentElement('afterend',el);else document.body.appendChild(el)}
-  el.textContent=message;
- }
- document.addEventListener('click',function(event){
-  const btn=event.target&&event.target.closest&&event.target.closest('#'+id);
-  if(!btn)return;
-  show('Tocco ricevuto. Verifica collegamento backup…');
-  setTimeout(function(){
-   const problems=[];
-   if(typeof JSZip==='undefined')problems.push('Libreria ZIP non caricata');
-   if(!window.diGalleryBackup)problems.push('Archivio foto non disponibile');
-   if(!window.diMapsBackup)problems.push('Archivio mappe non disponibile');
-   if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.saveBackupZip!=='function')problems.push('Collegamento Android non disponibile');
-   if(typeof btn.onclick!=='function')problems.push('Gestore esportazione non collegato');
-   const status=document.getElementById('di-backup-status');
-   show(problems.length?'Diagnostica backup:\\n'+problems.join('\\n'):(status&&status.textContent?status.textContent:'Collegamenti presenti. Attendi la finestra di salvataggio Android.'));
-  },1200);
- },true);
- window.addEventListener('error',function(e){const msg=String(e.message||'errore sconosciuto');if(/backup|zip|gallery|maps/i.test(msg))show('Errore JavaScript: '+msg)});
-})();
-</script>
 </body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
@@ -4164,4 +4138,31 @@ html body #di-page-home #di-home-grid .di-home-icon{color:#fff!important;line-he
 html body #di-page-home #di-home-grid .di-home-desc{line-height:1.15!important;}
 @media(max-height:730px){html body #di-page-home #di-home-grid>button{padding:3px 5px!important;}html body #di-page-home #di-home-hero .di-wide-logo strong{font-size:clamp(20px,4.5vw,40px)!important;}}
 </style>
+
+<script id="di-backup-click-diagnostic-2026">
+(function(){
+ const id='di-backup';
+ function show(message){
+  let el=document.getElementById('di-backup-diagnostic');
+  if(!el){el=document.createElement('div');el.id='di-backup-diagnostic';el.setAttribute('role','alert');el.style.cssText='display:block!important;position:relative!important;z-index:99999!important;background:#153f60!important;color:#fff!important;padding:12px!important;margin:8px 0!important;border:2px solid #ffc857!important;border-radius:8px!important;font-size:15px!important;white-space:pre-wrap!important;';const btn=document.getElementById(id);if(btn)btn.insertAdjacentElement('afterend',el);else document.body.appendChild(el)}
+  el.textContent=message;
+ }
+ document.addEventListener('click',function(event){
+  const btn=event.target&&event.target.closest&&event.target.closest('#'+id);
+  if(!btn)return;
+  show('Tocco ricevuto. Verifica collegamento backup…');
+  setTimeout(function(){
+   const problems=[];
+   if(typeof JSZip==='undefined')problems.push('Libreria ZIP non caricata');
+   if(!window.diGalleryBackup)problems.push('Archivio foto non disponibile');
+   if(!window.diMapsBackup)problems.push('Archivio mappe non disponibile');
+   if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.saveBackupZip!=='function')problems.push('Collegamento Android non disponibile');
+   if(typeof btn.onclick!=='function')problems.push('Gestore esportazione non collegato');
+   const status=document.getElementById('di-backup-status');
+   show(problems.length?'Diagnostica backup:\\n'+problems.join('\\n'):(status&&status.textContent?status.textContent:'Collegamenti presenti. Attendi la finestra di salvataggio Android.'));
+  },1200);
+ },true);
+ window.addEventListener('error',function(e){const msg=String(e.message||'errore sconosciuto');if(/backup|zip|gallery|maps/i.test(msg))show('Errore JavaScript: '+msg)});
+})();
+</script>
 </body></html>
