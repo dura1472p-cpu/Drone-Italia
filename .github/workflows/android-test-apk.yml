@@ -50,6 +50,10 @@ jobs:
           printf '%s' "$DRONE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/drone-italia-signing.jks"
           echo "DRONE_SIGNING_STORE_FILE=$RUNNER_TEMP/drone-italia-signing.jks" >> "$GITHUB_ENV"
       - name: Compila APK diagnostico separato con firma persistente
+        env:
+          DRONE_SIGNING_STORE_PASSWORD: ${{ secrets.DRONE_SIGNING_STORE_PASSWORD }}
+          DRONE_SIGNING_KEY_ALIAS: ${{ secrets.DRONE_SIGNING_KEY_ALIAS }}
+          DRONE_SIGNING_KEY_PASSWORD: ${{ secrets.DRONE_SIGNING_KEY_PASSWORD }}
         run: gradle --no-daemon :app:assembleDebug
       - name: Pubblica APK di prova
         uses: actions/upload-artifact@v4
