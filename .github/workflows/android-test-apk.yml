@@ -36,7 +36,20 @@ jobs:
           gradle-version: '8.14'
       - name: Imposta numero progressivo della build diagnostica
         run: echo "DRONE_CI_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
-      - name: Compila APK diagnostico separato
+      - name: Configura firma persistente diagnostica
+        env:
+          DRONE_KEYSTORE_BASE64: ${{ secrets.DRONE_KEYSTORE_BASE64 }}
+          DRONE_SIGNING_STORE_PASSWORD: ${{ secrets.DRONE_SIGNING_STORE_PASSWORD }}
+          DRONE_SIGNING_KEY_ALIAS: ${{ secrets.DRONE_SIGNING_KEY_ALIAS }}
+          DRONE_SIGNING_KEY_PASSWORD: ${{ secrets.DRONE_SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$DRONE_KEYSTORE_BASE64" ] || [ -z "$DRONE_SIGNING_STORE_PASSWORD" ] || [ -z "$DRONE_SIGNING_KEY_ALIAS" ] || [ -z "$DRONE_SIGNING_KEY_PASSWORD" ]; then
+            echo "::error::Configura i quattro GitHub Actions secrets DRONE_KEYSTORE_BASE64, DRONE_SIGNING_STORE_PASSWORD, DRONE_SIGNING_KEY_ALIAS e DRONE_SIGNING_KEY_PASSWORD. Build interrotta per evitare APK con firme variabili."
+            exit 1
+          fi
+          printf '%s' "$DRONE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/drone-italia-signing.jks"
+          echo "DRONE_SIGNING_STORE_FILE=$RUNNER_TEMP/drone-italia-signing.jks" >> "$GITHUB_ENV"
+      - name: Compila APK diagnostico separato con firma persistente
         run: gradle --no-daemon :app:assembleDebug
       - name: Pubblica APK di prova
         uses: actions/upload-artifact@v4
