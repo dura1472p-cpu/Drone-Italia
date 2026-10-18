@@ -4258,4 +4258,31 @@ html body #di-page-home #di-home-hero .di-wide-logo{
  display:none!important;
 }
 </style>
+
+<style id="di-banner-force-background-2026">
+/* Override older rules with a specific selector and a real img fallback. */
+html body #di-page-home.di-active #di-home-hero{
+ background-image:url("https://app.local/drone-home-hero.jpg")!important;
+ background-position:center!important;background-size:100% 100%!important;
+}
+html body #di-page-home.di-active #di-home-hero>img.di-banner-asset{
+ display:block!important;visibility:visible!important;opacity:1!important;
+ position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+ max-width:none!important;max-height:none!important;object-fit:fill!important;
+ margin:0!important;z-index:2!important;border-radius:inherit!important;
+}
+html body #di-page-home.di-active #di-home-hero .di-wide-logo{display:none!important;}
+</style>
+<script id="di-banner-real-img-2026">
+(function(){
+ function ensure(){
+  var hero=document.getElementById('di-home-hero');if(!hero)return;
+  var img=hero.querySelector('img.di-banner-asset');
+  if(!img){img=document.createElement('img');img.className='di-banner-asset';img.alt='Drone Italia';hero.appendChild(img);}
+  img.src='https://app.local/drone-home-hero.jpg';
+ }
+ document.addEventListener('DOMContentLoaded',ensure);window.addEventListener('load',ensure);
+ setTimeout(ensure,700);
+})();
+</script>
 </body></html>
