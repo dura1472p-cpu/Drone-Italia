@@ -218,7 +218,21 @@ public class MainActivity extends Activity {
  if("https".equals(u.getScheme()))startActivity(new Intent(Intent.ACTION_VIEW,u));return true;
  }});
  box.addView(web,new LinearLayout.LayoutParams(-1,0,1));
- setContentView(box);web.loadUrl("https://app.local/index.html");
+ android.widget.FrameLayout startupContainer=new android.widget.FrameLayout(this);
+ startupContainer.addView(box,new android.widget.FrameLayout.LayoutParams(-1,-1));
+ android.widget.ImageView startupImage=new android.widget.ImageView(this);
+ startupImage.setBackgroundColor(Color.rgb(3,25,54));
+ startupImage.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+ try(java.io.InputStream imageStream=getAssets().open("splash_drone_italia.png")){
+  android.graphics.Bitmap splashBitmap=BitmapFactory.decodeStream(imageStream);
+  if(splashBitmap!=null)startupImage.setImageBitmap(splashBitmap);
+ }catch(Exception ignored){}
+ startupContainer.addView(startupImage,new android.widget.FrameLayout.LayoutParams(-1,-1));
+ setContentView(startupContainer);
+ web.loadUrl("https://app.local/index.html");
+ startupImage.postDelayed(()->{
+  if(startupImage.getParent()==startupContainer)startupContainer.removeView(startupImage);
+ },1400);
  }
  @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==FILE_PICK&&fileCallback!=null){fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileCallback=null;}
  if(request==BACKUP_SAVE||request==MAPS_SAVE||request==ROUTE_SAVE){if(result==RESULT_OK&&data!=null&&data.getData()!=null&&pendingBackup!=null){try(OutputStream out=getContentResolver().openOutputStream(data.getData())){if(out==null)throw new Exception("Destinazione non disponibile");out.write(pendingBackup);Toast.makeText(this,request==ROUTE_SAVE?"Percorso GPX salvato":"Backup salvato",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,request==ROUTE_SAVE?"Errore salvataggio percorso":"Errore salvataggio backup",Toast.LENGTH_LONG).show();}}pendingBackup=null;}}
