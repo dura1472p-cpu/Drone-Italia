@@ -1,16 +1,5 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><script src="https://app.local/jszip.min.js"></script>
-<style id="di-startup-style">
-html:not(.di-ready){background:#031936}
-html:not(.di-ready) body{visibility:hidden}
-html:not(.di-ready)::after{content:"";position:fixed;inset:0;z-index:999999;background:#031936 url("https://app.local/splash_drone_italia.png") center center / contain no-repeat}
-</style>
-<script>
-(function(){
-var start=Date.now(), ready=false;
-window.diFinishStartup=function(){ready=true;var wait=Math.max(0,1000-(Date.now()-start));window.setTimeout(function(){document.documentElement.classList.add('di-ready')},wait)};
-window.setTimeout(function(){document.documentElement.classList.add('di-ready')},8000);
-})();
-</script>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"><style>
 *{box-sizing:border-box}body{margin:0;font:16px system-ui;color:#122c39;background:#f4f7fa}header{padding:16px;background:#102f40;color:white}h1{font-size:23px;margin:0}header p{margin:5px 0 0;font-size:13px}.notice{padding:12px;background:#fff0cc;color:#654700;font-weight:600;font-size:14px}form{display:flex;gap:6px;padding:10px}input{min-width:0;flex:1;padding:10px;border:1px solid #bbc9d1;border-radius:8px}button{padding:10px;border:0;border-radius:8px;background:#126b7a;color:white}#map{height:44vh;min-height:260px}.legend{display:flex;gap:12px;padding:10px;font-size:12px;flex-wrap:wrap}#detail{padding:14px;margin:0 10px;background:white;border-radius:12px}h2{font-size:18px;margin:0 0 8px}#detail p{font-size:14px}footer{padding:14px;font-size:12px}a{color:#126b7a}.error{color:#ab2436}
 
@@ -1466,7 +1455,7 @@ planner.remove();
 move('footer','settings');
 header.style.display='none';
 openPage('home');
-window.diFinishStartup();
+void 0;
 })();
 </script>
 
