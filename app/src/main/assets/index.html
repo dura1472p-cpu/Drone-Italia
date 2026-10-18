@@ -4165,4 +4165,45 @@ html body #di-page-home #di-home-grid .di-home-desc{line-height:1.15!important;}
  window.addEventListener('error',function(e){const msg=String(e.message||'errore sconosciuto');if(/backup|zip|gallery|maps/i.test(msg))show('Errore JavaScript: '+msg)});
 })();
 </script>
+
+<script id="di-backup-independent-export-2026">
+(function(){
+ const btn=document.getElementById('di-backup');if(!btn)return;
+ const status=document.getElementById('di-backup-status');
+ function say(t){if(status){status.textContent=t;status.style.cssText='display:block!important;visibility:visible!important;padding:10px!important;color:#103b5c!important;background:#e7f4ff!important;border-radius:8px!important;margin:8px 0!important;'}}
+ // Bind independently of the map/settings initialization, which may fail before its backup handler is reached.
+ if(typeof btn.onclick==='function')return;
+ btn.onclick=async function(){
+  btn.disabled=true;say('Esportazione avviata: controllo degli archivi…');
+  try{
+   if(typeof JSZip==='undefined')throw Error('Libreria ZIP non disponibile');
+   if(!window.DroneItaliaNative||typeof window.DroneItaliaNative.saveBackupZip!=='function')throw Error('Salvataggio Android non disponibile');
+   if(!window.diGalleryBackup||typeof window.diGalleryBackup.read!=='function')throw Error('Archivio foto non inizializzato: backup completo non possibile');
+   if(!window.diMapsBackup||typeof window.diMapsBackup.read!=='function')throw Error('Archivio mappe non inizializzato: backup completo non possibile');
+   const key='drone-italia-beta-';
+   function arr(k){const raw=localStorage.getItem(key+k);if(!raw)return [];const x=JSON.parse(raw);if(!Array.isArray(x))throw Error('Archivio '+k+' non valido');return x;}
+   const galleryPhotos=(await window.diGalleryBackup.read()).map(x=>({photo:x.photo,place:String(x.place||'Foto personale'),when:String(x.when||'')}));
+   const obj={version:3,created:new Date().toISOString(),favorites:arr('favorites'),plans:arr('plans'),logs:arr('logs'),profile:localStorage.getItem('drone-profile'),drones:arr('drones'),maintenance:arr('maintenance'),batteries:arr('batteries'),activeDrone:localStorage.getItem(key+'active-drone'),dark:localStorage.getItem(key+'dark'),galleryPhotos,mapArchive:window.diMapsBackup.read(),flightFavorites:JSON.parse(localStorage.getItem('drone-italia-flight-favorites-v2')||'{}')};
+   if(typeof window.diMapsBackup.validate==='function')window.diMapsBackup.validate(obj.mapArchive);
+   const zip=new JSZip(),packed={...obj,logs:obj.logs.map(x=>({...x})),galleryPhotos:obj.galleryPhotos.map(x=>({...x}))};let count=0,photoBytes=0;
+   for(const record of [...packed.logs,...packed.galleryPhotos]){
+    if(!record.photo)continue;
+    const m=String(record.photo).match(/^data:image\\/(jpeg|png|webp);base64,([A-Za-z0-9+/=\\s]+)$/);
+    if(!m)throw Error('Foto non valida nel backup');
+    const b=m[2].replace(/\\s/g,'');photoBytes+=Math.ceil(b.length*3/4);if(photoBytes>50000000)throw Error('Foto oltre 50 MB');
+    const name='photos/'+count+++'.'+m[1];zip.file(name,b,{base64:true});record.photo={file:name,mime:m[1]};
+   }
+   const json=JSON.stringify(packed);if(new TextEncoder().encode(json).length>12000000)throw Error('Dati e mappe oltre 12 MB');
+   zip.file('data.json',json);say('Preparazione ZIP…');const bytes=await zip.generateAsync({type:'uint8array',compression:'STORE'});if(bytes.length>50000000)throw Error('ZIP oltre 50 MB');
+   let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+   window.DroneItaliaNative.saveBackupZip(btoa(binary));say('Backup pronto. Scegli dove salvare il file nella finestra Android.');
+  }catch(e){const message='Backup non riuscito: '+(e&&e.message?e.message:String(e));say(message);alert(message)}finally{btn.disabled=false}
+ };
+})();
+</script>
+<style id="di-settings-compact-2026">
+#di-page-settings details{margin-block:7px!important;min-height:0!important}
+#di-page-settings details>summary{padding:13px 16px!important;min-height:0!important;line-height:1.3!important}
+#di-page-settings .di-settings-card{min-height:0!important}
+</style>
 </body></html>
