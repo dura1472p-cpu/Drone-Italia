@@ -3961,4 +3961,20 @@ html body #di-page-home #di-home-overview{flex:0 0 auto!important;margin:0!impor
 html body #di-page-home #di-home-sections-title{flex:0 0 auto!important;margin:0!important;}
 html body #di-page-home #di-donation-banner{flex:0 0 auto!important;margin:0!important;}
 </style>
+
+<style id="di-dashboard-reference-fit-2026">
+/* Reference layout: compact header, horizontal banner, donations, statistics, 4x2 tools. */
+html body #di-page-home.di-active{height:calc(100dvh - 80px - env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 80px - env(safe-area-inset-bottom))!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:clamp(3px,.5dvh,6px)!important;padding:3px 8px 5px!important;box-sizing:border-box!important;}
+html body #di-page-home #di-home-hero{height:clamp(68px,13dvh,130px)!important;max-height:clamp(68px,13dvh,130px)!important;flex:0 0 auto!important;min-height:0!important;margin:0!important;width:100%!important;padding:0!important;overflow:hidden!important;aspect-ratio:auto!important;}
+html body #di-page-home #di-home-hero>img{width:100%!important;height:100%!important;max-height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:center 52%!important;}
+html body #di-page-home #di-donation-banner{flex:0 0 auto!important;min-height:0!important;margin:0!important;padding:4px 8px!important;line-height:1.12!important;}
+html body #di-page-home #di-home-overview{flex:0 0 auto!important;min-height:0!important;margin:0!important;gap:5px!important;}
+html body #di-page-home #di-home-overview>*{min-height:0!important;padding:5px!important;}
+html body #di-page-home #di-home-sections-title{flex:0 0 auto!important;margin:0!important;padding:0!important;line-height:1.15!important;font-size:clamp(12px,1.8dvh,17px)!important;}
+html body #di-page-home #di-home-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;grid-auto-rows:minmax(0,1fr)!important;flex:1 1 0!important;min-height:0!important;height:0!important;overflow:hidden!important;margin:0!important;gap:clamp(3px,.45dvh,6px)!important;}
+html body #di-page-home #di-home-grid>*{min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;padding:clamp(3px,.45dvh,6px)!important;}
+html body #di-page-home #di-home-grid button{min-height:0!important;height:100%!important;max-height:100%!important;overflow:hidden!important;padding:clamp(3px,.45dvh,6px)!important;font-size:clamp(10px,1.5dvh,13px)!important;line-height:1.08!important;}
+html body #di-page-home #di-home-grid .di-home-icon{width:clamp(20px,3.6dvh,32px)!important;height:clamp(20px,3.6dvh,32px)!important;}
+@media(max-height:720px){html body #di-page-home #di-home-hero{height:9dvh!important;max-height:9dvh!important;}html body #di-page-home #di-home-grid button{font-size:10px!important;}}
+</style>
 </body></html>
