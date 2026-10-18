@@ -4216,4 +4216,31 @@ html body #di-page-home #di-home-hero .di-wide-logo strong{
 }
 html body #di-page-home #di-home-grid{margin-top:0!important;}
 </style>
+
+<style id="di-single-original-banner-2026">
+/* Use the original square artwork as one complete banner: no duplicate wordmark. */
+html body #di-page-home #di-home-hero{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ height:clamp(165px,22dvh,230px)!important;min-height:165px!important;
+ max-height:230px!important;margin:0!important;padding:0!important;
+ overflow:hidden!important;background:#062345!important;border-radius:12px!important;
+}
+html body #di-page-home #di-home-hero>img{
+ display:block!important;position:static!important;inset:auto!important;
+ width:auto!important;height:100%!important;max-width:100%!important;
+ max-height:100%!important;object-fit:contain!important;object-position:center!important;
+ aspect-ratio:auto!important;transform:none!important;margin:0 auto!important;
+}
+html body #di-page-home #di-home-hero .di-wide-logo{display:none!important;}
+</style>
+<script id="di-remove-duplicate-logo-2026">
+(function(){
+ function clean(){var hero=document.getElementById('di-home-hero');if(!hero)return;
+ hero.querySelectorAll('.di-wide-logo').forEach(function(el){el.remove()});
+ }
+ document.addEventListener('DOMContentLoaded',clean);
+ window.addEventListener('load',clean);
+ setTimeout(clean,1000);
+})();
+</script>
 </body></html>
