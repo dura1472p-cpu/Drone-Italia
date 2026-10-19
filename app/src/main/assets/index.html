@@ -4045,7 +4045,7 @@ html body #di-page-home #di-home-grid .di-home-desc{color:#bed4e6!important;}
   });
   var stats=document.getElementById('di-home-overview');
   if(stats){
-   var icons=['✈','◷','🚁'];
+   var icons=['✈','◷','✣'];
    Array.from(stats.children).forEach(function(card,i){
     if(!card.querySelector('.di-reference-stat-icon')){var icon=document.createElement('span');icon.className='di-reference-stat-icon';icon.textContent=icons[i]||'•';card.insertBefore(icon,card.firstChild);}
    });
@@ -4321,8 +4321,8 @@ html body #di-page-home.di-active{justify-content:flex-start!important;gap:clamp
 html body #di-page-home #di-donation-banner{min-height:clamp(58px,8dvh,78px)!important;padding:10px 12px!important;display:flex!important;align-items:center!important;gap:10px!important;}
 html body #di-page-home #di-donation-banner strong{font-size:clamp(14px,3.6vw,17px)!important;line-height:1.3!important;display:block!important;}
 html body #di-page-home #di-donation-banner button{min-height:38px!important;padding:8px 14px!important;font-weight:700!important;}
-html body #di-page-home #di-home-grid{flex:1 1 auto!important;height:auto!important;min-height:0!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;gap:clamp(6px,.7dvh,10px)!important;align-content:stretch!important;}
-html body #di-page-home #di-home-grid>button{height:100%!important;min-height:69px!important;max-height:none!important;padding:6px 9px!important;}
+html body #di-page-home #di-home-grid{flex:0 0 auto!important;height:auto!important;min-height:0!important;grid-template-rows:repeat(4,minmax(0,auto))!important;gap:clamp(7px,.85dvh,11px)!important;align-content:start!important;}
+html body #di-page-home #di-home-grid>button{height:clamp(78px,10.2dvh,104px)!important;min-height:0!important;max-height:104px!important;padding:6px 9px!important;}
 html body #di-page-home #di-home-grid .di-home-icon{width:clamp(32px,4.6dvh,43px)!important;height:clamp(32px,4.6dvh,43px)!important;}
 html body #di-page-home #di-home-grid .di-home-label{font-size:clamp(12px,3vw,15px)!important;}
 html body #di-page-home #di-home-grid .di-home-desc{font-size:clamp(10px,2.45vw,12px)!important;}
