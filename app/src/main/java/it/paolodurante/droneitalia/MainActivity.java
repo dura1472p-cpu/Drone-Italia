@@ -244,6 +244,17 @@ public class MainActivity extends Activity {
  @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest req){
  if(!req.isForMainFrame())return false;
  Uri u=req.getUrl(); if(u.toString().equals("https://app.local/index.html"))return false;
+ if("mailto".equalsIgnoreCase(u.getScheme())){
+  try{
+   Intent emailIntent=new Intent(Intent.ACTION_SENDTO,u);
+   startActivity(Intent.createChooser(emailIntent,"Invia email con"));
+  }catch(android.content.ActivityNotFoundException e){
+   Toast.makeText(MainActivity.this,"Nessuna app email disponibile. Installa o configura un client di posta.",Toast.LENGTH_LONG).show();
+  }catch(Exception e){
+   Toast.makeText(MainActivity.this,"Impossibile aprire l'app di posta.",Toast.LENGTH_LONG).show();
+  }
+  return true;
+ }
  if("https".equals(u.getScheme()))startActivity(new Intent(Intent.ACTION_VIEW,u));return true;
  }});
  box.addView(web,new LinearLayout.LayoutParams(-1,0,1));
