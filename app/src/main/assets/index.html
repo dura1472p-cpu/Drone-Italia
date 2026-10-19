@@ -4047,8 +4047,8 @@ html body #di-page-home #di-home-grid .di-home-desc{color:#bed4e6!important;}
     if(i===1||i===2){
      var paths=i===1
       ? '<circle cx="32" cy="34" r="19"/><path d="M32 20v15l10 7 M25 7h14 M32 7v8"/>'
-      : '<path d="M24 27h16v13H24z M28 40l-4 7 M36 40l4 7 M32 27v-5 M24 31l-9-9 M40 31l9-9"/><path d="M7 16h14v5H7z M43 16h14v5H43z M7 43h14v5H7z M43 43h14v5H43z"/><path d="M24 37l-9 8 M40 37l9 8"/><circle cx="14" cy="19" r="2"/><circle cx="50" cy="19" r="2"/><circle cx="14" cy="46" r="2"/><circle cx="50" cy="46" r="2"/>';
-     icon.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none" stroke="#60d7ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
+      : '<path d="M7 14H25V19H20V23Q20 27 25 27H29L32 23L35 27H39Q44 27 44 23V19H39V14H57V19H49V26Q49 32 42 34L39 37L43 44L48 46L51 52H45L41 49L37 43L34 40V45L32 48L30 45V40L27 43L23 49L19 52H13L16 46L21 44L25 37L22 34Q15 32 15 26V19H7Z"/>';
+     icon.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="'+(i===2?'#60d7ff':'none')+'" stroke="#60d7ff" stroke-width="'+(i===2?'1':'4')+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
      return;
     }
     img.src='data:image/jpeg;base64,'+referenceIcons[i];
