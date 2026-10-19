@@ -99,7 +99,19 @@ public class MainActivity extends Activity {
    statusWindow.setNavigationBarContrastEnforced(false);
  }
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
- box.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
+ // On Android 15+ the status bar is transparent: paint the inset behind the system clock.
+ final int statusBlue=Color.rgb(6,39,70);
+ box.setBackgroundColor(statusBlue);
+ View statusInsetBackground=new View(this);
+ statusInsetBackground.setBackgroundColor(statusBlue);
+ box.addView(statusInsetBackground,new LinearLayout.LayoutParams(-1,0));
+ box.setOnApplyWindowInsetsListener((v,insets)->{
+  int top=insets.getSystemWindowInsetTop();
+  LinearLayout.LayoutParams statusParams=(LinearLayout.LayoutParams)statusInsetBackground.getLayoutParams();
+  if(statusParams.height!=top){statusParams.height=top;statusInsetBackground.setLayoutParams(statusParams);}
+  v.setPadding(insets.getSystemWindowInsetLeft(),0,insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
+  return insets;
+ });
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
  web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(true);
  web.setWebChromeClient(new WebChromeClient(){
