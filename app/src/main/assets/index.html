@@ -1346,8 +1346,8 @@ layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];try{saveVisibility
 const body=document.body,header=body.querySelector('header');
 const navNames={home:'Home',map:'Mappa',flights:'Voli',photos:'Foto',settings:'Altro'};
 const pages={};
-for(const name of [...Object.keys(navNames),'zones']){
-const page=document.createElement('main');page.id='di-page-'+name;page.className='di-page';page.setAttribute('aria-label',navNames[name]||'Zone importate');pages[name]=page;body.insertBefore(page,header.nextSibling);
+for(const name of [...Object.keys(navNames),'zones','support']){
+const page=document.createElement('main');page.id='di-page-'+name;page.className='di-page';page.setAttribute('aria-label',navNames[name]||(name==='support'?'FAQ e assistenza':'Zone importate'));pages[name]=page;body.insertBefore(page,header.nextSibling);
 }
 const move=(selector,destination)=>{const el=document.querySelector(selector);if(el)pages[destination].append(el)};
 const hero=document.createElement('div');hero.id='di-home-hero';hero.innerHTML='<h2>Drone Italia</h2><p>Organizza i tuoi voli, consulta la mappa e gestisci le tue zone personali.</p>';pages.home.append(hero);
@@ -1360,8 +1360,24 @@ const cards=[
 ['🚁','I tuoi droni','Gestisci i tuoi droni','settings'],
 ['⚙️','Impostazioni','Preferenze dell’app','settings'],
 ['ℹ️','Normative','Regole e regolamenti','settings'],
-['❓','Supporto','FAQ e assistenza','settings']
+['❓','Supporto','FAQ e assistenza','support']
 ];
+// Supporto is a dedicated help page, not a duplicate of app settings.
+const supportTitle=document.createElement('h2');
+supportTitle.className='di-page-title';supportTitle.textContent='❓ FAQ e assistenza';
+pages.support.append(supportTitle);
+const supportFaq=document.createElement('section');
+supportFaq.className='di-tool-group';
+supportFaq.innerHTML='<h3>Domande frequenti (FAQ)</h3>'+
+ '<details><summary>Come salvo un volo?</summary><p>Apri Voli, compila i dati del volo e usa il comando per registrarlo.</p></details>'+
+ '<details><summary>Come aggiungo un drone?</summary><p>Apri I tuoi droni dalla Home, inserisci i dati richiesti e salva il drone.</p></details>'+
+ '<details><summary>Come importo una zona?</summary><p>Apri Importa zone e seleziona un file compatibile BZ, KML o GeoJSON.</p></details>'+
+ '<details><summary>Come proteggo i miei dati?</summary><p>Utilizza la funzione di esportazione del backup disponibile nelle impostazioni e conserva il file in un luogo sicuro.</p></details>';
+pages.support.append(supportFaq);
+const supportHelp=document.createElement('section');
+supportHelp.className='di-tool-group';
+supportHelp.innerHTML='<h3>Assistenza</h3><p>Se hai un problema, annota cosa stavi facendo, la versione dell’app e gli eventuali messaggi di errore. Queste informazioni aiutano a identificare il problema.</p><p>Per richieste di assistenza utilizza il canale di contatto ufficiale di Drone Italia, se disponibile. Non condividere password, dati personali o backup completi pubblicamente.</p>';
+pages.support.append(supportHelp);
 const nav=document.createElement('nav');nav.id='di-app-nav';nav.setAttribute('aria-label','Navigazione principale');
 const icons={home:'⌂',map:'🗺',flights:'✈',photos:'▧',settings:'•••'};
 const buttons={};
