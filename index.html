@@ -4036,47 +4036,65 @@ var banner=document.getElementById('di-donation-banner');
 if(!banner)return;
 var copy=banner.firstElementChild,button=banner.querySelector('button');
 if(!copy||!button)return;
-var preview=false,index=0,taps=0,key='di_donation_v1';
+var key='di_donation_v1',preview=false,index=0,interval=null,period=5500;
+var downloadUrl='https://github.com/dura1472p-cpu/Drone-Italia/actions/workflows/android-apk.yml';
 var slides=[
 ['💙 Grazie per il tuo sostegno!','Il tuo contributo aiuta a mantenere Drone Italia gratuita.'],
 ['🌍 Il tuo contributo conta','Aiuti a migliorare gli strumenti per i piloti.'],
-['🤝 Condividi Drone Italia','Fai conoscere l’app ad altri appassionati di droni.'],
+['🤝 Condividi Drone Italia','Invita altri piloti a scoprire e scaricare l’app.'],
 ['🚁 Scopri le novità','Esplora le funzionalità e gli aggiornamenti dell’app.']
 ];
 var original=copy.innerHTML;
+var test=document.createElement('button');test.type='button';test.id='di-inline-donor-test';test.textContent='🧪 Test';
+button.insertAdjacentElement('beforebegin',test);
 function verified(){try{return JSON.parse(localStorage.getItem(key)||'{}').verified===true}catch(e){return false}}
-function refresh(){
- var active=preview||verified();
- if(active){
+function active(){return preview||verified()}
+function draw(){
+ test.textContent=preview?'✕ Fine test':'🧪 Test';
+ if(active()){
   var slide=slides[index],html='<strong>'+slide[0]+'</strong>'+slide[1];
   if(copy.innerHTML!==html)copy.innerHTML=html;
-  if(button.textContent!=='Avanti ›')button.textContent='Avanti ›';
+  var label=index===2?'Condividi':'Avanti ›';
+  if(button.textContent!==label)button.textContent=label;
   if(banner.hidden)banner.hidden=false;
  }else{
   if(copy.innerHTML!==original)copy.innerHTML=original;
   if(button.textContent!=='Dona')button.textContent='Dona';
  }
 }
+function restart(){
+ if(interval!==null){clearInterval(interval);interval=null}
+ draw();
+ if(active())interval=setInterval(function(){if(document.hidden)return;if(!active()){restart();return}index=(index+1)%slides.length;draw()},period);
+}
+function share(){
+ var data={title:'Drone Italia',text:'Scopri Drone Italia: pagina per ottenere l’APK Android (accesso GitHub richiesto).',url:downloadUrl};
+ if(navigator.share){navigator.share(data).catch(function(){})}
+ else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(downloadUrl).then(function(){alert('Link copiato')}).catch(function(){window.prompt('Copia il link',downloadUrl)})}
+ else window.prompt('Copia il link',downloadUrl);
+}
 button.addEventListener('click',function(e){
- if(!(preview||verified()))return;
+ if(!active())return;
  e.preventDefault();e.stopImmediatePropagation();
- index=(index+1)%slides.length;refresh();
+ if(index===2){share();return}
+ index=(index+1)%slides.length;restart();
 },true);
-// Solo diagnostica: tre tocchi sul testo alternano anteprima e banner normale.
-// Non modifica mai la verifica PayPal o i dati di donazione.
-copy.addEventListener('click',function(){
- taps++;
- if(taps>=3){taps=0;preview=!preview;index=0;refresh()}
-});
-new MutationObserver(function(){if((preview||verified())&&banner.hidden)banner.hidden=false}).observe(banner,{attributes:true,attributeFilter:['hidden']});
-window.addEventListener('focus',refresh);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)refresh()});
-refresh();
+test.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();preview=!preview;index=0;restart()});
+new MutationObserver(function(){if(active()&&banner.hidden)banner.hidden=false}).observe(banner,{attributes:true,attributeFilter:['hidden']});
+window.addEventListener('focus',restart);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)restart()});
+restart();
 })();
 </script>
 
 <style id="di-diagnostic-donation-no-pink-accent">
 /* Mantiene il banner originale blu, eliminando soltanto la riga rosa/rossa a sinistra. */
 html body #di-page-home #di-donation-banner{border-left-color:#26749d!important;border-left-width:1px!important;border-left-style:solid!important}
+</style>
+<style id="di-inline-donor-test-style">
+html body #di-page-home #di-donation-banner{border-left:1px solid #26749d!important}
+#di-page-home #di-donation-banner>div:first-child{flex:1 1 auto!important;min-width:0!important}
+#di-page-home #di-donation-banner #di-inline-donor-test{flex:0 0 auto!important;min-height:29px!important;padding:4px 7px!important;margin:0 4px 0 auto!important;border:1px solid #4081ac!important;border-radius:7px!important;background:#234b6a!important;color:#fff!important;font-size:11px!important;white-space:nowrap!important}
+@media(max-width:390px){#di-page-home #di-donation-banner #di-inline-donor-test{padding:3px 5px!important;font-size:10px!important}}
 </style>
 </body></html>
