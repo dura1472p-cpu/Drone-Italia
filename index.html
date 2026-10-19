@@ -4029,4 +4029,62 @@ html body #di-page-home #di-home-sections-title{
  html body #di-page-home #di-home-grid button{font-size:10px!important}
 }
 </style>
+<style id="di-smart-banner-style">
+#di-smart-banner{display:none;align-items:center;gap:10px;margin:0 10px 12px;padding:11px 12px;border:1px solid #26749d;border-radius:13px;background:#153952;color:#eaf6ff;font-size:12px;min-height:77px}
+#di-smart-banner.di-visible{display:flex}
+#di-smart-banner .di-smart-content{flex:1;min-width:0}
+#di-smart-banner strong{display:block;font-size:13px;margin-bottom:3px}
+#di-smart-banner p{margin:0;font-size:12px;line-height:1.4;color:#c6e0f1}
+#di-smart-banner .di-smart-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+#di-smart-banner button{background:#127ed6;color:#fff;min-height:36px;padding:7px 9px;font-size:12px}
+#di-smart-banner .di-smart-arrow{background:#235371;padding:7px;min-width:30px}
+#di-smart-banner .di-smart-count{font-size:10px;color:#b7d7ec;text-align:center;margin-top:4px}
+html:not(.di-dark) #di-smart-banner{background:#e9f4ff;color:#17476e;border-color:#bcd9f2}
+html:not(.di-dark) #di-smart-banner p{color:#365b78}
+html:not(.di-dark) #di-smart-banner .di-smart-count{color:#4c7089}
+@media(max-width:370px){#di-smart-banner{gap:5px;padding:9px}#di-smart-banner .di-smart-actions{gap:3px}#di-smart-banner button{padding:6px;font-size:11px}}
+</style>
+<script id="di-smart-banner-script">
+(function(){
+'use strict';
+var old=document.getElementById('di-donation-banner'),home=document.getElementById('di-page-home');
+if(!old||!home||document.getElementById('di-smart-banner'))return;
+var key='di_donation_v1',position=0;
+var cards=[
+{title:'💙 Grazie per il tuo sostegno!',description:'Il tuo contributo aiuta a mantenere Drone Italia gratuita.',label:'I tuoi voli',action:function(){navigate('voli')}},
+{title:'🌍 Il tuo contributo conta',description:'Sostieni lo sviluppo e la disponibilità degli strumenti per i piloti.',label:'Strumenti',action:function(){navigate('mappa')}},
+{title:'🤝 Fai conoscere Drone Italia',description:'Condividi l’app con altri piloti e aiuta la community a crescere.',label:'Condividi',action:share},
+{title:'🚁 Scopri Drone Italia',description:'Esplora le funzionalità e gli aggiornamenti disponibili nell’app.',label:'Esplora',action:function(){navigate('altro')}}
+];
+function verified(){try{return JSON.parse(localStorage.getItem(key)||'{}').verified===true}catch(e){return false}}
+function navigate(name){var buttons=Array.from(document.querySelectorAll('#di-app-nav button'));var target=buttons.find(function(b){return b.textContent.toLowerCase().indexOf(name)>=0});if(target)target.click()}
+function share(){var url='https://github.com/dura1472p-cpu/Drone-Italia';if(navigator.share){navigator.share({title:'Drone Italia',text:'Scopri Drone Italia',url:url}).catch(function(){})}else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){alert('Link di Drone Italia copiato')}).catch(function(){window.prompt('Copia il link',url)})}else window.prompt('Copia il link',url)}
+var banner=document.createElement('div');banner.id='di-smart-banner';banner.setAttribute('role','region');banner.setAttribute('aria-label','Informazioni per sostenitori Drone Italia');
+var content=document.createElement('div');content.className='di-smart-content';
+var title=document.createElement('strong'),description=document.createElement('p'),count=document.createElement('div');count.className='di-smart-count';content.append(title,description,count);
+var actions=document.createElement('div');actions.className='di-smart-actions';
+var prev=document.createElement('button');prev.type='button';prev.className='di-smart-arrow';prev.textContent='‹';prev.setAttribute('aria-label','Messaggio precedente');
+var next=document.createElement('button');next.type='button';next.className='di-smart-arrow';next.textContent='›';next.setAttribute('aria-label','Messaggio successivo');
+var action=document.createElement('button');action.type='button';actions.append(prev,action,next);banner.append(content,actions);old.insertAdjacentElement('afterend',banner);
+function paint(){var c=cards[position];title.textContent=c.title;description.textContent=c.description;count.textContent=(position+1)+' / '+cards.length;action.textContent=c.label}
+function refresh(){var yes=verified();banner.classList.toggle('di-visible',yes);if(yes)old.hidden=true}
+prev.addEventListener('click',function(){position=(position+cards.length-1)%cards.length;paint()});
+next.addEventListener('click',function(){position=(position+1)%cards.length;paint()});
+action.addEventListener('click',function(){cards[position].action()});
+new MutationObserver(refresh).observe(old,{attributes:true,attributeFilter:['hidden']});
+window.addEventListener('focus',refresh);document.addEventListener('visibilitychange',function(){if(!document.hidden)refresh()});
+paint();refresh();
+})();
+</script>
+<style id="di-smart-banner-diagnostic-layout">
+/* La home diagnostica impone display:flex!important sul banner originario. */
+#di-page-home #di-donation-banner[hidden]{display:none!important}
+#di-page-home #di-smart-banner{box-sizing:border-box;flex:0 0 auto!important;width:auto;min-height:clamp(58px,8dvh,78px);margin:0 10px 12px!important;overflow:hidden}
+#di-page-home #di-smart-banner:not(.di-visible){display:none!important}
+#di-page-home #di-smart-banner.di-visible{display:flex!important}
+#di-page-home #di-smart-banner .di-smart-content{min-width:0}
+#di-page-home #di-smart-banner p{font-size:clamp(10px,2.7vw,12px);line-height:1.25}
+#di-page-home #di-smart-banner button{min-height:32px!important;padding:6px 8px!important}
+@media(max-width:370px){#di-page-home #di-smart-banner{margin-left:5px!important;margin-right:5px!important;padding:7px!important}}
+</style>
 </body></html>
