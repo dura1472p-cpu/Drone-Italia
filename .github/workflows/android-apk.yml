@@ -66,6 +66,19 @@ jobs:
           DRONE_SIGNING_KEY_PASSWORD: ${{ secrets.DRONE_SIGNING_KEY_PASSWORD }}
         run: gradle assembleDebug --stacktrace
 
+      - name: Verifica integrità e firma APK
+        run: |
+          set -e
+          APK=$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | head -n 1)
+          test -n "$APK"
+          echo "APK: $APK"
+          ls -lh "$APK"
+          sha256sum "$APK"
+          unzip -t "$APK" | tail -n 2
+          SDK_BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          "$SDK_BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK"
+          "$SDK_BUILD_TOOLS/aapt" dump badging "$APK" | head -n 8
+
       - name: Salva APK
         uses: actions/upload-artifact@v4
         with:
