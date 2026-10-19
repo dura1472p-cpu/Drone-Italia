@@ -2,3 +2,7 @@ name = "drone-italia-donazioni"
 main = "worker.js"
 compatibility_date = "2026-10-01"
 workers_dev = true
+
+# Configurazione isolata per i deploy di anteprima delle pull request.
+# Non modifica le impostazioni del Worker in produzione.
+[previews]
