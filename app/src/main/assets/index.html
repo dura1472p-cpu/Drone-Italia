@@ -914,6 +914,16 @@ function printLogReport(x){const escape=s=>String(s??'').replace(/[&<>"']/g,ch=>
  document.addEventListener('DOMContentLoaded',apply);window.addEventListener('load',apply);setTimeout(apply,1000);setTimeout(apply,2000);
 })();
 </script>
+
+<style id="di-1730-stat-cards-fix-2026">
+/* Three equal compact statistics cards; no changes to live counters. */
+html body #di-page-home #di-home-overview{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;}
+html body #di-page-home #di-home-overview>div{height:clamp(64px,8.2dvh,80px)!important;min-height:64px!important;box-sizing:border-box!important;padding:7px 5px!important;grid-template-columns:30px minmax(0,1fr)!important;grid-template-rows:1fr 1fr!important;column-gap:5px!important;align-items:center!important;}
+html body #di-page-home #di-home-overview .di-reference-stat-icon{width:28px!important;height:28px!important;margin:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;}
+html body #di-page-home #di-home-overview .di-reference-stat-icon svg{width:26px!important;height:26px!important;display:block!important;}
+html body #di-page-home #di-home-overview strong{font-size:clamp(16px,4vw,20px)!important;line-height:1.1!important;align-self:end!important;}
+html body #di-page-home #di-home-overview span:not(.di-reference-stat-icon){font-size:clamp(10px,2.65vw,12px)!important;line-height:1.15!important;margin:0!important;align-self:start!important;}
+</style>
 </body></html>';if(window.DroneItaliaNative&&window.DroneItaliaNative.printReport){window.DroneItaliaNative.printReport(html)}else{alert('Stampa PDF disponibile solo nella versione Android aggiornata.')}}
 $('di-report').onclick=()=>{const logs=load('logs');if(!logs.length){alert('Registra prima un volo nel diario.');return}printLogReport(logs[logs.length-1])};
 const weatherCard=document.createElement('section');weatherCard.id='di-weather-card';weatherCard.hidden=true;$('di-weather-status').after(weatherCard);
@@ -4045,9 +4055,15 @@ html body #di-page-home #di-home-grid .di-home-desc{color:#bed4e6!important;}
   });
   var stats=document.getElementById('di-home-overview');
   if(stats){
-   var icons=['✈','◷','✣'];
+   var icons=[
+    '<path d="M9 5h18v28H9z M14 12h8 M14 18h8 M14 24h5"/><path d="m25 27 4 4 7-8"/>',
+    '<circle cx="22" cy="21" r="15"/><path d="M22 10v12l8 5 M17 2h10"/>',
+    '<rect x="16" y="17" width="12" height="10" rx="3"/><path d="M16 20 8 12 M28 20l8-8 M16 25l-8 8 M28 25l8 8"/><circle cx="8" cy="11" r="5"/><circle cx="36" cy="11" r="5"/><circle cx="8" cy="34" r="5"/><circle cx="36" cy="34" r="5"/><circle cx="22" cy="22" r="2"/>'
+   ];
    Array.from(stats.children).forEach(function(card,i){
-    if(!card.querySelector('.di-reference-stat-icon')){var icon=document.createElement('span');icon.className='di-reference-stat-icon';icon.textContent=icons[i]||'•';card.insertBefore(icon,card.firstChild);}
+    var icon=card.querySelector('.di-reference-stat-icon');
+    if(!icon){icon=document.createElement('span');icon.className='di-reference-stat-icon';card.insertBefore(icon,card.firstChild);}
+    if(i<3){icon.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+icons[i]+'</svg>';icon.style.display='inline-flex';icon.style.alignItems='center';}
    });
   }
  }
