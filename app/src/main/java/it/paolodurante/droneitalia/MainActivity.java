@@ -88,8 +88,30 @@ public class MainActivity extends Activity {
 
  @Override public void onCreate(Bundle state) {
  super.onCreate(state);
+ // Explicit system-bar colors: Android 15/16 target SDK 36 may ignore theme-only statusBarColor.
+ Window statusWindow=getWindow();
+ statusWindow.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+ statusWindow.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+ statusWindow.setStatusBarColor(Color.rgb(6,39,70));
+ statusWindow.getDecorView().setSystemUiVisibility(
+   statusWindow.getDecorView().getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+ if(android.os.Build.VERSION.SDK_INT>=35){
+   statusWindow.setNavigationBarContrastEnforced(false);
+ }
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
- box.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
+ // On Android 15+ the status bar is transparent: paint the inset behind the system clock.
+ final int statusBlue=Color.rgb(6,39,70);
+ box.setBackgroundColor(statusBlue);
+ View statusInsetBackground=new View(this);
+ statusInsetBackground.setBackgroundColor(statusBlue);
+ box.addView(statusInsetBackground,new LinearLayout.LayoutParams(-1,0));
+ box.setOnApplyWindowInsetsListener((v,insets)->{
+  int top=insets.getSystemWindowInsetTop();
+  LinearLayout.LayoutParams statusParams=(LinearLayout.LayoutParams)statusInsetBackground.getLayoutParams();
+  if(statusParams.height!=top){statusParams.height=top;statusInsetBackground.setLayoutParams(statusParams);}
+  v.setPadding(insets.getSystemWindowInsetLeft(),0,insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
+  return insets;
+ });
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
  web.getSettings().setAllowFileAccess(false); web.getSettings().setAllowContentAccess(true);
  web.setWebChromeClient(new WebChromeClient(){
@@ -222,6 +244,17 @@ public class MainActivity extends Activity {
  @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest req){
  if(!req.isForMainFrame())return false;
  Uri u=req.getUrl(); if(u.toString().equals("https://app.local/index.html"))return false;
+ if("mailto".equalsIgnoreCase(u.getScheme())){
+  try{
+   Intent emailIntent=new Intent(Intent.ACTION_SENDTO,u);
+   startActivity(Intent.createChooser(emailIntent,"Invia email con"));
+  }catch(android.content.ActivityNotFoundException e){
+   Toast.makeText(MainActivity.this,"Nessuna app email disponibile. Installa o configura un client di posta.",Toast.LENGTH_LONG).show();
+  }catch(Exception e){
+   Toast.makeText(MainActivity.this,"Impossibile aprire l'app di posta.",Toast.LENGTH_LONG).show();
+  }
+  return true;
+ }
  if("https".equals(u.getScheme()))startActivity(new Intent(Intent.ACTION_VIEW,u));return true;
  }});
  box.addView(web,new LinearLayout.LayoutParams(-1,0,1));
