@@ -1367,7 +1367,7 @@ const supportTitle=document.createElement('h2');
 supportTitle.className='di-page-title';supportTitle.textContent='❓ FAQ e assistenza';
 pages.support.append(supportTitle);
 const supportFaq=document.createElement('section');
-supportFaq.className='di-tool-group';
+supportFaq.className='di-tool-group di-support-faq';
 supportFaq.innerHTML='<h3>Domande frequenti (FAQ)</h3>'+
  '<details><summary>Come salvo un volo?</summary><p>Apri Voli, compila i dati del volo e usa il comando per registrarlo.</p></details>'+
  '<details><summary>Come aggiungo un drone?</summary><p>Apri I tuoi droni dalla Home, inserisci i dati richiesti e salva il drone.</p></details>'+
@@ -1376,7 +1376,7 @@ supportFaq.innerHTML='<h3>Domande frequenti (FAQ)</h3>'+
 pages.support.append(supportFaq);
 const supportHelp=document.createElement('section');
 supportHelp.className='di-tool-group';
-supportHelp.innerHTML='<h3>Assistenza</h3><p>Se hai un problema, annota cosa stavi facendo, la versione dell’app e gli eventuali messaggi di errore. Queste informazioni aiutano a identificare il problema.</p><p>Per richieste di assistenza utilizza il canale di contatto ufficiale di Drone Italia, se disponibile. Non condividere password, dati personali o backup completi pubblicamente.</p>';
+supportHelp.innerHTML='<h3>Assistenza</h3><p>Per ricevere assistenza scrivi a:</p><p><a class="di-support-email" href="mailto:droneitalia966@gmail.com?subject=Assistenza%20Drone%20Italia">✉ droneitalia966@gmail.com</a></p><p>Descrivi il problema, la versione dell’app e gli eventuali messaggi di errore. Non inviare password o backup completi.</p>';
 pages.support.append(supportHelp);
 const nav=document.createElement('nav');nav.id='di-app-nav';nav.setAttribute('aria-label','Navigazione principale');
 const icons={home:'⌂',map:'🗺',flights:'✈',photos:'▧',settings:'•••'};
@@ -4385,5 +4385,16 @@ html:has(#di-page-home.di-active) body::after{
 html body #di-app-nav{
  background:#fff!important;
 }
+</style>
+<style id="di-support-faq-cards-2026">
+#di-page-support .di-support-faq details{margin:10px 0;border:1px solid #c9dfed;border-radius:14px;background:#f2f8fc;overflow:hidden}
+#di-page-support .di-support-faq summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:16px 15px;font-weight:700;color:#123d60;min-height:54px}
+#di-page-support .di-support-faq summary::-webkit-details-marker{display:none}
+#di-page-support .di-support-faq summary::after{content:"+";font-size:25px;line-height:1;color:#137ac3}
+#di-page-support .di-support-faq details[open] summary::after{content:"−"}
+#di-page-support .di-support-faq details[open]{background:#eaf5fc;border-color:#74b7e4}
+#di-page-support .di-support-faq details p{margin:0;padding:0 15px 16px;color:#35566e;line-height:1.55}
+#di-page-support .di-support-faq summary:focus-visible,#di-page-support .di-support-email:focus-visible{outline:3px solid #1687d2;outline-offset:2px}
+#di-page-support .di-support-email{display:inline-block;padding:12px 14px;border-radius:12px;background:#e6f3ff;border:1px solid #94c9ee;color:#075d9b;font-weight:700;text-decoration:none;overflow-wrap:anywhere}
 </style>
 </body></html>
