@@ -88,6 +88,16 @@ public class MainActivity extends Activity {
 
  @Override public void onCreate(Bundle state) {
  super.onCreate(state);
+ // Explicit system-bar colors: Android 15/16 target SDK 36 may ignore theme-only statusBarColor.
+ Window statusWindow=getWindow();
+ statusWindow.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+ statusWindow.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+ statusWindow.setStatusBarColor(Color.rgb(6,39,70));
+ statusWindow.getDecorView().setSystemUiVisibility(
+   statusWindow.getDecorView().getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+ if(android.os.Build.VERSION.SDK_INT>=35){
+   statusWindow.setNavigationBarContrastEnforced(false);
+ }
  LinearLayout box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL);
  box.setOnApplyWindowInsetsListener((v,insets)->{v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
  web=new WebView(this); web.getSettings().setJavaScriptEnabled(true); web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW); web.getSettings().setDomStorageEnabled(true);
