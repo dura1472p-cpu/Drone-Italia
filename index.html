@@ -4067,7 +4067,19 @@ var prev=document.createElement('button');prev.type='button';prev.className='di-
 var next=document.createElement('button');next.type='button';next.className='di-smart-arrow';next.textContent='›';next.setAttribute('aria-label','Messaggio successivo');
 var action=document.createElement('button');action.type='button';actions.append(prev,action,next);banner.append(content,actions);old.insertAdjacentElement('afterend',banner);
 function paint(){var c=cards[position];title.textContent=c.title;description.textContent=c.description;count.textContent=(position+1)+' / '+cards.length;action.textContent=c.label}
-function refresh(){var yes=verified();banner.classList.toggle('di-visible',yes);if(yes)old.hidden=true}
+var preview=false;
+var test=document.createElement('button');test.type='button';test.id='di-smart-banner-preview-toggle';test.setAttribute('aria-pressed','false');test.textContent='🧪 Prova banner sostenitore';
+banner.insertAdjacentElement('afterend',test);
+var previewLabel=document.createElement('span');previewLabel.id='di-smart-banner-preview-label';previewLabel.textContent='ANTEPRIMA · nessuna donazione simulata';banner.insertBefore(previewLabel,content);
+function refresh(){
+ var real=verified(),yes=real||preview;
+ banner.classList.toggle('di-visible',yes);
+ previewLabel.hidden=!preview;
+ test.textContent=preview?'✕ Termina anteprima':'🧪 Prova banner sostenitore';
+ test.setAttribute('aria-pressed',String(preview));
+ if(old.hidden!==yes)old.hidden=yes;
+}
+test.addEventListener('click',function(){preview=!preview;position=0;paint();refresh()});
 prev.addEventListener('click',function(){position=(position+cards.length-1)%cards.length;paint()});
 next.addEventListener('click',function(){position=(position+1)%cards.length;paint()});
 action.addEventListener('click',function(){cards[position].action()});
@@ -4086,5 +4098,12 @@ paint();refresh();
 #di-page-home #di-smart-banner p{font-size:clamp(10px,2.7vw,12px);line-height:1.25}
 #di-page-home #di-smart-banner button{min-height:32px!important;padding:6px 8px!important}
 @media(max-width:370px){#di-page-home #di-smart-banner{margin-left:5px!important;margin-right:5px!important;padding:7px!important}}
+</style>
+
+<style id="di-smart-banner-preview-style">
+/* Solo per la build diagnostica: anteprima visiva, mai una verifica PayPal. */
+#di-page-home #di-smart-banner-preview-toggle{display:block!important;box-sizing:border-box;align-self:flex-start;margin:0 10px 8px!important;padding:5px 9px!important;min-height:28px!important;border:1px dashed #3d91b9!important;border-radius:8px!important;background:#e7f5ff!important;color:#07527c!important;font-size:11px!important;line-height:1.2!important}
+#di-page-home #di-smart-banner-preview-label{display:block;font-size:9px;font-weight:800;letter-spacing:.03em;color:#ffda83;margin-bottom:3px}
+html:not(.di-dark) #di-page-home #di-smart-banner-preview-label{color:#8b4c00}
 </style>
 </body></html>
