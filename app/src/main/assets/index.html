@@ -4355,4 +4355,19 @@ html body #di-page-home #di-home-overview .di-reference-stat-icon img{display:bl
 html body #di-page-home.di-active{margin-bottom:90px!important;border-bottom:2px solid #176194!important;border-radius:20px!important;}
 html body #di-page-home #di-home-grid>button{height:clamp(72px,8.5dvh,92px)!important;min-height:72px!important;max-height:92px!important;}
 </style>
+<style id="di-1730-blue-outside-background-2026">
+/* Original 17:30 backdrop: blue around the outer dashboard frame, white only on the app navigation. */
+html:has(#di-page-home.di-active),
+html:has(#di-page-home.di-active) body{
+ background:#062746!important;
+ background-color:#062746!important;
+}
+html:has(#di-page-home.di-active) body::before,
+html:has(#di-page-home.di-active) body::after{
+ background-color:transparent!important;
+}
+html body #di-app-nav{
+ background:#fff!important;
+}
+</style>
 </body></html>
