@@ -3794,7 +3794,7 @@ html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#
 <script id="di-donations-verified-script">
 (function(){
 'use strict';
-var API='https://drone-italia-donazioni.turni-vigilanza-pdura.workers.dev';
+var API='https://drone-italia-donazioni-sandbox.turni-vigilanza-pdura.workers.dev';
 var KEY='di_donation_v1';
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
 function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
