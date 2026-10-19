@@ -4468,4 +4468,37 @@ html body #di-page-home #di-donation-banner{border-left:1px solid #26749d!import
 <style id="di-diagnostic-share-only-button">
 #di-page-home #di-donation-banner button:not(#di-inline-donor-test):empty{display:none!important}
 </style>
+<style id="di-settings-donation-cleanup">
+/* Nasconde solo la sezione donazioni nelle Impostazioni, non il banner Home. */
+#di-page-settings #di-paypal-support{display:none!important}
+#di-page-settings #di-donation-reminder-test{display:none!important}
+#di-donation-modal[hidden]{display:none!important}
+#di-donation-modal{position:fixed;inset:0;z-index:100001;background:rgba(4,22,42,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#di-donation-modal-panel{width:min(100%,420px);max-height:85dvh;overflow:auto;background:#f5f9fd;color:#153a58;border-radius:15px;padding:15px}
+#di-donation-modal-panel #di-paypal-support{display:block!important}
+#di-donation-modal-panel #di-donation-reminder-test{display:none!important}
+#di-donation-modal-close{display:block;margin-left:auto;margin-bottom:8px;padding:8px 12px;background:#126bc4;color:white;border-radius:8px}
+</style>
+<script id="di-settings-donation-cleanup-script">
+(function(){
+'use strict';
+var homeButton=document.querySelector('#di-donation-banner button:not(#di-inline-donor-test)');
+var group=document.getElementById('di-paypal-support');
+if(!homeButton||!group)return;
+var parent=group.parentNode,marker=document.createComment('donation-settings-location');
+parent.insertBefore(marker,group);
+var overlay=document.createElement('div');overlay.id='di-donation-modal';overlay.hidden=true;
+var panel=document.createElement('div');panel.id='di-donation-modal-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Sostieni Drone Italia');
+var close=document.createElement('button');close.id='di-donation-modal-close';close.type='button';close.textContent='Chiudi';
+panel.appendChild(close);overlay.appendChild(panel);document.body.appendChild(overlay);
+function hide(){overlay.hidden=true;marker.parentNode.insertBefore(group,marker.nextSibling)}
+function show(){panel.appendChild(group);overlay.hidden=false;var details=group.querySelector('details');if(details)details.open=true}
+close.addEventListener('click',hide);
+overlay.addEventListener('click',function(e){if(e.target===overlay)hide()});
+homeButton.addEventListener('click',function(e){
+ if(homeButton.textContent.trim()!=='Dona')return;
+ e.preventDefault();e.stopImmediatePropagation();show();
+},true);
+})();
+</script>
 </body></html>
