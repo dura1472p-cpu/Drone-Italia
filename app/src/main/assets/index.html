@@ -3826,8 +3826,8 @@ if(data.orderId){message('Hai già una donazione in attesa. Verificala prima di 
 busy=true;message('Apertura di PayPal…');try{var result=await post('/create-order',{donationId:data.donationId,amount:Number(amount.value)});if(!result.orderId||!/^https:\/\//.test(result.approvalUrl||''))throw new Error('Risposta non valida');
 var url=new URL(result.approvalUrl);if(!/(^|\.)paypal\.com$/.test(url.hostname))throw new Error('Indirizzo PayPal non valido');
 data.orderId=result.orderId;save(data);render();message('Completa il pagamento su PayPal, poi torna nell’app e tocca “Verifica pagamento”.');
-window.open(url.href,'_blank','noopener,noreferrer');
-}catch(e){message('Non è stato possibile aprire PayPal. Riprova più tardi.')}finally{busy=false}}
+window.location.assign(url.href);
+}catch(e){message('Impossibile preparare il pagamento: '+(e&&e.message?e.message:'errore di rete o servizio')+'. Nessun pagamento è stato effettuato.')}finally{busy=false}}
 link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
 bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
 check.addEventListener('click',verify);
