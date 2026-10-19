@@ -4422,7 +4422,7 @@ function draw(){
  if(active()){
   var slide=slides[index],html='<strong>'+slide[0]+'</strong>'+slide[1];
   if(copy.innerHTML!==html)copy.innerHTML=html;
-  var label=index===2?'Condividi':'Avanti ›';
+  var label=index===2?'Condividi':'';
   if(button.textContent!==label)button.textContent=label;
   if(banner.hidden)banner.hidden=false;
  }else{
@@ -4444,8 +4444,7 @@ function share(){
 button.addEventListener('click',function(e){
  if(!active())return;
  e.preventDefault();e.stopImmediatePropagation();
- if(index===2){share();return}
- index=(index+1)%slides.length;restart();
+ if(index===2)share();
 },true);
 test.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();preview=!preview;index=0;restart()});
 new MutationObserver(function(){if(active()&&banner.hidden)banner.hidden=false}).observe(banner,{attributes:true,attributeFilter:['hidden']});
@@ -4464,5 +4463,9 @@ html body #di-page-home #di-donation-banner{border-left:1px solid #26749d!import
 #di-page-home #di-donation-banner>div:first-child{flex:1 1 auto!important;min-width:0!important}
 #di-page-home #di-donation-banner #di-inline-donor-test{flex:0 0 auto!important;min-height:29px!important;padding:4px 7px!important;margin:0 4px 0 auto!important;border:1px solid #4081ac!important;border-radius:7px!important;background:#234b6a!important;color:#fff!important;font-size:11px!important;white-space:nowrap!important}
 @media(max-width:390px){#di-page-home #di-donation-banner #di-inline-donor-test{padding:3px 5px!important;font-size:10px!important}}
+</style>
+
+<style id="di-diagnostic-share-only-button">
+#di-page-home #di-donation-banner button:not(#di-inline-donor-test):empty{display:none!important}
 </style>
 </body></html>
