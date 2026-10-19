@@ -4044,6 +4044,13 @@ html body #di-page-home #di-home-grid .di-home-desc{color:#bed4e6!important;}
     if(!icon){icon=document.createElement('span');icon.className='di-reference-stat-icon';card.insertBefore(icon,card.firstChild);}
     icon.textContent='';
     var img=document.createElement('img');
+    if(i===1||i===2){
+     var paths=i===1
+      ? '<circle cx="32" cy="34" r="19"/><path d="M32 20v15l10 7 M25 7h14 M32 7v8"/>'
+      : '<rect x="25" y="27" width="14" height="11" rx="3"/><path d="M25 31 17 22 M39 31l8-9 M25 36l-8 8 M39 36l8 8"/><circle cx="14" cy="19" r="8"/><circle cx="50" cy="19" r="8"/><circle cx="14" cy="47" r="8"/><circle cx="50" cy="47" r="8"/>';
+     icon.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none" stroke="#60d7ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
+     return;
+    }
     img.src='data:image/jpeg;base64,'+referenceIcons[i];
     img.alt='';img.setAttribute('aria-hidden','true');
     img.style.cssText='display:block;width:100%;height:100%;object-fit:cover;border-radius:10px';
