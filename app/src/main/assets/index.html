@@ -3799,7 +3799,8 @@ var KEY='di_donation_v1';
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
 function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
 function token(){var a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,function(x){return x.toString(16).padStart(2,'0')}).join('')}
-var data=read();if(!/^[a-f0-9]{32,64}$/i.test(data.donationId||'')){data={donationId:token()};save(data)}
+var data=read(),serverVerified=false;if(!/^[a-f0-9]{32,64}$/i.test(data.donationId||'')){data={donationId:token()};save(data)}
+function updateVerification(value){serverVerified=value===true;window.diDonorServerVerified=serverVerified;data.verified=serverVerified;save(data);window.dispatchEvent(new Event('di-donation-verification-changed'));}
 var home=document.getElementById('di-page-home'),settings=document.getElementById('di-paypal-support'),link=document.getElementById('di-paypal-donate');
 if(!home||!settings||!link)return;
 var banner=document.createElement('div');banner.id='di-donation-banner';
@@ -3813,15 +3814,15 @@ var status=document.createElement('p');status.id='di-donation-status';status.set
 var check=document.createElement('button');check.type='button';check.id='di-donation-check';check.textContent='Verifica pagamento';check.hidden=true;
 link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);
 link.removeAttribute('href');link.removeAttribute('target');link.setAttribute('role','button');link.setAttribute('tabindex','0');
-function render(){banner.hidden=data.verified===true;link.textContent=data.verified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||data.verified===true;if(data.verified)status.textContent='Donazione verificata da PayPal. Grazie!'}
+function render(){banner.hidden=serverVerified;link.textContent=serverVerified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||serverVerified;if(serverVerified)status.textContent='Donazione verificata da PayPal. Grazie!'}
 function message(text){status.textContent=text}
 async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
 var busy=false;
-async function verify(){if(busy)return;if(!data.orderId){message('Nessun pagamento da verificare. Non è stata effettuata alcuna donazione.');return}if(data.verified){message('Donazione già verificata da PayPal. Grazie!');return}busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
+async function verify(){if(busy)return;if(!data.orderId){message('Nessun pagamento da verificare. Non è stata effettuata alcuna donazione.');return}if(serverVerified){message('Donazione già verificata da PayPal. Grazie!');return}busy=true;check.disabled=true;message('Verifica della donazione in corso…');try{
 var result=await post('/capture-order',{donationId:data.donationId,orderId:data.orderId});
-if(result.verified===true){data.verified=true;save(data);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
+if(result.verified===true){updateVerification(true);render()}else message('Pagamento non ancora confermato. Completa la donazione su PayPal e riprova.');
 }catch(e){message('Impossibile verificare ora. Controlla la connessione e riprova.')}finally{busy=false;check.disabled=false}}
-async function donate(ev){if(ev)ev.preventDefault();if(busy||data.verified)return;
+async function donate(ev){if(ev)ev.preventDefault();if(busy||serverVerified)return;
 if(data.orderId){message('Hai già una donazione in attesa. Verificala prima di iniziarne un’altra.');check.hidden=false;return}
 busy=true;message('Apertura di PayPal…');try{var result=await post('/create-order',{donationId:data.donationId,amount:Number(amount.value)});if(!result.orderId||!/^https:\/\//.test(result.approvalUrl||''))throw new Error('Risposta non valida');
 var url=new URL(result.approvalUrl);if(!/(^|\.)paypal\.com$/.test(url.hostname))throw new Error('Indirizzo PayPal non valido');
@@ -3831,9 +3832,10 @@ window.location.assign(url.href);
 link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
 bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
 check.addEventListener('click',verify);
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!data.verified)verify()});
-window.addEventListener('focus',function(){if(data.orderId&&!data.verified)verify()});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!serverVerified)verify()});
+window.addEventListener('focus',function(){if(data.orderId&&!serverVerified)verify()});
 render();
+if(data.orderId){post('/verify',{donationId:data.donationId,orderId:data.orderId}).then(function(result){updateVerification(result.verified===true);render()}).catch(function(){message('Verifica PayPal non disponibile. Riprova più tardi.')})}
 })();
 </script>
 <style id="di-donation-reminder-style">
@@ -4409,7 +4411,7 @@ var slides=[
 ['🚁 Scopri le novità','Esplora le funzionalità e gli aggiornamenti dell’app.']
 ];
 var original=copy.innerHTML;
-function verified(){try{return JSON.parse(localStorage.getItem(key)||'{}').verified===true}catch(e){return false}}
+function verified(){return window.diDonorServerVerified===true}
 function active(){return verified()}
 function draw(){
  if(active()){
@@ -4440,6 +4442,7 @@ button.addEventListener('click',function(e){
  if(index===2)share();
 },true);
 new MutationObserver(function(){if(active()&&banner.hidden)banner.hidden=false}).observe(banner,{attributes:true,attributeFilter:['hidden']});
+window.addEventListener('di-donation-verification-changed',restart);
 window.addEventListener('focus',restart);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)restart()});
 restart();
