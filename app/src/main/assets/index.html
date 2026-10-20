@@ -3871,10 +3871,6 @@ var donate=document.createElement('button');donate.type='button';donate.id='di-d
 var later=document.createElement('button');later.type='button';later.id='di-donation-reminder-later';later.textContent='Non ora';
 actions.append(donate,later);card.append(title,message,actions);overlay.append(card);document.body.appendChild(overlay);
 var shown=0,previous=-1,started=Date.now(),nextAt=started+15*60*1000,priorFocus=null;
-var testButton=document.createElement('button');testButton.type='button';testButton.id='di-donation-reminder-test';testButton.textContent='🎭 Prova promemoria adesso';testButton.style.cssText='display:block;margin:12px 0;padding:11px;border-radius:10px;background:#e9f4ff;color:#17476e;border:1px solid #bcd9f2;min-height:44px';
-var support=document.getElementById('di-paypal-support');if(support)support.appendChild(testButton);
-testButton.addEventListener('click',function(){show(true)});
-
 function close(){overlay.hidden=true;if(priorFocus&&typeof priorFocus.focus==='function')priorFocus.focus()}
 function show(isTest){
 var idx=Math.floor(Math.random()*phrases.length);
