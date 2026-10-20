@@ -3795,7 +3795,7 @@ html.di-dark #di-donation-banner{background:#1c3851;color:#e4edf6;border-color:#
 (function(){
 'use strict';
 var API='https://drone-italia-donazioni.turni-vigilanza-pdura.workers.dev';
-var KEY='di_donation_v1';
+var KEY='di_donation_live_v1'; // Separate PayPal Live orders from legacy sandbox/diagnostic orders.
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
 function save(data){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
 function token(){var a=new Uint8Array(24);crypto.getRandomValues(a);return Array.from(a,function(x){return x.toString(16).padStart(2,'0')}).join('')}
