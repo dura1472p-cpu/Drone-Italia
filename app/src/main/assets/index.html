@@ -1346,7 +1346,7 @@ layers.forEach(l=>map.removeLayer(l));layers.clear();items=[];try{saveVisibility
 const body=document.body,header=body.querySelector('header');
 const navNames={home:'Home',map:'Mappa',flights:'Voli',photos:'Foto',settings:'Altro'};
 const pages={};
-for(const name of [...Object.keys(navNames),'zones','support']){
+for(const name of [...Object.keys(navNames),'zones','support','normative']){
 const page=document.createElement('main');page.id='di-page-'+name;page.className='di-page';page.setAttribute('aria-label',navNames[name]||(name==='support'?'FAQ e assistenza':'Zone importate'));pages[name]=page;body.insertBefore(page,header.nextSibling);
 }
 const move=(selector,destination)=>{const el=document.querySelector(selector);if(el)pages[destination].append(el)};
@@ -1359,9 +1359,28 @@ const cards=[
 ['📷','Le mie foto','Foto associate ai voli','photos'],
 ['🚁','I tuoi droni','Gestisci i tuoi droni','settings'],
 ['⚙️','Impostazioni','Preferenze dell’app','settings'],
-['ℹ️','Normative','Regole e regolamenti','support'],
+['ℹ️','Normative','Regole e regolamenti','normative'],
 ['❓','Supporto','FAQ e assistenza','support']
 ];
+// Sezione Normative separata dalle Impostazioni.
+const normativeTitle=document.createElement('h2');normativeTitle.className='di-page-title';normativeTitle.textContent='📘 Normative';pages.normative.append(normativeTitle);
+const normativeIntro=document.createElement('section');normativeIntro.className='di-tool-group';
+normativeIntro.innerHTML='<p>Una guida essenziale alle regole per i piloti di droni in Italia. Prima di volare verifica sempre le informazioni ufficiali aggiornate.</p><p><strong>Importante:</strong> l\'assenza di zone nella mappa dell\'app non significa che il volo sia consentito. Verifica le restrizioni su <a href="https://www.d-flight.it/" target="_blank" rel="noopener noreferrer">d-flight</a>.</p>';
+pages.normative.append(normativeIntro);
+const normativeItems=[
+['Categorie operative','Le operazioni con droni rientrano nelle categorie Open, Specific o Certified, secondo il rischio e le condizioni di volo.','EASA','https://www.easa.europa.eu/en/light/topics/drones'],
+['Registrazione operatore','Verifica quando è necessaria la registrazione come operatore UAS e quali identificativi devono essere applicati.','ENAC','https://www.enac.gov.it/sicurezza-aerea/droni/'],
+['Attestati del pilota','I requisiti formativi variano in base alla categoria operativa, alla classe del drone e alle condizioni del volo.','EASA','https://www.easa.europa.eu/en/light/topics/drones'],
+['Assicurazione','Controlla gli obblighi assicurativi e le responsabilità prima di utilizzare il drone.','ENAC','https://www.enac.gov.it/sicurezza-aerea/droni/'],
+['Zone e restrizioni','Consulta le zone geografiche UAS, le limitazioni e le eventuali autorizzazioni necessarie prima di decollare.','d-flight','https://www.d-flight.it/']
+];
+for(const [heading,description,source,url] of normativeItems){
+ const details=document.createElement('details');details.style.cssText='margin:12px 16px;background:#fff;color:#183a50;border:1px solid #d5e4ef;border-radius:15px;padding:16px';
+ const summary=document.createElement('summary');summary.textContent=heading;summary.style.cssText='font-weight:750;cursor:pointer';
+ const p=document.createElement('p');p.textContent=description;
+ const a=document.createElement('a');a.textContent='Fonte ufficiale: '+source+' ↗';a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+ details.append(summary,p,a);pages.normative.append(details);
+}
 // Supporto is a dedicated help page, not a duplicate of app settings.
 const supportTitle=document.createElement('h2');
 supportTitle.className='di-page-title';supportTitle.textContent='❓ FAQ e assistenza';
