@@ -4494,16 +4494,18 @@ homeButton.addEventListener('click',function(e){
 })();
 </script>
 <style id="di-pilot-id-style">
-#di-reference-header>div:first-child{min-width:0;flex:1;position:relative!important;padding-right:0!important}
-#di-reference-header .di-pilot-heading-row{display:grid!important;grid-template-columns:max-content minmax(0,1fr)!important;align-items:center!important;gap:9px!important;min-width:0!important;width:100%!important;position:static!important}
-#di-reference-header .di-pilot-heading-row>strong{font-size:clamp(15px,3.1vw,23px)!important;letter-spacing:.2px!important;white-space:nowrap!important;min-width:0!important;flex:0 1 auto!important}
-#di-reference-header #di-pilot-id-box{justify-self:center!important;position:absolute!important;top:50%!important;transform:translateY(-50%)!important;display:inline-flex!important;align-items:center!important;flex-direction:row!important;flex:0 0 auto!important;gap:7px!important;padding:9px 12px!important;min-height:48px!important;max-width:190px!important;border:1px solid #328bc0!important;border-radius:10px!important;background:#103a5b!important;color:#eaf8ff!important;cursor:pointer!important;line-height:1.2!important;box-sizing:border-box!important}
-#di-reference-header #di-pilot-id-box .di-pilot-info{display:flex!important;flex-direction:column!important;gap:3px!important;min-width:0!important}
-#di-reference-header #di-pilot-id-box .di-pilot-label{font-size:12px!important;line-height:1.2!important;letter-spacing:0!important;color:#9cdefc!important;font-weight:700!important}
-#di-reference-header #di-pilot-id-box .di-pilot-value{font-size:14px!important;line-height:1.2!important;color:#fff!important;font-weight:650!important;max-width:115px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
-#di-reference-header #di-pilot-id-box .di-pilot-icon{font-size:17px!important;color:#8bd4f6!important}
-#di-reference-header #di-pilot-id-box .di-pilot-edit{font-size:16px!important;color:#8bd4f6!important}
-@media(max-width:480px){#di-reference-header .di-pilot-heading-row{gap:6px!important}#di-reference-header .di-pilot-heading-row>strong{font-size:clamp(12px,3.1vw,16px)!important}#di-reference-header #di-pilot-id-box{padding:7px 8px!important;min-height:44px!important;gap:5px!important}#di-reference-header #di-pilot-id-box .di-pilot-label{font-size:11px!important}#di-reference-header #di-pilot-id-box .di-pilot-value{font-size:13px!important;max-width:92px!important}}
+html body #di-page-home #di-reference-header{display:grid!important;grid-template-columns:max-content minmax(0,1fr) auto!important;align-items:center!important;column-gap:8px!important;width:100%!important;box-sizing:border-box!important}
+html body #di-page-home #di-reference-header>div:first-child{grid-column:1!important;min-width:0!important;flex:none!important;position:static!important}
+html body #di-page-home #di-reference-header>div:first-child>strong{font-size:clamp(12px,2dvh,19px)!important;white-space:nowrap!important}
+html body #di-page-home #di-reference-header>div:first-child>span{white-space:nowrap!important}
+html body #di-page-home #di-reference-header>b{grid-column:3!important;justify-self:end!important}
+html body #di-page-home #di-reference-header #di-pilot-id-box{grid-column:2!important;grid-row:1!important;justify-self:center!important;align-self:center!important;position:static!important;transform:none!important;display:inline-flex!important;align-items:center!important;gap:5px!important;min-width:0!important;max-width:100%!important;padding:7px 8px!important;border:1px solid #328bc0!important;border-radius:9px!important;background:#103a5b!important;color:#eaf8ff!important;box-sizing:border-box!important;cursor:pointer!important}
+html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-info{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:0!important}
+html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-label{font-size:11px!important;line-height:1.15!important;color:#9cdefc!important;font-weight:700!important}
+html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-value{font-size:13px!important;line-height:1.15!important;color:#fff!important;font-weight:650!important;max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-icon{font-size:14px!important;color:#8bd4f6!important}
+html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-edit{font-size:13px!important;color:#8bd4f6!important}
+@media(max-width:440px){html body #di-page-home #di-reference-header{column-gap:4px!important}html body #di-page-home #di-reference-header>div:first-child>strong{font-size:clamp(11px,3vw,14px)!important;letter-spacing:0!important}html body #di-page-home #di-reference-header #di-pilot-id-box{padding:5px 5px!important;gap:3px!important}html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-icon{display:none!important}html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-label{font-size:10px!important}html body #di-page-home #di-reference-header #di-pilot-id-box .di-pilot-value{font-size:12px!important}}
 </style>
 <script id="di-pilot-id-script">
 (function(){
@@ -4516,15 +4518,14 @@ function setup(){
  if(document.getElementById('di-pilot-id-box'))return true;
  var left=header.firstElementChild,title=left&&left.querySelector('strong');
  if(!title)return false;
- var row=document.createElement('div');row.className='di-pilot-heading-row';
- title.parentNode.insertBefore(row,title);row.appendChild(title);
+ 
  var box=document.createElement('button');box.type='button';box.id='di-pilot-id-box';box.setAttribute('aria-label','Modifica ID pilota D-Flight');
  var icon=document.createElement('span');icon.className='di-pilot-icon';icon.textContent='♙';
  var info=document.createElement('span');info.className='di-pilot-info';
  var label=document.createElement('span');label.className='di-pilot-label';label.textContent='ID PILOTA';
  var value=document.createElement('span');value.className='di-pilot-value';
  var edit=document.createElement('span');edit.className='di-pilot-edit';edit.textContent='✎';
- info.appendChild(label);info.appendChild(value);box.appendChild(icon);box.appendChild(info);box.appendChild(edit);row.appendChild(box);
+ info.appendChild(label);info.appendChild(value);box.appendChild(icon);box.appendChild(info);box.appendChild(edit);header.insertBefore(box,header.lastElementChild);
  function render(){value.textContent=read()||'Nessun ID'}
  box.addEventListener('click',function(){
   var input=window.prompt('ID pilota D-Flight (facoltativo). Lascia vuoto per rimuoverlo:',read());
