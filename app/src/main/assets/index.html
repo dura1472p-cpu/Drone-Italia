@@ -3812,9 +3812,10 @@ var amount=document.createElement('select');amount.id='di-donation-amount';
 [1,2,5,10,20].forEach(function(n){var o=document.createElement('option');o.value=String(n);o.textContent=n+' €';if(n===5)o.selected=true;amount.appendChild(o)});
 var status=document.createElement('p');status.id='di-donation-status';status.setAttribute('role','status');
 var check=document.createElement('button');check.type='button';check.id='di-donation-check';check.textContent='Verifica pagamento';check.hidden=true;
-link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);
+var cancel=document.createElement('button');cancel.type='button';cancel.id='di-donation-cancel-pending';cancel.textContent='Abbandona ordine in sospeso';cancel.hidden=true;cancel.style.cssText='display:block;margin-top:8px;padding:9px 12px;border:1px solid #b9cde0;border-radius:10px;background:#eef3f8;color:#17476e;';
+link.parentNode.insertBefore(amountLabel,link);link.parentNode.insertBefore(amount,link);link.parentNode.insertBefore(status,link.nextSibling);status.insertAdjacentElement('afterend',check);check.insertAdjacentElement('afterend',cancel);
 link.removeAttribute('href');link.removeAttribute('target');link.setAttribute('role','button');link.setAttribute('tabindex','0');
-function render(){banner.hidden=serverVerified;link.textContent=serverVerified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||serverVerified;if(serverVerified)status.textContent='Donazione verificata da PayPal. Grazie!'}
+function render(){banner.hidden=serverVerified;link.textContent=serverVerified?'❤️ Grazie per il tuo sostegno':'❤️ Dona con PayPal';check.hidden=!data.orderId||serverVerified;cancel.hidden=!data.orderId||serverVerified;cancel.style.display=cancel.hidden?'none':'block';if(serverVerified)status.textContent='Donazione verificata da PayPal. Grazie!'}
 function message(text){status.textContent=text}
 async function post(path,body){var r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error||'Errore di connessione');return j}
 var busy=false;
@@ -3832,6 +3833,7 @@ window.location.assign(url.href);
 link.addEventListener('click',donate);link.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();donate()}});
 bannerButton.addEventListener('click',function(){var nav=Array.from(document.querySelectorAll('#di-app-nav button')).find(function(b){return /impostazioni/i.test(b.textContent)});if(nav)nav.click();var details=settings.querySelector('details');if(details)details.open=true;settings.scrollIntoView({behavior:'smooth',block:'center'})});
 check.addEventListener('click',verify);
+cancel.addEventListener('click',async function(){if(busy||!data.orderId||serverVerified)return;if(!window.confirm('Abbandona questo ordine solo se NON hai autorizzato il pagamento. L’operazione non annulla un pagamento su PayPal. Continuare?'))return;busy=true;cancel.disabled=true;check.disabled=true;message('Controllo dello stato dell’ordine…');try{var result=await post('/verify',{donationId:data.donationId,orderId:data.orderId});if(result.verified===true){updateVerification(true);render();message('Pagamento già confermato da PayPal. Ordine conservato.');return}delete data.orderId;save(data);render();message('Ordine in sospeso rimosso dall’app. Puoi iniziare una nuova donazione. Nessun pagamento PayPal è stato annullato.')}catch(e){message('Impossibile controllare PayPal. Ordine conservato per sicurezza: riprova più tardi.')}finally{busy=false;cancel.disabled=false;check.disabled=false}});
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&data.orderId&&!serverVerified)verify()});
 window.addEventListener('focus',function(){if(data.orderId&&!serverVerified)verify()});
 render();
