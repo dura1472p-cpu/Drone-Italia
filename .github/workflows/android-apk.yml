@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - test/paypal-sandbox-diagnostica
+      - restore/cockpit-banner-live
 
 jobs:
   build:
