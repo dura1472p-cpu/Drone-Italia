@@ -4493,4 +4493,47 @@ homeButton.addEventListener('click',function(e){
 },true);
 })();
 </script>
+<style id="di-pilot-id-style">
+#di-reference-header>div:first-child{min-width:0;flex:1}
+#di-reference-header .di-pilot-heading-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#di-pilot-id-box{display:inline-flex;align-items:center;gap:7px;min-width:0;padding:5px 9px;border:1px solid #236e9b;border-radius:9px;background:rgba(18,60,91,.58);color:#c4e9fa;font-size:11px;line-height:1.2;cursor:pointer;text-align:left;box-shadow:none}
+#di-pilot-id-box .di-pilot-icon{font-size:15px;color:#78c6ef}
+#di-pilot-id-box .di-pilot-info{display:flex;flex-direction:column;gap:2px}
+#di-pilot-id-box .di-pilot-label{font-size:10px;letter-spacing:.25px;color:#8ec9e8}
+#di-pilot-id-box .di-pilot-value{font-size:11px;color:#e2f5ff;max-width:145px;overflow-wrap:anywhere}
+#di-pilot-id-box .di-pilot-edit{font-size:13px;color:#7ec9ed;margin-left:2px}
+@media(max-width:440px){#di-reference-header .di-pilot-heading-row{gap:6px}#di-pilot-id-box{padding:4px 6px;gap:4px}#di-pilot-id-box .di-pilot-value{max-width:90px}}
+</style>
+<script id="di-pilot-id-script">
+(function(){
+'use strict';
+var KEY='di_pilot_dflight_id_v1';
+function read(){try{return localStorage.getItem(KEY)||''}catch(e){return ''}}
+function setup(){
+ var header=document.getElementById('di-reference-header');
+ if(!header)return false;
+ if(document.getElementById('di-pilot-id-box'))return true;
+ var left=header.firstElementChild,title=left&&left.querySelector('strong');
+ if(!title)return false;
+ var row=document.createElement('div');row.className='di-pilot-heading-row';
+ title.parentNode.insertBefore(row,title);row.appendChild(title);
+ var box=document.createElement('button');box.type='button';box.id='di-pilot-id-box';box.setAttribute('aria-label','Modifica ID pilota D-Flight');
+ var icon=document.createElement('span');icon.className='di-pilot-icon';icon.textContent='♙';
+ var info=document.createElement('span');info.className='di-pilot-info';
+ var label=document.createElement('span');label.className='di-pilot-label';label.textContent='ID PILOTA';
+ var value=document.createElement('span');value.className='di-pilot-value';
+ var edit=document.createElement('span');edit.className='di-pilot-edit';edit.textContent='✎';
+ info.appendChild(label);info.appendChild(value);box.appendChild(icon);box.appendChild(info);box.appendChild(edit);row.appendChild(box);
+ function render(){value.textContent=read()||'Nessun ID'}
+ box.addEventListener('click',function(){
+  var input=window.prompt('ID pilota D-Flight (facoltativo). Lascia vuoto per rimuoverlo:',read());
+  if(input===null)return;input=input.trim();
+  if(input.length>80){window.alert('ID troppo lungo: massimo 80 caratteri.');return}
+  try{if(input)localStorage.setItem(KEY,input);else localStorage.removeItem(KEY);render()}catch(e){window.alert('Impossibile salvare l’ID su questo dispositivo.')}
+ });
+ render();return true;
+}
+if(!setup()){var tries=0;var timer=setInterval(function(){if(setup()||++tries>=80)clearInterval(timer)},250)}
+})();
+</script>
 </body></html>
