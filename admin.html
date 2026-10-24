@@ -14,7 +14,7 @@
 <main>
 <section class="panel" id="login-panel" aria-labelledby="login-title">
 <p class="access-banner" role="note">Area riservata. Non sei autorizzato ad accedere ai comandi senza la chiave amministrativa.</p><h1 id="login-title">Gestisci i commenti</h1><p>Accedi con la chiave amministrativa <strong>ADMIN_TOKEN</strong> già configurata nel Worker Cloudflare. Non è la password Google e non è il link ricevuto via email.</p>
-<form id="login-form"><label for="admin-key">Chiave amministrativa</label><input id="admin-key" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required><p class="hint">La chiave viene inviata soltanto al Worker di Drone Italia e resta in memoria fino alla chiusura del pannello. Non viene salvata nel browser.</p><button id="login-submit" type="submit">Apri pannello</button><p id="login-status" class="status" role="status" aria-live="polite"></p></form>
+<form id="login-form"><label for="admin-key">Chiave amministrativa</label><input id="admin-key" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required><p class="hint">La chiave viene inviata soltanto al Worker di Drone Italia e resta in memoria fino alla chiusura del pannello. Non viene salvata nel browser. Dopo un accesso riuscito viene ricordato solo che questo browser può mostrare il collegamento “Area amministratore”.</p><button id="login-submit" type="submit">Apri pannello</button><p id="login-status" class="status" role="status" aria-live="polite"></p></form>
 </section>
 <section id="workspace" hidden aria-labelledby="workspace-title">
 <div class="toolbar"><div><h1 id="workspace-title">Moderazione community</h1><p>Commenti, risposte e blocchi IP.</p></div><button id="signout" class="secondary" type="button">Chiudi pannello</button></div>
@@ -100,6 +100,7 @@
   key=$('admin-key').value.trim();if(!key)return;$('admin-key').value='';
   const id=++requestId;setBusy(true);$('login-status').textContent='Verifica accesso…';
   try{const data=await api('/admin/comments');if(id!==requestId)return;if(!Array.isArray(data.comments))throw Error('Elenco non valido.');
+   try{localStorage.setItem('drone_italia_admin_browser_v1','recognized');}catch(_){}
    tab='comments';rows=data.comments;$('status-filter').value='all';$('search').value='';$('filter-wrap').hidden=false;
    document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===tab)));
    $('scope').textContent='Vengono caricati i 100 commenti più recenti. “Elimina” nasconde il messaggio dalla pagina; puoi ripristinarlo da questo pannello.';
